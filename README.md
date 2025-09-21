@@ -812,6 +812,7 @@ main (保护分支)
 
 ### 开发文档
 - 🛠️ [**开发指南**](docs/DEVELOPMENT_GUIDE.md) - SDK使用、测试数据集、小程序开发
+- 🔌 [**端口占用文档**](docs/PORT_USAGE.md) - 服务端口配置和冲突解决
 - 🔄 [**代码合并总结**](docs/CODE_MERGE_SUMMARY.md) - 代码重构和统一架构
 - ⚡ [**批量处理系统**](docs/batch_system.md) - 高性能批处理架构
 - 🚀 [**Cursor性能优化**](docs/CURSOR_PERFORMANCE_OPTIMIZATION.md) - 开发环境优化
