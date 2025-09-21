@@ -1,0 +1,369 @@
+{
+  "metadata": {
+    "name": "安全测试数据集",
+    "version": "1.0.0",
+    "description": "用于权限验证、数据脱敏、攻击防护等安全测试的数据集",
+    "created_at": "2025-01-21",
+    "test_categories": ["authentication", "authorization", "data_protection", "injection_attacks", "xss", "csrf"],
+    "compliance_standards": ["GDPR", "SOC2", "ISO27001"]
+  },
+  "authentication_tests": [
+    {
+      "id": "auth_001",
+      "name": "有效凭证登录",
+      "type": "positive",
+      "credentials": {
+        "username": "test_user",
+        "password": "ValidPass123!"
+      },
+      "expected_result": "success",
+      "expected_response": {
+        "status": 200,
+        "contains": ["access_token", "refresh_token"]
+      }
+    },
+    {
+      "id": "auth_002",
+      "name": "无效密码登录",
+      "type": "negative",
+      "credentials": {
+        "username": "test_user",
+        "password": "WrongPassword"
+      },
+      "expected_result": "failure",
+      "expected_response": {
+        "status": 401,
+        "message": "Invalid credentials"
+      }
+    },
+    {
+      "id": "auth_003",
+      "name": "SQL注入尝试",
+      "type": "security",
+      "credentials": {
+        "username": "admin'; DROP TABLE users; --",
+        "password": "password"
+      },
+      "expected_result": "blocked",
+      "expected_response": {
+        "status": 400,
+        "message": "Invalid input format"
+      }
+    }
+  ],
+  "authorization_tests": [
+    {
+      "id": "authz_001",
+      "name": "管理员访问用户管理",
+      "user_role": "admin",
+      "endpoint": "/api/v1/admin/users",
+      "method": "GET",
+      "expected_result": "allowed",
+      "expected_status": 200
+    },
+    {
+      "id": "authz_002",
+      "name": "普通用户访问管理功能",
+      "user_role": "user",
+      "endpoint": "/api/v1/admin/users",
+      "method": "GET",
+      "expected_result": "denied",
+      "expected_status": 403
+    },
+    {
+      "id": "authz_003",
+      "name": "跨租户数据访问",
+      "user_tenant": "tenant_a",
+      "requested_resource": "/api/v1/conversations/tenant_b_conv_123",
+      "method": "GET",
+      "expected_result": "denied",
+      "expected_status": 403
+    }
+  ],
+  "data_protection_tests": [
+    {
+      "id": "data_001",
+      "name": "PII数据脱敏",
+      "input_data": {
+        "user_id": "user_123",
+        "email": "test@example.com",
+        "phone": "13812345678",
+        "id_card": "110101199001011234"
+      },
+      "expected_output": {
+        "user_id": "user_123",
+        "email": "t***@example.com",
+        "phone": "138****5678",
+        "id_card": "110101****1234"
+      }
+    },
+    {
+      "id": "data_002",
+      "name": "敏感信息日志过滤",
+      "log_input": "User login: username=admin, password=secret123, token=abc123xyz",
+      "expected_log": "User login: username=admin, password=*****, token=*****"
+    }
+  ],
+  "injection_attack_tests": [
+    {
+      "id": "inject_001",
+      "name": "SQL注入测试",
+      "attack_vectors": [
+        "'; DROP TABLE users; --",
+        "' OR '1'='1",
+        "' UNION SELECT * FROM admin_users --",
+        "'; INSERT INTO users VALUES ('hacker', 'pass'); --"
+      ],
+      "target_endpoints": [
+        "/api/v1/users/search",
+        "/api/v1/conversations/query",
+        "/api/v1/login"
+      ],
+      "expected_behavior": "blocked_and_logged"
+    },
+    {
+      "id": "inject_002",
+      "name": "NoSQL注入测试",
+      "attack_vectors": [
+        "{'$ne': null}",
+        "{'$gt': ''}",
+        "{'$where': 'this.username == this.password'}"
+      ],
+      "expected_behavior": "blocked_and_logged"
+    }
+  ],
+  "xss_attack_tests": [
+    {
+      "id": "xss_001",
+      "name": "存储型XSS测试",
+      "attack_payloads": [
+        "<script>alert('XSS')</script>",
+        "<img src=x onerror=alert('XSS')>",
+        "<svg onload=alert('XSS')>",
+        "javascript:alert('XSS')"
+      ],
+      "target_fields": [
+        "message_content",
+        "user_profile_bio",
+        "conversation_title"
+      ],
+      "expected_behavior": "sanitized_or_blocked"
+    },
+    {
+      "id": "xss_002",
+      "name": "反射型XSS测试",
+      "attack_urls": [
+        "/search?q=<script>alert('XSS')</script>",
+        "/user/profile?name=<img src=x onerror=alert('XSS')>"
+      ],
+      "expected_behavior": "sanitized_output"
+    }
+  ],
+  "csrf_attack_tests": [
+    {
+      "id": "csrf_001",
+      "name": "CSRF令牌验证",
+      "scenario": "无CSRF令牌的状态改变请求",
+      "request": {
+        "method": "POST",
+        "endpoint": "/api/v1/user/password",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "new_password": "hacked123"
+        }
+      },
+      "expected_result": "rejected",
+      "expected_status": 403
+    }
+  ],
+  "rate_limiting_tests": [
+    {
+      "id": "rate_001",
+      "name": "API速率限制",
+      "endpoint": "/api/v1/chat/send",
+      "rate_limit": "100 requests per minute",
+      "test_scenario": "发送150个请求在1分钟内",
+      "expected_behavior": {
+        "first_100_requests": "success",
+        "remaining_requests": "rate_limited",
+        "status_code": 429,
+        "retry_after_header": "present"
+      }
+    },
+    {
+      "id": "rate_002",
+      "name": "登录尝试限制",
+      "endpoint": "/api/v1/login",
+      "rate_limit": "5 failed attempts per 15 minutes",
+      "test_scenario": "连续6次错误登录",
+      "expected_behavior": {
+        "first_5_attempts": "normal_error_response",
+        "6th_attempt": "account_temporarily_locked",
+        "unlock_time": "15_minutes"
+      }
+    }
+  ],
+  "encryption_tests": [
+    {
+      "id": "encrypt_001",
+      "name": "数据传输加密",
+      "test_type": "tls_verification",
+      "endpoints": [
+        "/api/v1/login",
+        "/api/v1/chat/send",
+        "/api/v1/user/profile"
+      ],
+      "requirements": {
+        "min_tls_version": "1.2",
+        "cipher_suites": ["AES256", "ChaCha20"],
+        "certificate_validation": "required"
+      }
+    },
+    {
+      "id": "encrypt_002",
+      "name": "静态数据加密",
+      "test_type": "database_encryption",
+      "sensitive_fields": [
+        "user_passwords",
+        "api_keys",
+        "personal_data"
+      ],
+      "encryption_standard": "AES-256-GCM"
+    }
+  ],
+  "session_management_tests": [
+    {
+      "id": "session_001",
+      "name": "会话超时",
+      "scenario": "用户闲置超过配置时间",
+      "idle_timeout": "30 minutes",
+      "expected_behavior": "automatic_logout"
+    },
+    {
+      "id": "session_002",
+      "name": "并发会话限制",
+      "scenario": "同一用户多设备登录",
+      "max_concurrent_sessions": 3,
+      "expected_behavior": "oldest_session_terminated"
+    }
+  ],
+  "compliance_tests": {
+    "gdpr_tests": [
+      {
+        "id": "gdpr_001",
+        "name": "数据删除权",
+        "scenario": "用户请求删除个人数据",
+        "expected_actions": [
+          "删除用户个人信息",
+          "匿名化历史对话",
+          "清除相关缓存",
+          "发送确认通知"
+        ]
+      },
+      {
+        "id": "gdpr_002",
+        "name": "数据可携带权",
+        "scenario": "用户请求导出个人数据",
+        "expected_format": "JSON或CSV",
+        "included_data": [
+          "用户资料",
+          "对话历史",
+          "使用统计",
+          "偏好设置"
+        ]
+      }
+    ],
+    "soc2_tests": [
+      {
+        "id": "soc2_001",
+        "name": "访问日志记录",
+        "requirements": [
+          "记录所有数据访问",
+          "包含用户身份",
+          "记录时间戳",
+          "记录访问结果"
+        ]
+      }
+    ]
+  },
+  "vulnerability_scanning": {
+    "dependency_checks": [
+      {
+        "tool": "npm audit",
+        "target": "frontend dependencies",
+        "severity_threshold": "high"
+      },
+      {
+        "tool": "safety",
+        "target": "python dependencies",
+        "severity_threshold": "medium"
+      }
+    ],
+    "code_analysis": [
+      {
+        "tool": "bandit",
+        "target": "python code",
+        "rules": ["B101", "B102", "B103"]
+      },
+      {
+        "tool": "eslint-security",
+        "target": "javascript code",
+        "rules": ["security/detect-object-injection"]
+      }
+    ]
+  },
+  "penetration_testing": {
+    "automated_scans": [
+      {
+        "tool": "OWASP ZAP",
+        "target": "web application",
+        "scan_types": ["spider", "active_scan", "baseline"]
+      }
+    ],
+    "manual_tests": [
+      {
+        "category": "business_logic",
+        "tests": [
+          "价格操纵测试",
+          "权限提升测试",
+          "工作流绕过测试"
+        ]
+      }
+    ]
+  },
+  "security_headers_tests": [
+    {
+      "id": "headers_001",
+      "name": "安全响应头检查",
+      "required_headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block",
+        "Strict-Transport-Security": "max-age=31536000",
+        "Content-Security-Policy": "default-src 'self'"
+      }
+    }
+  ],
+  "test_execution_framework": {
+    "setup": [
+      "1. 准备测试环境",
+      "2. 创建测试用户和数据",
+      "3. 配置安全扫描工具",
+      "4. 设置监控和日志"
+    ],
+    "execution": [
+      "1. 运行自动化安全测试",
+      "2. 执行手动渗透测试",
+      "3. 验证安全控制措施",
+      "4. 记录所有测试结果"
+    ],
+    "reporting": [
+      "1. 生成漏洞报告",
+      "2. 评估风险等级",
+      "3. 提供修复建议",
+      "4. 跟踪修复进度"
+    ]
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "metadata": {
+    "name": "意图分类测试数据集",
+    "version": "1.0.0",
+    "description": "用于测试意图识别准确性的标注数据集",
+    "created_at": "2025-01-21",
+    "total_samples": 200,
+    "intent_categories": 15
+  },
+  "intent_definitions": {
+    "greeting": "问候、打招呼",
+    "product_inquiry": "产品咨询、功能了解",
+    "technical_support": "技术支持、使用帮助",
+    "complaint": "投诉、不满",
+    "booking_request": "预订、预约请求",
+    "order_status": "订单状态查询",
+    "payment_issue": "支付相关问题",
+    "account_management": "账户管理、设置",
+    "feature_request": "功能需求、建议",
+    "cancellation": "取消、退订",
+    "pricing_inquiry": "价格咨询",
+    "comparison": "产品对比",
+    "demo_request": "演示申请",
+    "contact_info": "联系方式查询",
+    "other": "其他未分类意图"
+  },
+  "test_samples": [
+    {
+      "id": "intent_001",
+      "text": "你好，我想了解一下你们的产品",
+      "expected_intent": "product_inquiry",
+      "confidence_threshold": 0.8,
+      "alternative_intents": ["greeting"],
+      "context": "新用户首次咨询"
+    },
+    {
+      "id": "intent_002",
+      "text": "早上好！",
+      "expected_intent": "greeting",
+      "confidence_threshold": 0.9,
+      "alternative_intents": [],
+      "context": "简单问候"
+    },
+    {
+      "id": "intent_003",
+      "text": "我的订单什么时候能到？",
+      "expected_intent": "order_status",
+      "confidence_threshold": 0.85,
+      "alternative_intents": ["technical_support"],
+      "context": "已下单用户查询"
+    },
+    {
+      "id": "intent_004",
+      "text": "你们的服务太差了，我要投诉！",
+      "expected_intent": "complaint",
+      "confidence_threshold": 0.9,
+      "alternative_intents": [],
+      "context": "用户不满情绪"
+    },
+    {
+      "id": "intent_005",
+      "text": "能帮我预订明天的会议室吗？",
+      "expected_intent": "booking_request",
+      "confidence_threshold": 0.85,
+      "alternative_intents": ["technical_support"],
+      "context": "企业用户预订"
+    },
+    {
+      "id": "intent_006",
+      "text": "支付的时候出现错误，怎么办？",
+      "expected_intent": "payment_issue",
+      "confidence_threshold": 0.8,
+      "alternative_intents": ["technical_support"],
+      "context": "支付流程问题"
+    },
+    {
+      "id": "intent_007",
+      "text": "我想修改我的账户信息",
+      "expected_intent": "account_management",
+      "confidence_threshold": 0.85,
+      "alternative_intents": ["technical_support"],
+      "context": "账户设置需求"
+    },
+    {
+      "id": "intent_008",
+      "text": "希望你们能增加语音识别功能",
+      "expected_intent": "feature_request",
+      "confidence_threshold": 0.8,
+      "alternative_intents": ["product_inquiry"],
+      "context": "功能建议"
+    },
+    {
+      "id": "intent_009",
+      "text": "我要取消我的订阅",
+      "expected_intent": "cancellation",
+      "confidence_threshold": 0.9,
+      "alternative_intents": ["account_management"],
+      "context": "取消服务"
+    },
+    {
+      "id": "intent_010",
+      "text": "你们的价格是多少？",
+      "expected_intent": "pricing_inquiry",
+      "confidence_threshold": 0.9,
+      "alternative_intents": ["product_inquiry"],
+      "context": "价格咨询"
+    },
+    {
+      "id": "intent_011",
+      "text": "和竞品相比有什么优势？",
+      "expected_intent": "comparison",
+      "confidence_threshold": 0.8,
+      "alternative_intents": ["product_inquiry"],
+      "context": "产品对比"
+    },
+    {
+      "id": "intent_012",
+      "text": "可以给我演示一下吗？",
+      "expected_intent": "demo_request",
+      "confidence_threshold": 0.85,
+      "alternative_intents": ["product_inquiry"],
+      "context": "演示申请"
+    },
+    {
+      "id": "intent_013",
+      "text": "你们的客服电话是多少？",
+      "expected_intent": "contact_info",
+      "confidence_threshold": 0.9,
+      "alternative_intents": [],
+      "context": "联系方式查询"
+    },
+    {
+      "id": "intent_014",
+      "text": "这个功能怎么使用？",
+      "expected_intent": "technical_support",
+      "confidence_threshold": 0.8,
+      "alternative_intents": ["product_inquiry"],
+      "context": "使用指导"
+    },
+    {
+      "id": "intent_015",
+      "text": "今天天气怎么样？",
+      "expected_intent": "other",
+      "confidence_threshold": 0.7,
+      "alternative_intents": [],
+      "context": "非业务相关"
+    }
+  ],
+  "challenging_cases": [
+    {
+      "id": "challenge_001",
+      "text": "你好，我想咨询一下价格，顺便看看能不能预约个演示",
+      "expected_intent": "pricing_inquiry",
+      "secondary_intent": "demo_request",
+      "difficulty": "high",
+      "reason": "多意图混合"
+    },
+    {
+      "id": "challenge_002",
+      "text": "那个东西怎么弄",
+      "expected_intent": "technical_support",
+      "difficulty": "high",
+      "reason": "指代不明确"
+    },
+    {
+      "id": "challenge_003",
+      "text": "不行不行，这样不对",
+      "expected_intent": "complaint",
+      "difficulty": "medium",
+      "reason": "情感表达模糊"
+    },
+    {
+      "id": "challenge_004",
+      "text": "嗯嗯，好的，那就这样吧",
+      "expected_intent": "other",
+      "difficulty": "medium",
+      "reason": "确认性回复"
+    },
+    {
+      "id": "challenge_005",
+      "text": "我想问一下，你们这个系统稳定吗？会不会经常出问题？",
+      "expected_intent": "product_inquiry",
+      "secondary_intent": "technical_support",
+      "difficulty": "medium",
+      "reason": "质量关注"
+    }
+  ],
+  "evaluation_criteria": {
+    "accuracy_metrics": {
+      "primary_intent_accuracy": "正确识别主要意图的比例",
+      "confidence_calibration": "置信度与实际准确性的匹配度",
+      "multi_intent_handling": "多意图场景的处理能力"
+    },
+    "performance_metrics": {
+      "response_time": "意图识别响应时间 < 100ms",
+      "throughput": "每秒处理请求数 > 1000",
+      "memory_usage": "内存占用 < 500MB"
+    },
+    "robustness_metrics": {
+      "typo_tolerance": "拼写错误容忍度",
+      "length_variance": "不同长度文本的处理能力",
+      "domain_adaptation": "新领域适应能力"
+    }
+  },
+  "test_protocol": {
+    "preparation": [
+      "1. 加载意图分类模型",
+      "2. 预热系统（处理100个样本）",
+      "3. 清空缓存和历史记录"
+    ],
+    "execution": [
+      "1. 随机打乱测试样本顺序",
+      "2. 逐个输入测试文本",
+      "3. 记录预测结果和置信度",
+      "4. 测量响应时间"
+    ],
+    "analysis": [
+      "1. 计算准确率、精确率、召回率",
+      "2. 分析混淆矩阵",
+      "3. 识别高频错误模式",
+      "4. 评估边界情况处理"
+    ]
+  }
+}
