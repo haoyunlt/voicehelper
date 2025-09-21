@@ -79,8 +79,6 @@ dmypy.json
 
 # Go
 # Binaries for programs and plugins
-*.exe
-*.exe~
 *.dll
 *.so
 *.dylib
@@ -94,6 +92,9 @@ vendor/
 
 # Go workspace file
 go.work
+
+# Go module cache
+go.sum.backup
 
 # Next.js
 .next/
@@ -246,6 +247,13 @@ local/
 .local/
 dev/
 
+# 部署相关
+deploy/local/
+deploy/data/
+deploy/logs/
+deploy/config/*.local
+deploy/config/*.secret
+
 # 测试文件
 test-results/
 test-reports/
@@ -256,6 +264,13 @@ build/
 dist/
 out/
 target/
+*.exe
+*.exe~
+backend/cmd/server/server
+backend/cmd/server/chatbot-backend*
+*-linux-*
+*-darwin-*
+*-windows-*
 
 # 临时文件
 *.tmp

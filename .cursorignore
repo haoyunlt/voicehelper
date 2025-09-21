@@ -1,5 +1,14 @@
 # Cursor AI 忽略文件配置
 # 用于控制 Cursor AI 在代码分析和建议时忽略的文件和目录
+#
+# Cursor AI 将专注分析以下类型的文件：
+# - 源代码文件 (*.go, *.py, *.js, *.ts, *.tsx, *.vue)
+# - 配置文件 (*.yaml, *.json, *.toml, Dockerfile, Makefile)
+# - 文档文件 (*.md, *.rst)
+# - 测试文件 (*_test.go, test_*.py, *.test.js)
+# - 构建脚本 (*.sh, *.bat)
+#
+# 以下文件和目录将被忽略：
 
 # 依赖目录 - 第三方代码，不需要AI分析
 node_modules/
@@ -21,6 +30,13 @@ target/
 .nuxt/
 coverage/
 *.tsbuildinfo
+
+# 跨平台构建产物
+*-linux-*
+*-darwin-*
+*-windows-*
+backend/cmd/server/server
+backend/cmd/server/chatbot-backend*
 
 # 日志文件 - 运行时生成，不需要分析
 *.log
@@ -162,16 +178,23 @@ dev/
 tmp/
 temp/
 
+# 部署相关文件
+deploy/local/
+deploy/data/
+deploy/logs/
+deploy/config/*.local
+deploy/config/*.secret
+
 # 大型JSON文件 - 可能是数据文件
 **/data.json
 **/large-data.json
 **/*-data.json
 
-# 锁文件 - 包管理器生成
+# 锁文件 - 包管理器生成（保留go.sum用于依赖管理）
 package-lock.json
 yarn.lock
 Pipfile.lock
-go.sum
+go.sum.backup
 
 # 编译后的二进制文件
 *.exe
@@ -186,3 +209,46 @@ go.sum
 public/uploads/
 static/uploads/
 assets/uploads/
+
+# 构建脚本生成的临时文件
+/tmp/chatbot-*
+*.tar.gz
+
+# 测试和基准测试结果
+*.bench
+*.prof
+*.pprof
+
+# 算法服务相关
+algo/__pycache__/
+algo/.pytest_cache/
+algo/models/
+algo/embeddings/
+algo/vectors/
+
+# 前端构建产物
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.vercel/
+
+# 管理后台
+admin/__pycache__/
+admin/instance/
+admin/static/uploads/
+
+# 微信小程序
+frontend/miniprogram/node_modules/
+frontend/miniprogram/dist/
+
+# 数据库相关
+*.sql.backup
+migrations/versions/
+alembic/versions/
+
+# 监控和日志聚合
+grafana/
+prometheus/
+elasticsearch/
+kibana/
+logs/
