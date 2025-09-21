@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"chatbot-backend/internal/service"
+	"chatbot/internal/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

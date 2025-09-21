@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"chatbot-backend/internal/service"
+	"chatbot/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"

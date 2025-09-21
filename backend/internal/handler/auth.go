@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"chatbot/internal/repository"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,78 +14,115 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// WeChatLoginRequest 微信小程序登录请求
-type WeChatLoginRequest struct {
-	Code string `json:"code" binding:"required"`
+// AuthHandler 认证处理器（使用真实数据库）
+type AuthHandler struct {
+	userRepo  repository.UserRepository
+	jwtSecret string
 }
 
-// WeChatLoginResponse 微信小程序登录响应
-type WeChatLoginResponse struct {
-	Token    string `json:"token"`
-	TenantID string `json:"tenant_id"`
-	UserID   string `json:"user_id"`
+// NewAuthHandler 创建认证处理器
+func NewAuthHandler(userRepo repository.UserRepository) *AuthHandler {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "default-secret-key-change-in-production"
+	}
+
+	return &AuthHandler{
+		userRepo:  userRepo,
+		jwtSecret: jwtSecret,
+	}
 }
 
-// WeChatSessionResponse 微信code2session响应
-type WeChatSessionResponse struct {
-	OpenID     string `json:"openid"`
-	SessionKey string `json:"session_key"`
-	UnionID    string `json:"unionid"`
-	ErrCode    int    `json:"errcode"`
-	ErrMsg     string `json:"errmsg"`
-}
-
-// Claims JWT声明
-type Claims struct {
-	UserID   string `json:"user_id"`
-	TenantID string `json:"tenant_id"`
-	OpenID   string `json:"openid"`
-	Channel  string `json:"channel"`
-	jwt.RegisteredClaims
-}
-
-// WeChatMiniProgramLogin 微信小程序登录
-func (h *Handlers) WeChatMiniProgramLogin(c *gin.Context) {
+// WeChatMiniProgramLoginV2 微信小程序登录（数据库版）
+func (h *AuthHandler) WeChatMiniProgramLoginV2(c *gin.Context) {
 	var req WeChatLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	// 调用微信 code2session 接口
+	// 调用微信API获取session
 	session, err := h.weChatCode2Session(req.Code)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get WeChat session")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "WeChat authentication failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "WeChat authentication failed"})
 		return
 	}
 
-	// 根据 OpenID 获取或创建用户
-	userID, tenantID, err := h.getOrCreateUser(session.OpenID, session.UnionID)
+	// 获取或创建用户（使用真实数据库）
+	ctx := c.Request.Context()
+	user, err := h.getOrCreateUser(ctx, session.OpenID, session.UnionID)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get or create user")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User creation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user"})
 		return
 	}
 
-	// 生成 JWT
-	token, err := h.generateJWT(userID, tenantID, session.OpenID)
+	// 更新最后登录时间
+	if err := h.userRepo.UpdateLastLogin(ctx, user.ID); err != nil {
+		logrus.WithError(err).Warn("Failed to update last login time")
+	}
+
+	// 生成JWT
+	token, err := h.generateJWT(user.ID, user.TenantID, session.OpenID)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to generate JWT")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token generation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	// 返回登录结果
-	c.JSON(http.StatusOK, WeChatLoginResponse{
-		Token:    token,
-		TenantID: tenantID,
-		UserID:   userID,
+	// 记录审计日志
+	h.auditLog(ctx, user.ID, user.TenantID, "login", c.ClientIP())
+
+	// 返回响应
+	c.JSON(http.StatusOK, gin.H{
+		"token":     token,
+		"tenant_id": user.TenantID,
+		"user_info": gin.H{
+			"user_id":  user.ID,
+			"nickname": user.Nickname,
+			"avatar":   user.Avatar,
+			"role":     user.Role,
+			"open_id":  session.OpenID,
+			"union_id": session.UnionID,
+		},
 	})
 }
 
+// getOrCreateUser 获取或创建用户（数据库实现）
+func (h *AuthHandler) getOrCreateUser(ctx context.Context, openID, unionID string) (*repository.User, error) {
+	// 先尝试获取用户
+	user, err := h.userRepo.GetByOpenID(ctx, openID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	// 如果用户存在，返回
+	if user != nil {
+		return user, nil
+	}
+
+	// 用户不存在，创建新用户
+	newUser := &repository.User{
+		OpenID:   openID,
+		UnionID:  unionID,
+		TenantID: h.getDefaultTenantID(),
+		Username: fmt.Sprintf("wx_%s", openID[:8]),
+		Nickname: "微信用户",
+		Role:     "user",
+		Status:   "active",
+	}
+
+	if err := h.userRepo.Create(ctx, newUser); err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	logrus.Infof("Created new user: %s (openID: %s)", newUser.ID, openID)
+	return newUser, nil
+}
+
 // weChatCode2Session 调用微信 code2session 接口
-func (h *Handlers) weChatCode2Session(code string) (*WeChatSessionResponse, error) {
+func (h *AuthHandler) weChatCode2Session(code string) (*WeChatSessionResponse, error) {
 	appID := os.Getenv("WECHAT_APP_ID")
 	appSecret := os.Getenv("WECHAT_APP_SECRET")
 
@@ -122,52 +161,29 @@ func (h *Handlers) weChatCode2Session(code string) (*WeChatSessionResponse, erro
 	return &session, nil
 }
 
-// getOrCreateUser 获取或创建用户
-func (h *Handlers) getOrCreateUser(openID, unionID string) (string, string, error) {
-	// 这里简化处理，实际应该查询数据库
-	// 在生产环境中，应该：
-	// 1. 先查询用户是否存在
-	// 2. 如果不存在则创建新用户
-	// 3. 返回用户ID和租户ID
-
-	// 模拟用户ID和租户ID
-	userID := "user_" + openID[:8]
-	tenantID := "tenant_default"
-
-	// TODO: 实际数据库操作
-	// user, err := h.services.UserService.GetByOpenID(openID)
-	// if err != nil {
-	//     user, err = h.services.UserService.Create(openID, unionID)
-	// }
-
-	logrus.Infof("User logged in: %s (tenant: %s)", userID, tenantID)
-
-	return userID, tenantID, nil
-}
-
 // generateJWT 生成JWT令牌
-func (h *Handlers) generateJWT(userID, tenantID, openID string) (string, error) {
-	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		secretKey = "default-secret-key-for-development"
-	}
-
+func (h *AuthHandler) generateJWT(userID, tenantID, openID string) (string, error) {
+	// 创建claims
 	claims := Claims{
 		UserID:   userID,
 		TenantID: tenantID,
 		OpenID:   openID,
-		Channel:  "wechat",
+		Channel:  "wechat_miniprogram",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)), // 7天有效期
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "chatbot-api",
 			Subject:   userID,
+			ID:        fmt.Sprintf("%d", time.Now().Unix()),
 		},
 	}
 
+	// 创建token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secretKey))
+
+	// 签名
+	tokenString, err := token.SignedString([]byte(h.jwtSecret))
 	if err != nil {
 		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
@@ -175,80 +191,176 @@ func (h *Handlers) generateJWT(userID, tenantID, openID string) (string, error) 
 	return tokenString, nil
 }
 
-// ValidateToken 验证JWT令牌（中间件使用）
-func (h *Handlers) ValidateToken(tokenString string) (*Claims, error) {
-	secretKey := os.Getenv("JWT_SECRET")
-	if secretKey == "" {
-		secretKey = "default-secret-key-for-development"
+// getDefaultTenantID 获取默认租户ID
+func (h *AuthHandler) getDefaultTenantID() string {
+	// 可以从配置或环境变量读取
+	tenantID := os.Getenv("DEFAULT_TENANT_ID")
+	if tenantID == "" {
+		tenantID = "default"
 	}
-
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secretKey), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, fmt.Errorf("invalid token")
+	return tenantID
 }
 
-// RefreshToken 刷新令牌
-func (h *Handlers) RefreshToken(c *gin.Context) {
-	// 从请求头获取当前令牌
-	tokenString := c.GetHeader("Authorization")
-	if tokenString == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
+// auditLog 记录审计日志
+func (h *AuthHandler) auditLog(ctx context.Context, userID, tenantID, action, ip string) {
+	// 这里可以异步写入审计日志
+	// 为了避免影响主流程，使用goroutine
+	go func() {
+		logrus.WithFields(logrus.Fields{
+			"user_id":   userID,
+			"tenant_id": tenantID,
+			"action":    action,
+			"ip":        ip,
+			"timestamp": time.Now().UTC(),
+		}).Info("Audit log")
+
+		// TODO: 写入数据库审计表
+	}()
+}
+
+// RefreshToken 刷新Token
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	// 从header获取旧token
+	oldToken := c.GetHeader("Authorization")
+	if oldToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token required"})
 		return
 	}
 
-	// 去掉 "Bearer " 前缀
-	if len(tokenString) > 7 && tokenString[:7] == "Bearer " {
-		tokenString = tokenString[7:]
-	}
+	// 解析旧token
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(oldToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(h.jwtSecret), nil
+	})
 
-	// 验证当前令牌
-	claims, err := h.ValidateToken(tokenString)
-	if err != nil {
+	if err != nil || !token.Valid {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 		return
 	}
 
-	// 生成新令牌
+	// 检查是否在刷新窗口内（例如：过期前24小时）
+	if time.Until(claims.ExpiresAt.Time) > 24*time.Hour {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token not eligible for refresh"})
+		return
+	}
+
+	// 生成新token
 	newToken, err := h.generateJWT(claims.UserID, claims.TenantID, claims.OpenID)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to refresh token")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token refresh failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new token"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": newToken,
+		"token":      newToken,
+		"expires_at": time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 }
 
-// Logout 登出（可选，主要用于清理服务端会话）
-func (h *Handlers) Logout(c *gin.Context) {
-	// 获取用户信息
+// Logout 登出
+func (h *AuthHandler) Logout(c *gin.Context) {
 	userID := c.GetString("user_id")
-	if userID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
-		return
-	}
 
-	// TODO: 清理服务端会话（如果有）
-	// h.services.SessionService.ClearUserSession(userID)
+	// 记录登出日志
+	h.auditLog(c.Request.Context(), userID, c.GetString("tenant_id"), "logout", c.ClientIP())
 
-	logrus.Infof("User logged out: %s", userID)
+	// TODO: 将token加入黑名单（Redis）
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Logged out successfully",
+	})
+}
+
+// GetUserInfo 获取用户信息
+func (h *AuthHandler) GetUserInfo(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// 从数据库获取用户信息
+	user, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to get user info")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
+		return
+	}
+
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// 返回用户信息（过滤敏感字段）
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":    user.ID,
+		"username":   user.Username,
+		"nickname":   user.Nickname,
+		"avatar":     user.Avatar,
+		"email":      user.Email,
+		"phone":      user.Phone,
+		"role":       user.Role,
+		"status":     user.Status,
+		"tenant_id":  user.TenantID,
+		"last_login": user.LastLogin,
+		"created_at": user.CreatedAt,
+	})
+}
+
+// UpdateUserInfo 更新用户信息
+func (h *AuthHandler) UpdateUserInfo(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	var req struct {
+		Nickname string `json:"nickname"`
+		Avatar   string `json:"avatar"`
+		Email    string `json:"email"`
+		Phone    string `json:"phone"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	// 获取用户
+	ctx := c.Request.Context()
+	user, err := h.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+		return
+	}
+
+	// 更新字段
+	if req.Nickname != "" {
+		user.Nickname = req.Nickname
+	}
+	if req.Avatar != "" {
+		user.Avatar = req.Avatar
+	}
+	if req.Email != "" {
+		user.Email = req.Email
+	}
+	if req.Phone != "" {
+		user.Phone = req.Phone
+	}
+
+	// 保存更新
+	if err := h.userRepo.Update(ctx, user); err != nil {
+		logrus.WithError(err).Error("Failed to update user info")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user info"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User info updated successfully",
+		"user": gin.H{
+			"user_id":  user.ID,
+			"nickname": user.Nickname,
+			"avatar":   user.Avatar,
+			"email":    user.Email,
+			"phone":    user.Phone,
+		},
 	})
 }
