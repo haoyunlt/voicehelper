@@ -1,463 +1,174 @@
-# Cursor AI 忽略文件配置
-# 用于控制 Cursor AI 在代码分析和建议时忽略的文件和目录
-#
-# Cursor AI 将专注分析以下类型的文件：
-# - 源代码文件 (*.go, *.py, *.js, *.ts, *.tsx, *.vue)
-# - 配置文件 (*.yaml, *.json, *.toml, Dockerfile, Makefile)
-# - 文档文件 (*.md, *.rst)
-# - 测试文件 (*_test.go, test_*.py, *.test.js)
-# - 构建脚本 (*.sh, *.bat)
-#
-# 以下文件和目录将被忽略：
+# Cursor AI 优化忽略配置 - v1.9.0
+# 专注于源代码分析，排除构建产物和大文件
 
-# 依赖目录 - 第三方代码，不需要AI分析
+# ==================== 核心排除目录 ====================
+# 依赖和构建产物 - 最影响性能的目录
 node_modules/
-vendor/
 __pycache__/
-.eggs/
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.tox/
-.nox/
-
-# 构建产物 - 自动生成的文件
-build/
 dist/
+build/
 out/
-target/
+coverage/
 .next/
 .nuxt/
-coverage/
-*.tsbuildinfo
+target/
+vendor/
 
-# 跨平台构建产物
-*-linux-*
-*-darwin-*
-*-windows-*
-backend/cmd/server/server
-backend/cmd/server/chatbot-backend*
-
-# 日志文件 - 运行时生成，不需要分析
-*.log
-logs/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# 缓存文件 - 临时文件
-.cache/
-.parcel-cache/
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-*.tmp
-*.temp
-
-# 环境配置 - 敏感信息
-.env
-.env.*
-config.local.json
-secrets.yaml
-*.pem
-*.key
-*.crt
-
-# 数据文件 - 大文件，不需要分析
-*.db
-*.sqlite
-*.sqlite3
+# ==================== 数据和缓存文件 ====================
+# 大文件和数据目录
 data/
-uploads/
-downloads/
+logs/
+models/
+embeddings/
+vectors/
 audio_files/
 voice_cache/
 conversation_logs/
 user_data/
+uploads/
+downloads/
 
-# AI模型文件 - 二进制文件，体积大
-models/
-model_cache/
-embeddings/
-vectors/
-checkpoints/
-*.pkl
-*.joblib
-*.model
-wandb/
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
 
-# 媒体文件 - 二进制文件
+# ==================== 媒体和二进制文件 ====================
+# 图片文件
 *.jpg
 *.jpeg
 *.png
 *.gif
 *.svg
 *.ico
+
+# 音视频文件
 *.mp3
 *.mp4
 *.wav
 *.avi
 *.mov
 
-# 压缩文件 - 二进制文件
+# 压缩文件
 *.zip
 *.tar.gz
 *.rar
 *.7z
 
-# 系统文件 - 操作系统生成
+# ==================== 系统和临时文件 ====================
+# 系统文件
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+ehthumbs.db
 
-# IDE配置 - 编辑器特定
+# 临时文件
+*.tmp
+*.temp
+*.log
+*.bak
+*.backup
+*.old
+
+# ==================== 开发环境文件 ====================
+# 环境配置
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# IDE配置
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# 测试覆盖率报告 - 自动生成
-coverage/
-htmlcov/
-.coverage
-.coverage.*
-*.cover
-.hypothesis/
-test-results/
-test-reports/
+# ==================== v1.9.0 特定排除 ====================
+# 开发者平台
+developer-portal/node_modules/
+developer-portal/.next/
+developer-portal/dist/
+developer-portal/coverage/
 
-# 文档构建 - 自动生成
-/site
-docs/_build/
-docs/build/
-
-# 备份文件 - 临时文件
-*.bak
-*.backup
-*.old
-
-# 运行时文件 - 进程相关
-*.pid
-*.seed
-*.pid.lock
-pids/
-
-# 监控数据 - 运行时生成
-monitoring/
-grafana/data/
-prometheus/data/
-
-# 特定框架忽略
-# Jupyter Notebook检查点
-.ipynb_checkpoints/
-
-# Yarn v2
-.yarn/cache/
-.yarn/unplugged/
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# 微信小程序构建产物
-miniprogram/dist/
-miniprogram/node_modules/
-
-# Docker相关
-.dockerignore
-
-# 本地开发文件
-local/
-.local/
-dev/
-tmp/
-temp/
-
-# 部署相关文件
-deploy/local/
-deploy/data/
-deploy/logs/
-deploy/config/*.local
-deploy/config/*.secret
-
-# 大型JSON文件 - 可能是数据文件
-**/data.json
-**/large-data.json
-**/*-data.json
-
-# 锁文件 - 包管理器生成（保留go.sum用于依赖管理）
-package-lock.json
-yarn.lock
-Pipfile.lock
-go.sum.backup
-
-# 编译后的二进制文件
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.out
-*.test
-
-# 特殊目录 - 通常包含大量文件
-public/uploads/
-static/uploads/
-assets/uploads/
-
-# 构建脚本生成的临时文件
-/tmp/chatbot-*
-*.tar.gz
-
-# 测试和基准测试结果
-*.bench
-*.prof
-*.pprof
-
-# 算法服务相关
-algo/__pycache__/
-algo/.pytest_cache/
-algo/models/
-algo/embeddings/
-algo/vectors/
-
-# 前端构建产物
-frontend/.next/
-frontend/out/
-frontend/node_modules/
-frontend/.vercel/
-
-# 管理后台
-admin/__pycache__/
-admin/instance/
-admin/static/uploads/
-
-# 前端相关构建产物
-frontend/miniprogram/node_modules/
-frontend/miniprogram/dist/
-frontend/browser-extension/dist/
-frontend/browser-extension/node_modules/
-
-# 数据库相关
-*.sql.backup
-migrations/versions/
-alembic/versions/
-
-# 监控和日志聚合
-grafana/
-prometheus/
-elasticsearch/
-kibana/
-logs/
-
-# 多平台客户端构建产物
-mobile/node_modules/
-mobile/dist/
-mobile/build/
-mobile/android/
-mobile/ios/
-desktop/node_modules/
-desktop/dist/
-desktop/build/
-desktop/out/
-
-# SDK构建产物和依赖
+# SDK构建产物
+sdks/javascript/lib/
 sdks/javascript/dist/
 sdks/javascript/node_modules/
 sdks/python/build/
 sdks/python/dist/
 sdks/python/*.egg-info/
-sdks/python/__pycache__/
 
-# 安全相关敏感文件
-backend/pkg/security/keys/
-backend/pkg/security/certs/
-*.private
-*.public
-*.keystore
-*.jks
+# 移动端构建产物
+mobile/ios/build/
+mobile/ios/DerivedData/
+mobile/ios/Pods/
+mobile/android/app/build/
+mobile/android/.gradle/
 
-# AI推理引擎相关
+# 桌面端构建产物
+desktop/dist/
+desktop/build/
+desktop/node_modules/
+
+# 浏览器扩展构建产物
+browser-extension/dist/
+browser-extension/build/
+browser-extension/node_modules/
+
+# ==================== 测试和报告 ====================
+# 测试相关
+test-results/
+test-reports/
+.pytest_cache/
+.coverage
+htmlcov/
+.nyc_output/
+
+# ==================== 监控和部署 ====================
+# 监控数据
+monitoring/data/
+grafana/data/
+prometheus/data/
+
+# 部署相关
+deploy/data/
+deploy/logs/
+backup/
+archive/
+
+# ==================== AI和算法相关 ====================
+# AI模型文件
+*.pkl
+*.joblib
+*.model
+wandb/
+checkpoints/
+model_cache/
+
+# 算法缓存
 algo/reasoning/cache/
 algo/reasoning/models/
 algo/reasoning/temp/
-algo/reasoning/__pycache__/
 
-# 性能测试和基准测试
-tests/performance/results/
-tests/performance/reports/
-tests/performance/data/
-*.benchmark
-*.prof
-*.pprof
+# ==================== 编译产物 ====================
+# 二进制文件
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
 
-# 大型配置和数据文件
-deploy/config/grafana/dashboards/*.json
-deploy/data/
-deploy/logs/
+# 编译缓存
+*.tsbuildinfo
+.rpt2_cache/
+.rts2_cache_*/
+.parcel-cache/
 
-# 编译后的扩展文件
-frontend/browser-extension/build/
-frontend/browser-extension/web-ext-artifacts/
-
-# 临时开发文件
-.vscode/settings.json
-.idea/workspace.xml
-*.code-workspace
-
-# v1.9.0 开发者平台相关 - 自动生成和构建产物
-developer-portal/node_modules/
-developer-portal/.next/
-developer-portal/out/
-developer-portal/dist/
-developer-portal/.vercel/
-developer-portal/.turbo/
-developer-portal/coverage/
-developer-portal/test-results/
-
-# v1.9.0 SDK相关 - 构建产物和依赖
-sdks/javascript/lib/
-sdks/javascript/esm/
-sdks/javascript/cjs/
-sdks/javascript/types/
-sdks/javascript/coverage/
-sdks/javascript/.nyc_output/
-sdks/javascript/test-results/
-
-sdks/python/voicehelper_sdk/__pycache__/
-sdks/python/voicehelper_sdk.egg-info/
-sdks/python/.pytest_cache/
-sdks/python/.mypy_cache/
-sdks/python/.tox/
-sdks/python/htmlcov/
-
-# v1.9.0 移动端应用 - 构建产物
-mobile/ios/build/
-mobile/ios/DerivedData/
-mobile/ios/*.xcworkspace/xcuserdata/
-mobile/ios/*.xcodeproj/xcuserdata/
-mobile/ios/Pods/
-mobile/ios/Podfile.lock
-
-mobile/android/app/build/
-mobile/android/.gradle/
-mobile/android/local.properties
-mobile/android/gradle.properties
-mobile/android/keystore.properties
-
-# v1.9.0 桌面端应用 - 构建产物
-desktop/dist/
-desktop/out/
-desktop/build/
-desktop/release/
-desktop/app/
-desktop/.webpack/
-
-# v1.9.0 浏览器扩展 - 构建产物
-browser-extension/dist/
-browser-extension/build/
-browser-extension/web-ext-artifacts/
-browser-extension/coverage/
-
-# v1.9.0 文档生成 - 自动生成的文档
-docs/api/generated/
-docs/sdk/generated/
-docs/.vitepress/cache/
-docs/.vitepress/dist/
-
-# v1.9.0 API规范 - 生成的客户端代码
-docs/api/clients/
-docs/api/codegen/
-
-# v1.9.0 测试相关 - 测试报告和覆盖率
-tests/e2e/screenshots/
-tests/e2e/videos/
-tests/e2e/test-results/
-tests/integration/reports/
-tests/performance/results/
-tests/sdk/coverage/
-
-# v1.9.0 开发工具 - 临时文件
-tools/codegen/output/
-tools/scripts/temp/
-tools/migration/backup/
-
-# v1.9.0 CI/CD相关 - 构建缓存
-.github/workflows/cache/
-.gitlab-ci/cache/
-.circleci/cache/
-
-# v1.9.0 容器化相关 - 构建上下文
-docker/build/
-docker/cache/
-docker/volumes/
-
-# v1.9.0 监控和日志 - 运行时数据
-monitoring/data/
-monitoring/logs/
-monitoring/alerts/
-monitoring/dashboards/cache/
-
-# v1.9.0 安全扫描 - 报告文件
-security/reports/
-security/scans/
-security/vulnerabilities/
-
-# v1.9.0 性能分析 - 分析结果
-profiling/
-benchmarks/results/
-load-tests/reports/
-
-# v1.9.0 数据库迁移 - 备份文件
-migrations/backup/
-migrations/rollback/
-schema/backup/
-
-# v1.9.0 配置管理 - 环境特定配置
-config/local/
-config/dev/
-config/staging/
-config/production/secrets/
-
-# v1.9.0 第三方集成 - 缓存和临时文件
-integrations/cache/
-integrations/temp/
-integrations/logs/
-
-# v1.9.0 AI模型相关 - 大文件
-models/weights/
-models/checkpoints/
-models/cache/
-embeddings/vectors/
-embeddings/index/
-
-# v1.9.0 多语言支持 - 编译后的翻译文件
-i18n/compiled/
-locales/compiled/
-translations/build/
-
-# v1.9.0 资源文件 - 大型静态资源
-assets/videos/
-assets/audio/
-assets/images/original/
-assets/fonts/
-public/static/large/
-
-# v1.9.0 备份和归档 - 历史文件
-backup/
-archive/
-snapshots/
-exports/
-
-# v1.9.0 开发环境 - 个人配置
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.vscode/launch.json
-.vscode/tasks.json
+# ==================== 包管理器锁文件 ====================
+# 保留go.sum，排除其他锁文件
+package-lock.json
+yarn.lock
+Pipfile.lock
