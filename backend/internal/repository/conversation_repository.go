@@ -31,7 +31,7 @@ type Conversation struct {
 type Message struct {
 	ID             string                 `json:"id"`
 	ConversationID string                 `json:"conversation_id"`
-	Role           string                 `json:"role"`     // user, assistant, system
+	Role           string                 `json:"role"` // user, assistant, system
 	Content        string                 `json:"content"`
 	Modality       string                 `json:"modality"` // text, voice, image
 	TokenCount     int                    `json:"token_count"`
@@ -57,13 +57,13 @@ type ConversationRepository interface {
 	Update(ctx context.Context, conv *Conversation) error
 	Delete(ctx context.Context, id string) error
 	Archive(ctx context.Context, id string) error
-	
+
 	// Message operations
 	AddMessage(ctx context.Context, msg *Message) error
 	GetMessages(ctx context.Context, convID string, opts ListOptions) ([]*Message, int, error)
 	GetLastMessages(ctx context.Context, convID string, limit int) ([]*Message, error)
 	UpdateMessageReferences(ctx context.Context, msgID string, refs []Reference) error
-	
+
 	// Statistics
 	UpdateStats(ctx context.Context, convID string) error
 	GetUserStats(ctx context.Context, userID string) (map[string]interface{}, error)

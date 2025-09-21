@@ -380,7 +380,7 @@ func (r *PostgresAPIKeyRepository) UpdateLastUsed(ctx context.Context, id string
 func (r *PostgresAPIKeyRepository) CheckRateLimit(ctx context.Context, id string) (bool, error) {
 	// 这里简化实现，实际应该使用Redis等缓存系统
 	// 记录请求次数并检查是否超过限制
-	
+
 	// 获取API Key信息
 	key, err := r.Get(ctx, id)
 	if err != nil {
@@ -390,7 +390,7 @@ func (r *PostgresAPIKeyRepository) CheckRateLimit(ctx context.Context, id string
 	// TODO: 实现基于Redis的速率限制
 	// 这里暂时返回true（允许）
 	_ = key.RateLimit
-	
+
 	return true, nil
 }
 
@@ -458,20 +458,20 @@ func ParseAPIKey(authHeader string) string {
 	// 1. Bearer sk_xxx
 	// 2. ApiKey sk_xxx
 	// 3. sk_xxx
-	
+
 	authHeader = strings.TrimSpace(authHeader)
-	
+
 	if strings.HasPrefix(authHeader, "Bearer ") {
 		return strings.TrimPrefix(authHeader, "Bearer ")
 	}
-	
+
 	if strings.HasPrefix(authHeader, "ApiKey ") {
 		return strings.TrimPrefix(authHeader, "ApiKey ")
 	}
-	
+
 	if strings.HasPrefix(authHeader, "sk_") {
 		return authHeader
 	}
-	
+
 	return ""
 }

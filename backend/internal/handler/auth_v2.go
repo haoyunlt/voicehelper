@@ -16,7 +16,7 @@ import (
 
 // AuthHandler 认证处理器（使用真实数据库）
 type AuthHandler struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
 	jwtSecret string
 }
 
@@ -26,9 +26,9 @@ func NewAuthHandler(userRepo repository.UserRepository) *AuthHandler {
 	if jwtSecret == "" {
 		jwtSecret = "default-secret-key-change-in-production"
 	}
-	
+
 	return &AuthHandler{
-		userRepo: userRepo,
+		userRepo:  userRepo,
 		jwtSecret: jwtSecret,
 	}
 }
@@ -213,7 +213,7 @@ func (h *AuthHandler) auditLog(ctx context.Context, userID, tenantID, action, ip
 			"ip":        ip,
 			"timestamp": time.Now().UTC(),
 		}).Info("Audit log")
-		
+
 		// TODO: 写入数据库审计表
 	}()
 }
@@ -252,7 +252,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": newToken,
+		"token":      newToken,
 		"expires_at": time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 }
@@ -260,12 +260,12 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 // Logout 登出
 func (h *AuthHandler) Logout(c *gin.Context) {
 	userID := c.GetString("user_id")
-	
+
 	// 记录登出日志
 	h.auditLog(c.Request.Context(), userID, c.GetString("tenant_id"), "logout", c.ClientIP())
-	
+
 	// TODO: 将token加入黑名单（Redis）
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Logged out successfully",
 	})
@@ -294,15 +294,15 @@ func (h *AuthHandler) GetUserInfo(c *gin.Context) {
 
 	// 返回用户信息（过滤敏感字段）
 	c.JSON(http.StatusOK, gin.H{
-		"user_id":   user.ID,
-		"username":  user.Username,
-		"nickname":  user.Nickname,
-		"avatar":    user.Avatar,
-		"email":     user.Email,
-		"phone":     user.Phone,
-		"role":      user.Role,
-		"status":    user.Status,
-		"tenant_id": user.TenantID,
+		"user_id":    user.ID,
+		"username":   user.Username,
+		"nickname":   user.Nickname,
+		"avatar":     user.Avatar,
+		"email":      user.Email,
+		"phone":      user.Phone,
+		"role":       user.Role,
+		"status":     user.Status,
+		"tenant_id":  user.TenantID,
 		"last_login": user.LastLogin,
 		"created_at": user.CreatedAt,
 	})
@@ -311,14 +311,14 @@ func (h *AuthHandler) GetUserInfo(c *gin.Context) {
 // UpdateUserInfo 更新用户信息
 func (h *AuthHandler) UpdateUserInfo(c *gin.Context) {
 	userID := c.GetString("user_id")
-	
+
 	var req struct {
 		Nickname string `json:"nickname"`
 		Avatar   string `json:"avatar"`
 		Email    string `json:"email"`
 		Phone    string `json:"phone"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return

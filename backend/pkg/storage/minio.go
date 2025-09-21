@@ -38,11 +38,11 @@ func DefaultConfig() *Config {
 
 // ObjectInfo 对象信息
 type ObjectInfo struct {
-	Key          string    `json:"key"`
-	Size         int64     `json:"size"`
-	ContentType  string    `json:"content_type"`
-	ETag         string    `json:"etag"`
-	LastModified time.Time `json:"last_modified"`
+	Key          string            `json:"key"`
+	Size         int64             `json:"size"`
+	ContentType  string            `json:"content_type"`
+	ETag         string            `json:"etag"`
+	LastModified time.Time         `json:"last_modified"`
 	Metadata     map[string]string `json:"metadata"`
 }
 
@@ -63,19 +63,19 @@ type ObjectStorage interface {
 	Download(ctx context.Context, key string) (io.ReadCloser, error)
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
-	
+
 	// 批量操作
 	ListObjects(ctx context.Context, prefix string, recursive bool) ([]*ObjectInfo, error)
 	DeleteMultiple(ctx context.Context, keys []string) error
-	
+
 	// URL生成
 	GetPresignedURL(ctx context.Context, key string, expires time.Duration) (string, error)
 	GetPresignedPutURL(ctx context.Context, key string, expires time.Duration) (string, error)
-	
+
 	// 元数据
 	GetObjectInfo(ctx context.Context, key string) (*ObjectInfo, error)
 	UpdateMetadata(ctx context.Context, key string, metadata map[string]string) error
-	
+
 	// Bucket操作
 	CreateBucket(ctx context.Context, bucketName string) error
 	ListBuckets(ctx context.Context) ([]string, error)
@@ -318,9 +318,9 @@ func (s *MinIOStorage) UpdateMetadata(ctx context.Context, key string, metadata 
 	}
 
 	dst := minio.CopyDestOptions{
-		Bucket:       s.bucketName,
-		Object:       key,
-		UserMetadata: metadata,
+		Bucket:          s.bucketName,
+		Object:          key,
+		UserMetadata:    metadata,
 		ReplaceMetadata: true,
 	}
 
@@ -385,14 +385,14 @@ func GenerateObjectKey(prefix, filename string) string {
 	// 生成日期路径
 	now := time.Now()
 	datePath := now.Format("2006/01/02")
-	
+
 	// 生成唯一ID
 	timestamp := now.UnixNano()
-	
+
 	// 获取文件扩展名
 	ext := filepath.Ext(filename)
 	nameWithoutExt := strings.TrimSuffix(filename, ext)
-	
+
 	// 清理文件名（移除特殊字符）
 	cleanName := strings.Map(func(r rune) rune {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
@@ -400,7 +400,7 @@ func GenerateObjectKey(prefix, filename string) string {
 		}
 		return '_'
 	}, nameWithoutExt)
-	
+
 	// 组合最终的key
 	return fmt.Sprintf("%s/%s/%s_%d%s", prefix, datePath, cleanName, timestamp, ext)
 }

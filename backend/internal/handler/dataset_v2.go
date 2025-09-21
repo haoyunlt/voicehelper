@@ -4,10 +4,13 @@ import (
 	"chatbot-backend/internal/repository"
 	"chatbot-backend/internal/service"
 	"chatbot-backend/pkg/storage"
+	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -66,10 +69,10 @@ func (h *DatasetHandler) ListDatasets(c *gin.Context) {
 
 	// 返回响应
 	c.JSON(http.StatusOK, gin.H{
-		"datasets": datasets,
-		"total":    total,
-		"page":     page,
-		"page_size": pageSize,
+		"datasets":    datasets,
+		"total":       total,
+		"page":        page,
+		"page_size":   pageSize,
 		"total_pages": (total + pageSize - 1) / pageSize,
 	})
 }
@@ -298,7 +301,7 @@ func (h *DatasetHandler) UploadFiles(c *gin.Context) {
 			Type:      filepath.Ext(file.Filename),
 			Size:      file.Size,
 			Status:    "pending",
-			Metadata:  map[string]interface{}{
+			Metadata: map[string]interface{}{
 				"object_key": objectKey,
 				"etag":       uploadResult.ETag,
 			},
@@ -347,9 +350,9 @@ func (h *DatasetHandler) UploadFiles(c *gin.Context) {
 func (h *DatasetHandler) processFiles(datasetID string, filePaths []string) {
 	// 调用算法服务入库
 	req := &service.IngestRequest{
-		DatasetID: datasetID,
-		Files:     filePaths,
-		ChunkSize: 600,
+		DatasetID:    datasetID,
+		Files:        filePaths,
+		ChunkSize:    600,
 		ChunkOverlap: 100,
 	}
 
@@ -404,10 +407,10 @@ func (h *DatasetHandler) Search(c *gin.Context) {
 // GetDocument 获取文档详情
 func (h *DatasetHandler) GetDocument(c *gin.Context) {
 	docID := c.Param("doc_id")
-	
+
 	// TODO: 实现文档详情查询
 	// 这里需要添加文档repository的GetDocument方法
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"id":     docID,
 		"name":   "document.pdf",
@@ -445,7 +448,7 @@ func (h *DatasetHandler) DeleteDocument(c *gin.Context) {
 func (h *DatasetHandler) GetPresignedUploadURL(c *gin.Context) {
 	datasetID := c.Query("dataset_id")
 	filename := c.Query("filename")
-	
+
 	if datasetID == "" || filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "dataset_id and filename are required"})
 		return
@@ -479,7 +482,7 @@ func (h *DatasetHandler) GetPresignedUploadURL(c *gin.Context) {
 // DownloadDocument 下载文档
 func (h *DatasetHandler) DownloadDocument(c *gin.Context) {
 	docID := c.Param("doc_id")
-	
+
 	// TODO: 从数据库获取文档信息
 	// 这里假设已经获取到了object_key
 	objectKey := fmt.Sprintf("documents/%s", docID)

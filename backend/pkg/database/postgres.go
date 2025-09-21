@@ -310,7 +310,7 @@ func (db *DB) Migrate(ctx context.Context) error {
 		`CREATE INDEX IF NOT EXISTS idx_datasets_tenant ON datasets(tenant_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_documents_dataset ON documents(dataset_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_apikeys_key ON api_keys(key)`,
-		
+
 		// 添加外键约束
 		`ALTER TABLE conversations ADD CONSTRAINT fk_conversations_user 
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`,
