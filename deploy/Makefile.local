@@ -1,0 +1,210 @@
+# 智能聊天机器人系统 - 本地开发 Makefile
+
+.PHONY: help setup up down restart logs clean build health check-deps
+
+# 默认目标
+.DEFAULT_GOAL := help
+
+# 颜色定义
+BLUE := \033[36m
+GREEN := \033[32m
+YELLOW := \033[33m
+RED := \033[31m
+NC := \033[0m
+
+## 显示帮助信息
+help:
+	@echo "$(BLUE)智能聊天机器人系统 - 本地开发命令$(NC)"
+	@echo "=================================================="
+	@echo
+	@echo "$(GREEN)🚀 部署命令:$(NC)"
+	@echo "  $(YELLOW)make setup$(NC)     - 完整部署（包含依赖检查、构建、启动）"
+	@echo "  $(YELLOW)make up$(NC)        - 启动所有服务"
+	@echo "  $(YELLOW)make down$(NC)      - 停止所有服务"
+	@echo "  $(YELLOW)make restart$(NC)   - 重启所有服务"
+	@echo
+	@echo "$(GREEN)🔧 开发命令:$(NC)"
+	@echo "  $(YELLOW)make build$(NC)     - 构建应用镜像"
+	@echo "  $(YELLOW)make logs$(NC)      - 查看所有服务日志"
+	@echo "  $(YELLOW)make logs-f$(NC)    - 实时查看服务日志"
+	@echo "  $(YELLOW)make health$(NC)    - 健康检查"
+	@echo
+	@echo "$(GREEN)🗄️ 数据库命令:$(NC)"
+	@echo "  $(YELLOW)make db-init$(NC)   - 初始化数据库"
+	@echo "  $(YELLOW)make db-reset$(NC)  - 重置数据库"
+	@echo "  $(YELLOW)make db-backup$(NC) - 备份数据库"
+	@echo
+	@echo "$(GREEN)🧹 清理命令:$(NC)"
+	@echo "  $(YELLOW)make clean$(NC)     - 清理容器和网络"
+	@echo "  $(YELLOW)make clean-all$(NC) - 清理所有（包含数据卷）"
+	@echo
+	@echo "$(GREEN)📊 监控命令:$(NC)"
+	@echo "  $(YELLOW)make monitor$(NC)   - 打开监控面板"
+	@echo "  $(YELLOW)make status$(NC)    - 查看服务状态"
+	@echo
+
+## 检查依赖
+check-deps:
+	@echo "$(BLUE)检查系统依赖...$(NC)"
+	@command -v docker >/dev/null 2>&1 || { echo "$(RED)错误: Docker 未安装$(NC)"; exit 1; }
+	@command -v docker-compose >/dev/null 2>&1 || docker compose version >/dev/null 2>&1 || { echo "$(RED)错误: Docker Compose 未安装$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ 依赖检查通过$(NC)"
+
+## 完整部署
+setup: check-deps
+	@echo "$(BLUE)开始完整部署...$(NC)"
+	@./deploy.sh
+	@echo "$(GREEN)✓ 部署完成$(NC)"
+
+## 启动所有服务
+up:
+	@echo "$(BLUE)启动所有服务...$(NC)"
+	@docker-compose -f docker-compose.local.yml up -d
+	@echo "$(GREEN)✓ 服务启动完成$(NC)"
+	@make status
+
+## 停止所有服务
+down:
+	@echo "$(BLUE)停止所有服务...$(NC)"
+	@docker-compose -f docker-compose.local.yml down
+	@echo "$(GREEN)✓ 服务已停止$(NC)"
+
+## 重启所有服务
+restart: down
+	@echo "$(BLUE)重启所有服务...$(NC)"
+	@sleep 2
+	@make up
+
+## 构建应用镜像
+build:
+	@echo "$(BLUE)构建应用镜像...$(NC)"
+	@if [ -f "backend/Dockerfile" ]; then \
+		echo "构建 Gateway 镜像..."; \
+		docker build -t chatbot-gateway:latest ./backend; \
+	fi
+	@if [ -f "algo/Dockerfile" ]; then \
+		echo "构建 Algorithm 镜像..."; \
+		docker build -t chatbot-algo:latest ./algo; \
+	fi
+	@if [ -f "frontend/Dockerfile" ]; then \
+		echo "构建 Frontend 镜像..."; \
+		docker build -t chatbot-frontend:latest ./frontend; \
+	fi
+	@if [ -f "admin/Dockerfile" ]; then \
+		echo "构建 Admin 镜像..."; \
+		docker build -t chatbot-admin:latest ./admin; \
+	fi
+	@echo "$(GREEN)✓ 镜像构建完成$(NC)"
+
+## 查看服务日志
+logs:
+	@docker-compose -f docker-compose.local.yml logs
+
+## 实时查看服务日志
+logs-f:
+	@docker-compose -f docker-compose.local.yml logs -f
+
+## 查看特定服务日志
+logs-%:
+	@docker-compose -f docker-compose.local.yml logs -f $*
+
+## 健康检查
+health:
+	@echo "$(BLUE)执行健康检查...$(NC)"
+	@echo
+	@echo "$(YELLOW)容器状态:$(NC)"
+	@docker-compose -f docker-compose.local.yml ps
+	@echo
+	@echo "$(YELLOW)端口检查:$(NC)"
+	@services="PostgreSQL:5432 Redis:6379 Milvus:19530 Neo4j:7474 Prometheus:9090 Grafana:3001 Elasticsearch:9200 Kibana:5601 RabbitMQ:15672"; \
+	for service in $$services; do \
+		name=$$(echo $$service | cut -d: -f1); \
+		port=$$(echo $$service | cut -d: -f2); \
+		if nc -z localhost $$port 2>/dev/null; then \
+			echo "  $(GREEN)✓$(NC) $$name ($$port)"; \
+		else \
+			echo "  $(RED)✗$(NC) $$name ($$port)"; \
+		fi; \
+	done
+
+## 查看服务状态
+status:
+	@echo "$(BLUE)服务状态概览:$(NC)"
+	@docker-compose -f docker-compose.local.yml ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+
+## 初始化数据库
+db-init:
+	@echo "$(BLUE)初始化数据库...$(NC)"
+	@if [ -f "deploy/database/schema.sql" ]; then \
+		docker exec -i chatbot-postgres psql -U chatbot -d chatbot < deploy/database/schema.sql; \
+		echo "$(GREEN)✓ 数据库初始化完成$(NC)"; \
+	else \
+		echo "$(YELLOW)⚠ 数据库初始化脚本不存在$(NC)"; \
+	fi
+
+## 重置数据库
+db-reset:
+	@echo "$(BLUE)重置数据库...$(NC)"
+	@docker exec chatbot-postgres psql -U chatbot -d chatbot -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	@make db-init
+	@echo "$(GREEN)✓ 数据库重置完成$(NC)"
+
+## 备份数据库
+db-backup:
+	@echo "$(BLUE)备份数据库...$(NC)"
+	@mkdir -p backups
+	@docker exec chatbot-postgres pg_dump -U chatbot chatbot > backups/chatbot_$$(date +%Y%m%d_%H%M%S).sql
+	@echo "$(GREEN)✓ 数据库备份完成$(NC)"
+
+## 清理容器和网络
+clean:
+	@echo "$(BLUE)清理容器和网络...$(NC)"
+	@docker-compose -f docker-compose.local.yml down --remove-orphans
+	@docker network prune -f
+	@echo "$(GREEN)✓ 清理完成$(NC)"
+
+## 清理所有（包含数据卷）
+clean-all:
+	@echo "$(RED)⚠ 这将删除所有数据，包括数据库数据！$(NC)"
+	@read -p "确定要继续吗？(y/N) " confirm && [ "$$confirm" = "y" ]
+	@docker-compose -f docker-compose.local.yml down -v --remove-orphans
+	@docker system prune -f
+	@echo "$(GREEN)✓ 完全清理完成$(NC)"
+
+## 打开监控面板
+monitor:
+	@echo "$(BLUE)打开监控面板...$(NC)"
+	@echo "Prometheus: http://localhost:9090"
+	@echo "Grafana:    http://localhost:3001 (admin/admin123)"
+	@echo "Kibana:     http://localhost:5601"
+	@echo "RabbitMQ:   http://localhost:15672 (rabbitmq/rabbitmq123)"
+	@if command -v open >/dev/null 2>&1; then \
+		open http://localhost:3001; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open http://localhost:3001; \
+	fi
+
+## 进入容器
+shell-%:
+	@docker exec -it chatbot-$* /bin/bash || docker exec -it chatbot-$* /bin/sh
+
+## 查看资源使用情况
+stats:
+	@echo "$(BLUE)资源使用情况:$(NC)"
+	@docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}"
+
+## 更新镜像
+update:
+	@echo "$(BLUE)更新基础镜像...$(NC)"
+	@docker-compose -f docker-compose.local.yml pull
+	@echo "$(GREEN)✓ 镜像更新完成$(NC)"
+
+## 快速重建
+rebuild: clean build up
+
+## 开发模式（仅启动基础设施）
+dev:
+	@echo "$(BLUE)启动开发模式（仅基础设施）...$(NC)"
+	@docker-compose -f docker-compose.local.yml up -d postgres redis milvus neo4j prometheus grafana elasticsearch rabbitmq
+	@echo "$(GREEN)✓ 开发环境就绪$(NC)"
+	@make status

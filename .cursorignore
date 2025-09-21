@@ -1,0 +1,188 @@
+# Cursor AI 忽略文件配置
+# 用于控制 Cursor AI 在代码分析和建议时忽略的文件和目录
+
+# 依赖目录 - 第三方代码，不需要AI分析
+node_modules/
+vendor/
+__pycache__/
+.eggs/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.tox/
+.nox/
+
+# 构建产物 - 自动生成的文件
+build/
+dist/
+out/
+target/
+.next/
+.nuxt/
+coverage/
+*.tsbuildinfo
+
+# 日志文件 - 运行时生成，不需要分析
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 缓存文件 - 临时文件
+.cache/
+.parcel-cache/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+*.tmp
+*.temp
+
+# 环境配置 - 敏感信息
+.env
+.env.*
+config.local.json
+secrets.yaml
+*.pem
+*.key
+*.crt
+
+# 数据文件 - 大文件，不需要分析
+*.db
+*.sqlite
+*.sqlite3
+data/
+uploads/
+downloads/
+audio_files/
+voice_cache/
+conversation_logs/
+user_data/
+
+# AI模型文件 - 二进制文件，体积大
+models/
+model_cache/
+embeddings/
+vectors/
+checkpoints/
+*.pkl
+*.joblib
+*.model
+wandb/
+
+# 媒体文件 - 二进制文件
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.ico
+*.mp3
+*.mp4
+*.wav
+*.avi
+*.mov
+
+# 压缩文件 - 二进制文件
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# 系统文件 - 操作系统生成
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE配置 - 编辑器特定
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试覆盖率报告 - 自动生成
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+*.cover
+.hypothesis/
+test-results/
+test-reports/
+
+# 文档构建 - 自动生成
+/site
+docs/_build/
+docs/build/
+
+# 备份文件 - 临时文件
+*.bak
+*.backup
+*.old
+
+# 运行时文件 - 进程相关
+*.pid
+*.seed
+*.pid.lock
+pids/
+
+# 监控数据 - 运行时生成
+monitoring/
+grafana/data/
+prometheus/data/
+
+# 特定框架忽略
+# Jupyter Notebook检查点
+.ipynb_checkpoints/
+
+# Yarn v2
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# 微信小程序构建产物
+miniprogram/dist/
+miniprogram/node_modules/
+
+# Docker相关
+.dockerignore
+
+# 本地开发文件
+local/
+.local/
+dev/
+tmp/
+temp/
+
+# 大型JSON文件 - 可能是数据文件
+**/data.json
+**/large-data.json
+**/*-data.json
+
+# 锁文件 - 包管理器生成
+package-lock.json
+yarn.lock
+Pipfile.lock
+go.sum
+
+# 编译后的二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+*.test
+
+# 特殊目录 - 通常包含大量文件
+public/uploads/
+static/uploads/
+assets/uploads/
