@@ -96,8 +96,8 @@ func (h *Handlers) GetTask(c *gin.Context) {
 
 	// TODO: 实现任务状态查询
 	c.JSON(http.StatusOK, gin.H{
-		"task_id": taskID,
-		"status":  "processing",
+		"task_id":  taskID,
+		"status":   "processing",
 		"progress": 50,
 	})
 }

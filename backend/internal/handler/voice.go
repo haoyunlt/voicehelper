@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -22,16 +21,16 @@ var upgrader = websocket.Upgrader{
 
 // VoiceMessage WebSocket 消息结构
 type VoiceMessage struct {
-	Type           string                 `json:"type"`
-	Seq            int                    `json:"seq,omitempty"`
-	ConversationID string                 `json:"conversation_id,omitempty"`
-	Codec          string                 `json:"codec,omitempty"`
-	SampleRate     int                    `json:"sample_rate,omitempty"`
-	Chunk          string                 `json:"chunk,omitempty"`
-	Text           string                 `json:"text,omitempty"`
-	PCM            string                 `json:"pcm,omitempty"`
-	Items          []service.Reference    `json:"items,omitempty"`
-	Error          string                 `json:"error,omitempty"`
+	Type           string              `json:"type"`
+	Seq            int                 `json:"seq,omitempty"`
+	ConversationID string              `json:"conversation_id,omitempty"`
+	Codec          string              `json:"codec,omitempty"`
+	SampleRate     int                 `json:"sample_rate,omitempty"`
+	Chunk          string              `json:"chunk,omitempty"`
+	Text           string              `json:"text,omitempty"`
+	PCM            string              `json:"pcm,omitempty"`
+	Items          []service.Reference `json:"items,omitempty"`
+	Error          string              `json:"error,omitempty"`
 }
 
 // VoiceSession 语音会话
@@ -55,17 +54,17 @@ func NewVoiceHub() *VoiceHub {
 	hub := &VoiceHub{
 		sessions: make(map[string]*VoiceSession),
 	}
-	
+
 	// 启动清理协程
 	go hub.cleanup()
-	
+
 	return hub
 }
 
 func (h *VoiceHub) cleanup() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		h.mu.Lock()
 		now := time.Now()
@@ -239,7 +238,7 @@ func (h *Handlers) forwardAudioToAlgo(ctx context.Context, session *VoiceSession
 	go func() {
 		for response := range responseCh {
 			var voiceMsg VoiceMessage
-			
+
 			switch response.Type {
 			case "asr_partial":
 				voiceMsg = VoiceMessage{

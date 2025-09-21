@@ -20,7 +20,7 @@ func NewHandlers(services *service.Services) *Handlers {
 // HealthCheck 健康检查
 func (h *Handlers) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"status": "ok",
+		"status":  "ok",
 		"service": "chatbot-backend",
 	})
 }

@@ -64,10 +64,18 @@ class BatchConfig:
 
 
 class RequestDeduplicator:
-    """请求去重器"""
+    """请求去重器 - 使用统一工具类"""
     
     def __init__(self, similarity_threshold: float = 0.9):
         self.similarity_threshold = similarity_threshold
+        
+        # 使用统一请求处理器
+        from .unified_utils import get_request_processor
+        self._processor = get_request_processor(
+            similarity_threshold=similarity_threshold
+        )
+        
+        # 向后兼容的缓存
         self.request_cache: Dict[str, BatchRequest] = {}
         self.response_cache: Dict[str, BatchResponse] = {}
     
@@ -83,27 +91,41 @@ class RequestDeduplicator:
         Returns:
             (unique_requests, duplicate_mapping)
         """
-        unique_requests = []
-        duplicate_mapping = {}  # original_id -> unique_id
-        hash_to_request = {}
+        # 转换为统一请求格式
+        from .unified_utils import UnifiedRequest
+        unified_requests = []
         
         for request in requests:
-            request_hash = self.get_request_hash(request)
-            
-            # 检查缓存的响应
-            if request_hash in self.response_cache:
-                cached_response = self.response_cache[request_hash]
-                # 直接返回缓存的结果
-                if request.future and not request.future.done():
-                    request.future.set_result(cached_response)
-                continue
-            
-            # 检查是否有相同的请求
-            if request_hash in hash_to_request:
-                duplicate_mapping[request.id] = hash_to_request[request_hash].id
-            else:
-                unique_requests.append(request)
-                hash_to_request[request_hash] = request
+            unified_req = UnifiedRequest(
+                id=request.id,
+                content=request.content,
+                model=request.model,
+                parameters=request.parameters,
+                timestamp=request.timestamp,
+                future=request.future
+            )
+            unified_requests.append(unified_req)
+        
+        # 使用统一处理器去重
+        unique_unified, merge_mapping = self._processor.process_requests(unified_requests)
+        
+        # 转换回BatchRequest格式
+        unique_requests = []
+        duplicate_mapping = {}
+        
+        # 创建ID映射
+        unified_id_to_batch = {req.id: req for req in requests}
+        
+        for unified_req in unique_unified:
+            if unified_req.id in unified_id_to_batch:
+                unique_requests.append(unified_id_to_batch[unified_req.id])
+        
+        # 处理合并映射
+        for group_id, merged_ids in merge_mapping.items():
+            if len(merged_ids) > 1:
+                representative_id = merged_ids[0]
+                for merged_id in merged_ids[1:]:
+                    duplicate_mapping[merged_id] = representative_id
         
         return unique_requests, duplicate_mapping
     
@@ -111,6 +133,16 @@ class RequestDeduplicator:
         """缓存响应"""
         request_hash = self.get_request_hash(request)
         self.response_cache[request_hash] = response
+        
+        # 同时缓存到统一缓存管理器
+        from .unified_utils import get_cache_manager
+        cache_manager = get_cache_manager()
+        asyncio.create_task(cache_manager.put(
+            request.content, 
+            response, 
+            request.model, 
+            request.parameters
+        ))
 
 
 class LLMBatchProcessor:
