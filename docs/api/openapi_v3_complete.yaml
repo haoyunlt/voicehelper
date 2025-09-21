@@ -1,0 +1,1317 @@
+openapi: 3.0.3
+info:
+  title: VoiceHelper AI 智能客服系统 API
+  description: |
+    VoiceHelper AI 是一个企业级智能客服系统，提供多模态对话、语音交互、知识检索等功能。
+    
+    ## 核心特性
+    - 🎤 **语音交互**: 150ms超低延迟语音处理
+    - 🧠 **智能对话**: GraphRAG + Agent架构
+    - 🔗 **服务集成**: 500+第三方服务集成
+    - 📱 **多平台**: Web/移动端/桌面端全覆盖
+    - 🔒 **企业安全**: 端到端加密，合规认证
+    
+    ## 认证方式
+    支持多种认证方式：
+    - API Key 认证 (推荐)
+    - OAuth 2.0
+    - JWT Token
+    
+    ## 速率限制
+    - 免费版: 100 requests/hour
+    - 专业版: 1000 requests/hour  
+    - 企业版: 10000 requests/hour
+    
+  version: 1.9.0
+  contact:
+    name: VoiceHelper API Support
+    url: https://voicehelper.ai/support
+    email: api-support@voicehelper.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://voicehelper.ai/terms
+
+servers:
+  - url: https://api.voicehelper.ai/v1
+    description: 生产环境
+  - url: https://api-staging.voicehelper.ai/v1
+    description: 测试环境
+  - url: http://localhost:8080/v1
+    description: 本地开发环境
+
+security:
+  - ApiKeyAuth: []
+  - OAuth2: [read, write]
+  - BearerAuth: []
+
+paths:
+  # ==================== 对话接口 ====================
+  /chat/completions:
+    post:
+      tags:
+        - Chat
+      summary: 创建对话完成
+      description: 发送消息并获得AI回复，支持流式和非流式响应
+      operationId: createChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+            examples:
+              simple_chat:
+                summary: 简单对话
+                value:
+                  messages:
+                    - role: user
+                      content: 你好，请介绍一下你的功能
+                  model: gpt-4
+                  temperature: 0.7
+              multimodal_chat:
+                summary: 多模态对话
+                value:
+                  messages:
+                    - role: user
+                      content: 
+                        - type: text
+                          text: 这张图片里有什么？
+                        - type: image_url
+                          image_url:
+                            url: https://example.com/image.jpg
+                  model: gpt-4-vision
+      responses:
+        '200':
+          description: 成功响应
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionStreamResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /chat/conversations:
+    get:
+      tags:
+        - Chat
+      summary: 获取对话列表
+      description: 获取用户的对话历史列表
+      operationId: listConversations
+      parameters:
+        - name: limit
+          in: query
+          description: 返回数量限制
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: 偏移量
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: status
+          in: query
+          description: 对话状态过滤
+          schema:
+            type: string
+            enum: [active, archived, deleted]
+      responses:
+        '200':
+          description: 对话列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationList'
+
+    post:
+      tags:
+        - Chat
+      summary: 创建新对话
+      description: 创建一个新的对话会话
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationRequest'
+      responses:
+        '201':
+          description: 对话创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  /chat/conversations/{conversationId}:
+    get:
+      tags:
+        - Chat
+      summary: 获取对话详情
+      description: 获取指定对话的详细信息和消息历史
+      operationId: getConversation
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: 对话详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Chat
+      summary: 删除对话
+      description: 删除指定的对话
+      operationId: deleteConversation
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '204':
+          description: 删除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== 语音接口 ====================
+  /voice/transcribe:
+    post:
+      tags:
+        - Voice
+      summary: 语音转文字
+      description: 将音频文件转换为文字
+      operationId: transcribeAudio
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 音频文件 (支持 mp3, wav, m4a, ogg)
+                model:
+                  type: string
+                  enum: [whisper-1, funasr-zh, funasr-en]
+                  default: whisper-1
+                language:
+                  type: string
+                  description: 语言代码 (如 zh, en, ja)
+                response_format:
+                  type: string
+                  enum: [json, text, srt, verbose_json]
+                  default: json
+              required:
+                - file
+      responses:
+        '200':
+          description: 转录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptionResponse'
+
+  /voice/synthesize:
+    post:
+      tags:
+        - Voice
+      summary: 文字转语音
+      description: 将文字转换为语音
+      operationId: synthesizeText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SynthesisRequest'
+      responses:
+        '200':
+          description: 合成成功
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+            audio/wav:
+              schema:
+                type: string
+                format: binary
+
+  /voice/realtime:
+    get:
+      tags:
+        - Voice
+      summary: 实时语音对话
+      description: 建立WebSocket连接进行实时语音对话
+      operationId: realtimeVoiceChat
+      parameters:
+        - name: model
+          in: query
+          description: 使用的模型
+          schema:
+            type: string
+            default: gpt-4-voice
+        - name: voice
+          in: query
+          description: 语音类型
+          schema:
+            type: string
+            enum: [alloy, echo, fable, onyx, nova, shimmer]
+            default: alloy
+      responses:
+        '101':
+          description: WebSocket连接建立
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ==================== 知识库接口 ====================
+  /knowledge/datasets:
+    get:
+      tags:
+        - Knowledge
+      summary: 获取数据集列表
+      description: 获取用户的知识库数据集列表
+      operationId: listDatasets
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: 数据集列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetList'
+
+    post:
+      tags:
+        - Knowledge
+      summary: 创建数据集
+      description: 创建新的知识库数据集
+      operationId: createDataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDatasetRequest'
+      responses:
+        '201':
+          description: 数据集创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+
+  /knowledge/datasets/{datasetId}/documents:
+    post:
+      tags:
+        - Knowledge
+      summary: 上传文档
+      description: 向数据集上传文档
+      operationId: uploadDocument
+      parameters:
+        - $ref: '#/components/parameters/DatasetId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201':
+          description: 文档上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+  /knowledge/search:
+    post:
+      tags:
+        - Knowledge
+      summary: 知识检索
+      description: 在知识库中搜索相关内容
+      operationId: searchKnowledge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: 搜索结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+  # ==================== 服务集成接口 ====================
+  /integrations/services:
+    get:
+      tags:
+        - Integrations
+      summary: 获取可用服务列表
+      description: 获取所有可集成的第三方服务列表
+      operationId: listAvailableServices
+      parameters:
+        - name: category
+          in: query
+          description: 服务分类过滤
+          schema:
+            type: string
+            enum: [office_suite, development, social_platform, ecommerce, cloud_service, ai_ml]
+        - name: status
+          in: query
+          description: 服务状态过滤
+          schema:
+            type: string
+            enum: [active, beta, deprecated]
+      responses:
+        '200':
+          description: 服务列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceList'
+
+  /integrations/connections:
+    get:
+      tags:
+        - Integrations
+      summary: 获取已连接服务
+      description: 获取用户已连接的服务列表
+      operationId: listConnections
+      responses:
+        '200':
+          description: 连接列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionList'
+
+    post:
+      tags:
+        - Integrations
+      summary: 创建服务连接
+      description: 连接到第三方服务
+      operationId: createConnection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionRequest'
+      responses:
+        '201':
+          description: 连接创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+
+  /integrations/connections/{connectionId}/execute:
+    post:
+      tags:
+        - Integrations
+      summary: 执行服务操作
+      description: 通过连接执行第三方服务操作
+      operationId: executeServiceOperation
+      parameters:
+        - $ref: '#/components/parameters/ConnectionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteOperationRequest'
+      responses:
+        '200':
+          description: 操作执行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationResponse'
+
+  # ==================== 用户管理接口 ====================
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: 获取用户资料
+      description: 获取当前用户的资料信息
+      operationId: getUserProfile
+      responses:
+        '200':
+          description: 用户资料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+    put:
+      tags:
+        - Users
+      summary: 更新用户资料
+      description: 更新用户资料信息
+      operationId: updateUserProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfileRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /users/usage:
+    get:
+      tags:
+        - Users
+      summary: 获取使用统计
+      description: 获取用户的API使用统计
+      operationId: getUserUsage
+      parameters:
+        - name: start_date
+          in: query
+          description: 开始日期
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: 结束日期
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 使用统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageStats'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API密钥认证
+    
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.voicehelper.ai/oauth/authorize
+          tokenUrl: https://auth.voicehelper.ai/oauth/token
+          scopes:
+            read: 读取权限
+            write: 写入权限
+            admin: 管理权限
+    
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      description: 对话ID
+      schema:
+        type: string
+        format: uuid
+    
+    DatasetId:
+      name: datasetId
+      in: path
+      required: true
+      description: 数据集ID
+      schema:
+        type: string
+        format: uuid
+    
+    ConnectionId:
+      name: connectionId
+      in: path
+      required: true
+      description: 连接ID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ==================== 对话相关 ====================
+    ChatCompletionRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: 对话消息列表
+        model:
+          type: string
+          enum: [gpt-4, gpt-4-turbo, gpt-3.5-turbo, claude-3, ernie-4.0]
+          default: gpt-4
+          description: 使用的模型
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+          description: 随机性控制
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          description: 最大生成token数
+        stream:
+          type: boolean
+          default: false
+          description: 是否流式返回
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+          description: 可用工具列表
+        tool_choice:
+          oneOf:
+            - type: string
+              enum: [none, auto]
+            - $ref: '#/components/schemas/ToolChoice'
+          description: 工具选择策略
+
+    Message:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, tool]
+          description: 消息角色
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ContentPart'
+          description: 消息内容
+        name:
+          type: string
+          description: 消息发送者名称
+        tool_calls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolCall'
+          description: 工具调用列表
+        tool_call_id:
+          type: string
+          description: 工具调用ID
+
+    ContentPart:
+      oneOf:
+        - $ref: '#/components/schemas/TextContent'
+        - $ref: '#/components/schemas/ImageContent'
+        - $ref: '#/components/schemas/AudioContent'
+
+    TextContent:
+      type: object
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum: [text]
+        text:
+          type: string
+
+    ImageContent:
+      type: object
+      required:
+        - type
+        - image_url
+      properties:
+        type:
+          type: string
+          enum: [image_url]
+        image_url:
+          type: object
+          required:
+            - url
+          properties:
+            url:
+              type: string
+              format: uri
+            detail:
+              type: string
+              enum: [low, high, auto]
+              default: auto
+
+    AudioContent:
+      type: object
+      required:
+        - type
+        - audio_url
+      properties:
+        type:
+          type: string
+          enum: [audio_url]
+        audio_url:
+          type: object
+          required:
+            - url
+          properties:
+            url:
+              type: string
+              format: uri
+            format:
+              type: string
+              enum: [mp3, wav, ogg, m4a]
+
+    ChatCompletionResponse:
+      type: object
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+      properties:
+        id:
+          type: string
+          description: 响应ID
+        object:
+          type: string
+          enum: [chat.completion]
+        created:
+          type: integer
+          description: 创建时间戳
+        model:
+          type: string
+          description: 使用的模型
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Choice'
+        usage:
+          $ref: '#/components/schemas/Usage'
+
+    Choice:
+      type: object
+      required:
+        - index
+        - message
+        - finish_reason
+      properties:
+        index:
+          type: integer
+        message:
+          $ref: '#/components/schemas/Message'
+        finish_reason:
+          type: string
+          enum: [stop, length, tool_calls, content_filter]
+
+    Usage:
+      type: object
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
+      properties:
+        prompt_tokens:
+          type: integer
+        completion_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+
+    # ==================== 语音相关 ====================
+    TranscriptionResponse:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: 转录文本
+        language:
+          type: string
+          description: 检测到的语言
+        duration:
+          type: number
+          description: 音频时长(秒)
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranscriptionSegment'
+
+    TranscriptionSegment:
+      type: object
+      properties:
+        id:
+          type: integer
+        start:
+          type: number
+        end:
+          type: number
+        text:
+          type: string
+        confidence:
+          type: number
+
+    SynthesisRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 4096
+          description: 要合成的文本
+        voice:
+          type: string
+          enum: [alloy, echo, fable, onyx, nova, shimmer, zh-female-1, zh-male-1]
+          default: alloy
+          description: 语音类型
+        response_format:
+          type: string
+          enum: [mp3, opus, aac, flac, wav, pcm]
+          default: mp3
+          description: 音频格式
+        speed:
+          type: number
+          minimum: 0.25
+          maximum: 4.0
+          default: 1.0
+          description: 语速
+        emotion:
+          type: string
+          enum: [neutral, happy, sad, angry, excited, calm]
+          default: neutral
+          description: 情感类型
+
+    # ==================== 工具相关 ====================
+    Tool:
+      type: object
+      required:
+        - type
+        - function
+      properties:
+        type:
+          type: string
+          enum: [function]
+        function:
+          $ref: '#/components/schemas/Function'
+
+    Function:
+      type: object
+      required:
+        - name
+        - description
+        - parameters
+      properties:
+        name:
+          type: string
+          description: 函数名称
+        description:
+          type: string
+          description: 函数描述
+        parameters:
+          type: object
+          description: 函数参数JSON Schema
+
+    ToolCall:
+      type: object
+      required:
+        - id
+        - type
+        - function
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [function]
+        function:
+          type: object
+          required:
+            - name
+            - arguments
+          properties:
+            name:
+              type: string
+            arguments:
+              type: string
+
+    ToolChoice:
+      type: object
+      required:
+        - type
+        - function
+      properties:
+        type:
+          type: string
+          enum: [function]
+        function:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+
+    # ==================== 其他模型 ====================
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+            - type
+            - code
+          properties:
+            message:
+              type: string
+              description: 错误消息
+            type:
+              type: string
+              description: 错误类型
+            code:
+              type: string
+              description: 错误代码
+            param:
+              type: string
+              description: 相关参数
+
+    # 其他必要的schema定义...
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, archived, deleted]
+
+    ConversationList:
+      type: object
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Conversation'
+        total:
+          type: integer
+        has_more:
+          type: boolean
+
+    CreateConversationRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        initial_message:
+          type: string
+
+    ConversationDetail:
+      allOf:
+        - $ref: '#/components/schemas/Conversation'
+        - type: object
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        document_count:
+          type: integer
+
+    DatasetList:
+      type: object
+      properties:
+        datasets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dataset'
+        total:
+          type: integer
+
+    CreateDatasetRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        content_type:
+          type: string
+        size:
+          type: integer
+        uploaded_at:
+          type: string
+          format: date-time
+
+    SearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+        datasets:
+          type: array
+          items:
+            type: string
+            format: uuid
+        limit:
+          type: integer
+          default: 10
+
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              content:
+                type: string
+              score:
+                type: number
+              metadata:
+                type: object
+
+    ServiceList:
+      type: object
+      properties:
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              category:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+
+    ConnectionList:
+      type: object
+      properties:
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connection'
+
+    Connection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        service_id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, error]
+        created_at:
+          type: string
+          format: date-time
+
+    CreateConnectionRequest:
+      type: object
+      required:
+        - service_id
+        - config
+      properties:
+        service_id:
+          type: string
+        name:
+          type: string
+        config:
+          type: object
+
+    ExecuteOperationRequest:
+      type: object
+      required:
+        - operation
+      properties:
+        operation:
+          type: string
+        parameters:
+          type: object
+
+    OperationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          type: string
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        plan:
+          type: string
+          enum: [free, pro, enterprise]
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateUserProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+
+    UsageStats:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+        requests:
+          type: object
+          properties:
+            total:
+              type: integer
+            by_endpoint:
+              type: object
+              additionalProperties:
+                type: integer
+        tokens:
+          type: object
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+            total:
+              type: integer
+
+    ChatCompletionStreamResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [chat.completion.chunk]
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              delta:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  content:
+                    type: string
+                  tool_calls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ToolCall'
+              finish_reason:
+                type: string
+                enum: [stop, length, tool_calls, content_filter]
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              message: "Invalid request parameters"
+              type: "invalid_request_error"
+              code: "invalid_parameter"
+
+    Unauthorized:
+      description: 认证失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              message: "Invalid API key"
+              type: "authentication_error"
+              code: "invalid_api_key"
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              message: "Resource not found"
+              type: "not_found_error"
+              code: "resource_not_found"
+
+    RateLimited:
+      description: 请求频率超限
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              message: "Rate limit exceeded"
+              type: "rate_limit_error"
+              code: "rate_limit_exceeded"
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: 速率限制
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: 剩余请求数
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: 重置时间戳
+
+tags:
+  - name: Chat
+    description: 对话相关接口
+  - name: Voice
+    description: 语音处理接口
+  - name: Knowledge
+    description: 知识库管理接口
+  - name: Integrations
+    description: 第三方服务集成接口
+  - name: Users
+    description: 用户管理接口
+
+externalDocs:
+  description: 完整开发文档
+  url: https://docs.voicehelper.ai
