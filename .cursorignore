@@ -144,14 +144,39 @@ archive/
 *.pkl
 *.joblib
 *.model
+*.h5
+*.onnx
+*.pt
+*.pth
 wandb/
 checkpoints/
 model_cache/
 
-# 算法缓存
+# 算法缓存和临时文件
 algo/reasoning/cache/
 algo/reasoning/models/
 algo/reasoning/temp/
+algo/*/cache/
+algo/*/temp/
+algo/*/models/
+algo/*/data/
+
+# Python缓存和编译文件
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.tox/
+
+# 测试覆盖率文件
+.coverage
+.coverage.*
+htmlcov/
+.nyc_output/
+coverage.xml
+*.cover
 
 # ==================== 编译产物 ====================
 # 二进制文件
