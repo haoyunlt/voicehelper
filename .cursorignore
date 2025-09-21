@@ -309,3 +309,155 @@ frontend/browser-extension/web-ext-artifacts/
 .vscode/settings.json
 .idea/workspace.xml
 *.code-workspace
+
+# v1.9.0 开发者平台相关 - 自动生成和构建产物
+developer-portal/node_modules/
+developer-portal/.next/
+developer-portal/out/
+developer-portal/dist/
+developer-portal/.vercel/
+developer-portal/.turbo/
+developer-portal/coverage/
+developer-portal/test-results/
+
+# v1.9.0 SDK相关 - 构建产物和依赖
+sdks/javascript/lib/
+sdks/javascript/esm/
+sdks/javascript/cjs/
+sdks/javascript/types/
+sdks/javascript/coverage/
+sdks/javascript/.nyc_output/
+sdks/javascript/test-results/
+
+sdks/python/voicehelper_sdk/__pycache__/
+sdks/python/voicehelper_sdk.egg-info/
+sdks/python/.pytest_cache/
+sdks/python/.mypy_cache/
+sdks/python/.tox/
+sdks/python/htmlcov/
+
+# v1.9.0 移动端应用 - 构建产物
+mobile/ios/build/
+mobile/ios/DerivedData/
+mobile/ios/*.xcworkspace/xcuserdata/
+mobile/ios/*.xcodeproj/xcuserdata/
+mobile/ios/Pods/
+mobile/ios/Podfile.lock
+
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/gradle.properties
+mobile/android/keystore.properties
+
+# v1.9.0 桌面端应用 - 构建产物
+desktop/dist/
+desktop/out/
+desktop/build/
+desktop/release/
+desktop/app/
+desktop/.webpack/
+
+# v1.9.0 浏览器扩展 - 构建产物
+browser-extension/dist/
+browser-extension/build/
+browser-extension/web-ext-artifacts/
+browser-extension/coverage/
+
+# v1.9.0 文档生成 - 自动生成的文档
+docs/api/generated/
+docs/sdk/generated/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# v1.9.0 API规范 - 生成的客户端代码
+docs/api/clients/
+docs/api/codegen/
+
+# v1.9.0 测试相关 - 测试报告和覆盖率
+tests/e2e/screenshots/
+tests/e2e/videos/
+tests/e2e/test-results/
+tests/integration/reports/
+tests/performance/results/
+tests/sdk/coverage/
+
+# v1.9.0 开发工具 - 临时文件
+tools/codegen/output/
+tools/scripts/temp/
+tools/migration/backup/
+
+# v1.9.0 CI/CD相关 - 构建缓存
+.github/workflows/cache/
+.gitlab-ci/cache/
+.circleci/cache/
+
+# v1.9.0 容器化相关 - 构建上下文
+docker/build/
+docker/cache/
+docker/volumes/
+
+# v1.9.0 监控和日志 - 运行时数据
+monitoring/data/
+monitoring/logs/
+monitoring/alerts/
+monitoring/dashboards/cache/
+
+# v1.9.0 安全扫描 - 报告文件
+security/reports/
+security/scans/
+security/vulnerabilities/
+
+# v1.9.0 性能分析 - 分析结果
+profiling/
+benchmarks/results/
+load-tests/reports/
+
+# v1.9.0 数据库迁移 - 备份文件
+migrations/backup/
+migrations/rollback/
+schema/backup/
+
+# v1.9.0 配置管理 - 环境特定配置
+config/local/
+config/dev/
+config/staging/
+config/production/secrets/
+
+# v1.9.0 第三方集成 - 缓存和临时文件
+integrations/cache/
+integrations/temp/
+integrations/logs/
+
+# v1.9.0 AI模型相关 - 大文件
+models/weights/
+models/checkpoints/
+models/cache/
+embeddings/vectors/
+embeddings/index/
+
+# v1.9.0 多语言支持 - 编译后的翻译文件
+i18n/compiled/
+locales/compiled/
+translations/build/
+
+# v1.9.0 资源文件 - 大型静态资源
+assets/videos/
+assets/audio/
+assets/images/original/
+assets/fonts/
+public/static/large/
+
+# v1.9.0 备份和归档 - 历史文件
+backup/
+archive/
+snapshots/
+exports/
+
+# v1.9.0 开发环境 - 个人配置
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vscode/launch.json
+.vscode/tasks.json
