@@ -805,20 +805,22 @@ main (保护分支)
 ## 📚 文档导航
 
 ### 核心文档
-- 📘 [**完整技术文档**](docs/PROJECT_MASTER_DOC.md) - 系统设计、API规范、部署方案
-- 🗺️ [**版本迭代计划**](VERSION_ROADMAP.md) - v1.5.0到v2.0.0完整路线图
-- 🏆 [**业界对比分析**](INDUSTRY_COMPARISON_REPORT.md) - 竞争力分析与提升方案
-- 🚀 [**部署指南**](README-DEPLOY.md) - 本地和生产环境部署
+- 📘 [**版本实施总结**](VERSION_IMPLEMENTATION_SUMMARY.md) - v1.8.0和v1.9.0完整实施报告
+- 🗺️ [**版本迭代路线图**](docs/ROADMAP.md) - v1.8.0到v2.0.0完整路线图
+- 🏆 [**业界竞争力分析**](docs/INDUSTRY_COMPARISON.md) - v1.9.0竞争力评估与v2.0.0展望
+- 🎉 [**v1.9.0最终完成报告**](docs/V1_9_0_FINAL_COMPLETION_REPORT.md) - 生态建设版完整成果
 
-### 项目管理
-- 📚 [文档索引](docs/DOCUMENTATION_INDEX.md) - 所有文档导航
-- 🌳 [分支策略](docs/BRANCHING.md) - Git工作流程
-- 📁 [项目结构](PROJECT_STRUCTURE.md) - 目录组织说明
+### 开发文档
+- 🛠️ [**开发指南**](docs/DEVELOPMENT_GUIDE.md) - SDK使用、测试数据集、小程序开发
+- 🔄 [**代码合并总结**](docs/CODE_MERGE_SUMMARY.md) - 代码重构和统一架构
+- ⚡ [**批量处理系统**](docs/batch_system.md) - 高性能批处理架构
+- 🚀 [**Cursor性能优化**](docs/CURSOR_PERFORMANCE_OPTIMIZATION.md) - 开发环境优化
 
-### API文档
+### API和SDK
 - 🔗 [API接口文档](http://localhost:8000/docs) - FastAPI Swagger
-- 📖 [SDK使用指南](docs/SDK_GUIDE.md) - 多语言SDK
-- 🛠️ [开发者工具](docs/DEVELOPER_TOOLS.md) - 开发辅助工具
+- 📖 [开发者门户](http://localhost:3002) - SDK下载和API文档
+- 🛠️ [JavaScript SDK](sdks/javascript/src/voicehelper-sdk-complete.ts) - TypeScript完整SDK
+- 🐍 [Python SDK](sdks/python/voicehelper_sdk/client_complete.py) - Python异步SDK
 
 ---
 
