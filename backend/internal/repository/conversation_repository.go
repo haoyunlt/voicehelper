@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 // Conversation 会话模型
@@ -567,18 +566,25 @@ func (r *PostgresConversationRepository) GetUserStats(ctx context.Context, userI
 		WHERE c.user_id = $1 AND c.deleted_at IS NULL
 	`
 
-	stats := make(map[string]interface{})
-	var lastActive pq.NullTime
+	var conversationCount, messageCount int
+	var totalTokens int64
+	var lastActive sql.NullTime
 
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(
-		&stats["conversation_count"],
-		&stats["message_count"],
-		&stats["total_tokens"],
+		&conversationCount,
+		&messageCount,
+		&totalTokens,
 		&lastActive,
 	)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user stats: %w", err)
+	}
+
+	stats := map[string]interface{}{
+		"conversation_count": conversationCount,
+		"message_count":      messageCount,
+		"total_tokens":       totalTokens,
 	}
 
 	if lastActive.Valid {

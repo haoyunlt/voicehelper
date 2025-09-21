@@ -1,0 +1,913 @@
+openapi: 3.0.3
+info:
+  title: Chatbot API
+  description: |
+    智能聊天机器人系统API文档
+    
+    ## 功能特性
+    - 🤖 智能对话：支持文本和语音双模态交互
+    - 📚 知识检索：基于GraphRAG的智能文档检索
+    - 👥 多租户：支持多租户隔离和管理
+    - 🔐 安全认证：JWT令牌认证和RBAC权限控制
+    - 📊 监控指标：完整的性能和业务指标监控
+    
+    ## 认证方式
+    API使用JWT Bearer Token进行认证。请在请求头中包含：
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+    
+  version: 1.6.0
+  contact:
+    name: Chatbot API Support
+    email: support@chatbot.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.chatbot.ai/v1
+    description: 生产环境
+  - url: https://staging-api.chatbot.ai/v1
+    description: 测试环境
+  - url: http://localhost:8080/v1
+    description: 本地开发环境
+
+security:
+  - BearerAuth: []
+
+paths:
+  # 认证相关
+  /auth/wechat/login:
+    post:
+      tags:
+        - Authentication
+      summary: 微信小程序登录
+      description: 使用微信小程序授权码进行登录
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeChatLoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: 刷新访问令牌
+      description: 使用刷新令牌获取新的访问令牌
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: 刷新令牌
+              required:
+                - refresh_token
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+
+  # 对话相关
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      summary: 获取对话列表
+      description: 获取当前用户的对话列表
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: 对话状态筛选
+          schema:
+            type: string
+            enum: [active, archived, deleted]
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Conversations
+      summary: 创建新对话
+      description: 创建一个新的对话会话
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 对话标题
+                  maxLength: 100
+                metadata:
+                  type: object
+                  description: 对话元数据
+              example:
+                title: "新的对话"
+                metadata:
+                  source: "web"
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  /conversations/{conversationId}:
+    get:
+      tags:
+        - Conversations
+      summary: 获取对话详情
+      description: 获取指定对话的详细信息
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Conversations
+      summary: 更新对话
+      description: 更新对话的标题或元数据
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 100
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+    delete:
+      tags:
+        - Conversations
+      summary: 删除对话
+      description: 软删除指定的对话
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      responses:
+        '204':
+          description: 删除成功
+
+  /conversations/{conversationId}/messages:
+    get:
+      tags:
+        - Messages
+      summary: 获取对话消息
+      description: 获取指定对话的消息列表
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: before
+          in: query
+          description: 获取指定时间之前的消息
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Messages
+      summary: 发送消息
+      description: 向指定对话发送消息
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '200':
+          description: 消息发送成功，返回AI回复
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events流式响应
+              example: |
+                data: {"type": "delta", "content": "你好", "seq": 1}
+                
+                data: {"type": "delta", "content": "！我是", "seq": 2}
+                
+                data: {"type": "delta", "content": "AI助手", "seq": 3}
+                
+                data: {"type": "done", "message_id": "msg_123", "seq": 4}
+
+  # 语音相关
+  /voice/transcribe:
+    post:
+      tags:
+        - Voice
+      summary: 语音转文字
+      description: 将音频文件转换为文字
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: 音频文件 (支持 wav, mp3, m4a)
+                language:
+                  type: string
+                  description: 语言代码
+                  default: "zh-CN"
+                  enum: ["zh-CN", "en-US", "ja-JP"]
+              required:
+                - audio
+      responses:
+        '200':
+          description: 转换成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+                    description: 识别出的文字
+                  confidence:
+                    type: number
+                    format: float
+                    description: 置信度 (0-1)
+                  duration:
+                    type: number
+                    format: float
+                    description: 音频时长(秒)
+
+  /voice/synthesize:
+    post:
+      tags:
+        - Voice
+      summary: 文字转语音
+      description: 将文字转换为语音
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: 要转换的文字
+                  maxLength: 1000
+                voice:
+                  type: string
+                  description: 语音类型
+                  default: "female"
+                  enum: ["female", "male", "child"]
+                speed:
+                  type: number
+                  format: float
+                  description: 语速 (0.5-2.0)
+                  default: 1.0
+                  minimum: 0.5
+                  maximum: 2.0
+              required:
+                - text
+      responses:
+        '200':
+          description: 转换成功
+          content:
+            audio/wav:
+              schema:
+                type: string
+                format: binary
+
+  # 数据集管理
+  /datasets:
+    get:
+      tags:
+        - Datasets
+      summary: 获取数据集列表
+      description: 获取当前租户的数据集列表
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  datasets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dataset'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Datasets
+      summary: 创建数据集
+      description: 创建新的知识数据集
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 数据集名称
+                  maxLength: 100
+                description:
+                  type: string
+                  description: 数据集描述
+                  maxLength: 500
+                type:
+                  type: string
+                  description: 数据集类型
+                  enum: ["document", "qa", "custom"]
+                  default: "document"
+              required:
+                - name
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dataset'
+
+  /datasets/{datasetId}/documents:
+    post:
+      tags:
+        - Documents
+      summary: 上传文档
+      description: 向数据集上传文档
+      parameters:
+        - name: datasetId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 文档文件
+                name:
+                  type: string
+                  description: 文档名称
+              required:
+                - file
+      responses:
+        '201':
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+  # 搜索相关
+  /search:
+    post:
+      tags:
+        - Search
+      summary: 知识搜索
+      description: 在知识库中搜索相关内容
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: 搜索查询
+                  maxLength: 500
+                dataset_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: 指定搜索的数据集ID
+                top_k:
+                  type: integer
+                  description: 返回结果数量
+                  default: 10
+                  minimum: 1
+                  maximum: 50
+                threshold:
+                  type: number
+                  format: float
+                  description: 相似度阈值
+                  default: 0.7
+                  minimum: 0.0
+                  maximum: 1.0
+              required:
+                - query
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+                  total:
+                    type: integer
+                    description: 总结果数
+
+  # 健康检查
+  /health:
+    get:
+      tags:
+        - System
+      summary: 健康检查
+      description: 检查系统健康状态
+      security: []
+      responses:
+        '200':
+          description: 系统健康
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  timestamp:
+                    type: integer
+                    format: int64
+                  service:
+                    type: string
+                  version:
+                    type: string
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: 系统指标
+      description: 获取Prometheus格式的系统指标
+      security: []
+      responses:
+        '200':
+          description: 指标数据
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ConversationIdParam:
+      name: conversationId
+      in: path
+      required: true
+      description: 对话ID
+      schema:
+        type: string
+        format: uuid
+
+    PageParam:
+      name: page
+      in: query
+      description: 页码 (从1开始)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: 每页数量
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    WeChatLoginRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 微信授权码
+        nickname:
+          type: string
+          description: 用户昵称
+        avatar:
+          type: string
+          format: uri
+          description: 用户头像URL
+      required:
+        - code
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 访问令牌
+        refresh_token:
+          type: string
+          description: 刷新令牌
+        expires_at:
+          type: string
+          format: date-time
+          description: 令牌过期时间
+        user:
+          $ref: '#/components/schemas/User'
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 新的访问令牌
+        expires_at:
+          type: string
+          format: date-time
+          description: 令牌过期时间
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        created_at:
+          type: string
+          format: date-time
+        last_login:
+          type: string
+          format: date-time
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        summary:
+          type: string
+        status:
+          type: string
+          enum: [active, archived, deleted]
+        msg_count:
+          type: integer
+        token_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        last_msg_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        modality:
+          type: string
+          enum: [text, voice, image]
+        token_count:
+          type: integer
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reference'
+        created_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    SendMessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: 消息内容
+          maxLength: 4000
+        modality:
+          type: string
+          enum: [text, voice]
+          default: text
+        stream:
+          type: boolean
+          description: 是否流式返回
+          default: true
+        metadata:
+          type: object
+          description: 消息元数据
+      required:
+        - content
+
+    Reference:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        snippet:
+          type: string
+        score:
+          type: number
+          format: float
+
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [document, qa, custom]
+        status:
+          type: string
+          enum: [active, inactive, processing]
+        doc_count:
+          type: integer
+        chunk_count:
+          type: integer
+        token_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dataset_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        source:
+          type: string
+        type:
+          type: string
+        size:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        chunk_count:
+          type: integer
+        token_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SearchResult:
+      type: object
+      properties:
+        content:
+          type: string
+        score:
+          type: number
+          format: float
+        source:
+          type: object
+          properties:
+            document_id:
+              type: string
+            document_name:
+              type: string
+            chunk_id:
+              type: string
+        metadata:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误消息
+        code:
+          type: string
+          description: 错误代码
+        details:
+          type: object
+          description: 错误详情
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Invalid request parameters"
+            code: "INVALID_PARAMS"
+
+    Unauthorized:
+      description: 未授权访问
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized access"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Insufficient permissions"
+            code: "FORBIDDEN"
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Resource not found"
+            code: "NOT_FOUND"
+
+    InternalServerError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Internal server error"
+            code: "INTERNAL_ERROR"
+
+tags:
+  - name: Authentication
+    description: 用户认证相关接口
+  - name: Conversations
+    description: 对话管理接口
+  - name: Messages
+    description: 消息处理接口
+  - name: Voice
+    description: 语音处理接口
+  - name: Datasets
+    description: 数据集管理接口
+  - name: Documents
+    description: 文档管理接口
+  - name: Search
+    description: 知识搜索接口
+  - name: System
+    description: 系统相关接口
