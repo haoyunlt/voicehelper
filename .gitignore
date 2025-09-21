@@ -298,9 +298,15 @@ data/
 uploads/
 downloads/
 
-# 微信小程序
-miniprogram/node_modules/
-miniprogram/dist/
+# 前端相关
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/miniprogram/node_modules/
+frontend/miniprogram/dist/
+frontend/browser-extension/dist/
+frontend/browser-extension/node_modules/
 
 # AI相关
 embeddings/
@@ -313,3 +319,34 @@ audio_files/
 voice_cache/
 conversation_logs/
 user_data/
+
+# 多平台客户端
+mobile/node_modules/
+mobile/dist/
+mobile/build/
+desktop/node_modules/
+desktop/dist/
+desktop/build/
+
+# SDK构建产物
+sdks/javascript/dist/
+sdks/javascript/node_modules/
+sdks/python/build/
+sdks/python/dist/
+sdks/python/*.egg-info/
+
+# 安全相关
+backend/pkg/security/keys/
+backend/pkg/security/certs/
+*.private
+*.public
+
+# 性能测试结果
+tests/performance/results/
+tests/performance/reports/
+*.benchmark
+
+# 推理引擎缓存
+algo/reasoning/cache/
+algo/reasoning/models/
+algo/reasoning/temp/

@@ -237,9 +237,11 @@ admin/__pycache__/
 admin/instance/
 admin/static/uploads/
 
-# 微信小程序
+# 前端相关构建产物
 frontend/miniprogram/node_modules/
 frontend/miniprogram/dist/
+frontend/browser-extension/dist/
+frontend/browser-extension/node_modules/
 
 # 数据库相关
 *.sql.backup
@@ -252,3 +254,58 @@ prometheus/
 elasticsearch/
 kibana/
 logs/
+
+# 多平台客户端构建产物
+mobile/node_modules/
+mobile/dist/
+mobile/build/
+mobile/android/
+mobile/ios/
+desktop/node_modules/
+desktop/dist/
+desktop/build/
+desktop/out/
+
+# SDK构建产物和依赖
+sdks/javascript/dist/
+sdks/javascript/node_modules/
+sdks/python/build/
+sdks/python/dist/
+sdks/python/*.egg-info/
+sdks/python/__pycache__/
+
+# 安全相关敏感文件
+backend/pkg/security/keys/
+backend/pkg/security/certs/
+*.private
+*.public
+*.keystore
+*.jks
+
+# AI推理引擎相关
+algo/reasoning/cache/
+algo/reasoning/models/
+algo/reasoning/temp/
+algo/reasoning/__pycache__/
+
+# 性能测试和基准测试
+tests/performance/results/
+tests/performance/reports/
+tests/performance/data/
+*.benchmark
+*.prof
+*.pprof
+
+# 大型配置和数据文件
+deploy/config/grafana/dashboards/*.json
+deploy/data/
+deploy/logs/
+
+# 编译后的扩展文件
+frontend/browser-extension/build/
+frontend/browser-extension/web-ext-artifacts/
+
+# 临时开发文件
+.vscode/settings.json
+.idea/workspace.xml
+*.code-workspace
