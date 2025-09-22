@@ -22,7 +22,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./deploy/database/init:/docker-entrypoint-initdb.d
+      - ./tools/deployment/database:/docker-entrypoint-initdb.d
     networks:
       - voicehelper-network
     healthcheck:
@@ -41,7 +41,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-      - ./deploy/config/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./tools/deployment/config/redis-optimized.conf:/usr/local/etc/redis/redis.conf
     networks:
       - voicehelper-network
     healthcheck:
@@ -187,7 +187,7 @@ services:
   # Next.js 前端服务
   frontend:
     build:
-      context: ./frontend
+      context: ./platforms/web
       dockerfile: Dockerfile.simple
     container_name: voicehelper-frontend
     restart: unless-stopped
@@ -199,7 +199,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./platforms/web:/app
       - frontend_node_modules:/app/node_modules
       - frontend_next:/app/.next
     depends_on:
@@ -211,7 +211,7 @@ services:
   # 开发者门户
   developer-portal:
     build:
-      context: ./developer-portal
+      context: ./platforms/web/developer-portal
       dockerfile: Dockerfile
     container_name: voicehelper-portal
     restart: unless-stopped
@@ -223,7 +223,7 @@ services:
     ports:
       - "3002:3002"
     volumes:
-      - ./developer-portal:/app
+      - ./platforms/web/developer-portal:/app
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -234,7 +234,7 @@ services:
   # 管理后台
   admin:
     build:
-      context: ./admin
+      context: ./platforms/admin
       dockerfile: Dockerfile
     container_name: voicehelper-admin
     restart: unless-stopped
@@ -249,7 +249,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - ./admin:/app
+      - ./platforms/admin:/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -275,7 +275,7 @@ services:
       - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      - ./deploy/config/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./tools/deployment/config/pgadmin/servers.json:/pgadmin4/servers.json
     depends_on:
       - postgres
     networks:
@@ -315,7 +315,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./tools/deployment/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
       - voicehelper-network
@@ -333,8 +333,8 @@ services:
       - "3004:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./deploy/config/grafana/provisioning:/etc/grafana/provisioning
-      - ./deploy/config/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./tools/deployment/config/grafana/provisioning:/etc/grafana/provisioning
+      - ./tools/deployment/config/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     networks:
@@ -364,9 +364,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./deploy/config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./deploy/config/nginx/conf.d:/etc/nginx/conf.d
-      - ./deploy/ssl:/etc/nginx/ssl
+      - ./tools/deployment/config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./tools/deployment/config/nginx/conf.d:/etc/nginx/conf.d
+      - ./tools/deployment/ssl:/etc/nginx/ssl
     depends_on:
       - frontend
       - gateway

@@ -88,15 +88,15 @@ run_unit_tests() {
     log_info "运行单元测试..."
     
     # 后端单元测试
-    if [ -d "tests/unit/backend" ]; then
+    if [ -d "tools/testing/unit/backend" ]; then
         log_info "执行后端单元测试..."
-        python3 -m pytest tests/unit/backend/ -v --tb=short --cov=backend --cov-report=html:reports/backend_coverage
+        python3 -m pytest tools/testing/unit/backend/ -v --tb=short --cov=backend --cov-report=html:reports/backend_coverage
     fi
     
     # 算法服务单元测试
-    if [ -d "tests/unit/algo" ]; then
+    if [ -d "tools/testing/unit/algo" ]; then
         log_info "执行算法服务单元测试..."
-        python3 -m pytest tests/unit/algo/ -v --tb=short --cov=algo --cov-report=html:reports/algo_coverage
+        python3 -m pytest tools/testing/unit/algo/ -v --tb=short --cov=algo --cov-report=html:reports/algo_coverage
     fi
     
     log_success "单元测试完成"
@@ -106,8 +106,8 @@ run_unit_tests() {
 run_integration_tests() {
     log_info "运行集成测试..."
     
-    if [ -d "tests/integration" ]; then
-        python3 -m pytest tests/integration/ -v --tb=short -s
+    if [ -d "tools/testing/integration" ]; then
+        python3 -m pytest tools/testing/integration/ -v --tb=short -s
     else
         log_warning "集成测试目录不存在"
     fi
@@ -124,8 +124,8 @@ run_e2e_tests() {
         log_warning "Chrome浏览器未安装，跳过Web UI测试"
     fi
     
-    if [ -d "tests/e2e" ]; then
-        python3 -m pytest tests/e2e/ -v --tb=short -s --maxfail=5
+    if [ -d "tools/testing/e2e" ]; then
+        python3 -m pytest tools/testing/e2e/ -v --tb=short -s --maxfail=5
     else
         log_warning "端到端测试目录不存在"
     fi
@@ -215,8 +215,8 @@ generate_report() {
         <ul>
             <li><a href="backend_coverage/index.html">后端代码覆盖率报告</a></li>
             <li><a href="algo_coverage/index.html">算法服务代码覆盖率报告</a></li>
-            <li><a href="../tests/">测试用例源码</a></li>
-            <li><a href="../scripts/performance/">性能测试脚本</a></li>
+            <li><a href="../tools/testing/">测试用例源码</a></li>
+            <li><a href="../tools/testing/performance/">性能测试脚本</a></li>
         </ul>
     </div>
 </body>

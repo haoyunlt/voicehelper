@@ -40,7 +40,7 @@ help:
 install:
 	@echo "📦 安装项目依赖..."
 	pip install -r requirements.txt
-	cd frontend && npm install
+	cd platforms/web && npm install
 	cd backend && go mod tidy
 
 install-test:
@@ -50,19 +50,19 @@ install-test:
 # 测试命令
 test: install-test
 	@echo "🧪 运行所有测试..."
-	./scripts/run_tests.sh
+	./tools/scripts/run_tests.sh
 
 test-unit: install-test
 	@echo "🧪 运行单元测试..."
-	python -m pytest tests/unit/ -v
+	python -m pytest tools/testing/unit/ -v
 
 test-integration: install-test
 	@echo "🔗 运行集成测试..."
-	python -m pytest tests/integration/ -v
+	python -m pytest tools/testing/integration/ -v
 
 test-e2e: install-test
 	@echo "🌐 运行端到端测试..."
-	python -m pytest tests/e2e/ -v
+	python -m pytest tools/testing/e2e/ -v
 
 test-performance:
 	@echo "⚡ 启动性能测试..."
@@ -74,11 +74,11 @@ test-performance:
 
 test-quick:
 	@echo "⚡ 快速测试验证..."
-	./scripts/quick_test.sh
+	./tools/scripts/simple_validation.py
 
 test-demo:
 	@echo "🎯 测试演示..."
-	python scripts/demo_tests.py
+	python tools/scripts/simple_test_logging.py
 
 # 代码质量
 lint:
@@ -105,7 +105,7 @@ coverage: install-test
 # 服务管理
 start-backend:
 	@echo "🚀 启动后端服务..."
-	cd backend && go run cmd/server/main.go &
+	cd backend && go run cmd/gateway/main.go &
 
 start-algo:
 	@echo "🚀 启动算法服务..."
@@ -113,11 +113,11 @@ start-algo:
 
 start-frontend:
 	@echo "🚀 启动前端服务..."
-	cd frontend && npm run dev &
+	cd platforms/web && npm run dev &
 
 stop-services:
 	@echo "🛑 停止所有服务..."
-	pkill -f "go run cmd/server/main.go" || true
+	pkill -f "go run cmd/gateway/main.go" || true
 	pkill -f "python app/main.py" || true
 	pkill -f "npm run dev" || true
 
@@ -125,9 +125,9 @@ stop-services:
 docs:
 	@echo "📚 生成文档..."
 	# 生成API文档
-	cd backend && swag init -g cmd/server/main.go || true
+	cd backend && swag init -g cmd/gateway/main.go || true
 	# 生成测试报告
-	python -m pytest tests/ --html=reports/test_report.html --self-contained-html || true
+	python -m pytest tools/testing/ --html=reports/test_report.html --self-contained-html || true
 	@echo "📁 文档位置:"
 	@echo "  API文档: backend/docs/"
 	@echo "  测试报告: reports/test_report.html"
