@@ -6,6 +6,9 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+.vscode/
+.cursor/
+.cursorignore
 
 # IDE和编辑器
 .vscode/
