@@ -16,25 +16,26 @@
 | 文档 | 描述 | 适用人群 |
 |------|------|----------|
 | [API 使用指南](API_GUIDE.md) | 完整的 API 文档和 SDK 使用 | 开发者 |
-| [部署指南](DEPLOYMENT_GUIDE.md) | 各种环境的部署方案 | 运维工程师、DevOps |
+| [统一部署指南](UNIFIED_DEPLOYMENT_GUIDE.md) | 各种环境的部署方案 | 运维工程师、DevOps |
 | [故障排除指南](TROUBLESHOOTING_GUIDE.md) | 常见问题和解决方案 | 技术支持、运维 |
 | [最佳实践指南](BEST_PRACTICES.md) | 架构设计和开发最佳实践 | 架构师、开发者 |
+| [Cursor 性能指南](CURSOR_PERFORMANCE_GUIDE.md) | Cursor 性能诊断与优化 | 开发者、技术支持 |
 
 ### 📖 技术文档
 
 | 文档 | 描述 | 适用人群 |
 |------|------|----------|
 | [系统架构深度解析](ARCHITECTURE_DEEP_DIVE.md) | 详细的系统架构说明 | 架构师、高级开发者 |
-| [环境配置指南](ENVIRONMENT_CONFIG.md) | 环境变量和配置说明 | 运维工程师 |
+| [统一环境配置指南](UNIFIED_ENVIRONMENT_GUIDE.md) | 环境变量和配置说明 | 运维工程师 |
 | [开发指南](DEVELOPMENT_GUIDE.md) | 开发环境搭建和开发流程 | 开发者 |
+| [统一测试指南](UNIFIED_TESTING_GUIDE.md) | 完整的测试策略和执行方法 | 开发者、测试工程师 |
 
 ### 🔧 运维文档
 
 | 文档 | 描述 | 适用人群 |
 |------|------|----------|
-| [Docker 部署指南](DOCKER_SETUP_GUIDE.md) | Docker 容器化部署 | 运维工程师 |
 | [端口使用说明](PORT_USAGE.md) | 系统端口分配和使用 | 网络管理员 |
-| [环境变量指南](ENVIRONMENT_VARIABLES_GUIDE.md) | 详细的环境变量配置 | 运维工程师 |
+| [统一环境配置指南](UNIFIED_ENVIRONMENT_GUIDE.md) | 详细的环境变量配置 | 运维工程师 |
 
 ### 📊 项目管理
 
@@ -42,7 +43,7 @@
 |------|------|----------|
 | [项目路线图](ROADMAP.md) | 功能规划和发展方向 | 产品经理、决策者 |
 | [版本发布说明](V1_20_0_RELEASE_NOTES.md) | 最新版本功能和变更 | 所有用户 |
-| [竞品分析报告](COMPETITIVE_GAP_ANALYSIS.md) | 市场竞争力分析 | 产品经理、市场团队 |
+| [统一竞争分析报告](UNIFIED_COMPETITIVE_ANALYSIS.md) | 市场竞争力分析 | 产品经理、市场团队 |
 
 ## 🎯 按角色分类
 

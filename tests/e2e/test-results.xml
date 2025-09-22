@@ -1,0 +1,1082 @@
+<testsuites id="" name="" tests="42" failures="24" skipped="0" errors="0" time="37.38251">
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="chromium" tests="1" failures="1" skipped="0" time="10.89" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="10.89">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [chromium] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-chromium/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="chromium" tests="6" failures="3" skipped="0" time="26.582" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="1.208">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="10.904">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [chromium] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ─────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-chromium/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="1.211">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="1.229">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [chromium] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ──────────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-chromium/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.599">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.431">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [chromium] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-chromium/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="firefox" tests="1" failures="1" skipped="0" time="11.051" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="11.051">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [firefox] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ─────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-firefox/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="firefox" tests="6" failures="3" skipped="0" time="25.011" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="0.624">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="11.048">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [firefox] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ──────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-firefox/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="0.486">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="1.082">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [firefox] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ───────────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-firefox/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.55">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.221">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [firefox] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ─────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-firefox/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="webkit" tests="1" failures="1" skipped="0" time="11.388" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="11.388">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [webkit] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ──────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-webkit/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="webkit" tests="6" failures="3" skipped="0" time="24.682" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="0.968">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="10.669">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [webkit] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ───────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-webkit/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="0.258">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="0.879">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [webkit] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ────────────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-webkit/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.7">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.208">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [webkit] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ──────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-webkit/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="10.764" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="10.764">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ───────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Chrome/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="Mobile Chrome" tests="6" failures="3" skipped="0" time="23.557" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="0.2">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="10.761">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Chrome/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="0.092">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="0.722">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ─────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Chrome/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.503">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.279">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ───────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Chrome/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="Mobile Safari" tests="1" failures="1" skipped="0" time="10.764" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="10.764">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Safari] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ───────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-Mobile-Safari/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="Mobile Safari" tests="6" failures="3" skipped="0" time="23.986" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="0.357">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="10.666">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Safari] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-Mobile-Safari/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="0.235">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="0.831">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Safari] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ─────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-Mobile-Safari/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.54">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.357">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [Mobile Safari] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ───────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-Mobile-Safari/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="chat.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="iPad" tests="1" failures="1" skipped="0" time="10.735" errors="0">
+<testcase name="聊天功能测试 › 基本文本聊天功能 @smoke" classname="chat.spec.ts" time="10.735">
+<failure message="chat.spec.ts:26:7 基本文本聊天功能 @smoke" type="FAILURE">
+<![CDATA[  [iPad] › chat.spec.ts:26:7 › 聊天功能测试 › 基本文本聊天功能 @smoke ────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      19 |     
+      20 |     // 验证页面基本元素
+    > 21 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      22 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      23 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      24 |   });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/chat.spec.ts:21:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/test-failed-1.png is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/video.webm is missing
+Warning: attachment test-results/chat-聊天功能测试-基本文本聊天功能-smoke-iPad/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="smoke.spec.ts" timestamp="2025-09-22T04:43:53.270Z" hostname="iPad" tests="6" failures="3" skipped="0" time="23.477" errors="0">
+<testcase name="冒烟测试 › 首页加载正常 @smoke" classname="smoke.spec.ts" time="0.14">
+</testcase>
+<testcase name="冒烟测试 › 聊天页面基本功能 @smoke" classname="smoke.spec.ts" time="10.777">
+<failure message="smoke.spec.ts:21:7 聊天页面基本功能 @smoke" type="FAILURE">
+<![CDATA[  [iPad] › smoke.spec.ts:21:7 › 冒烟测试 › 聊天页面基本功能 @smoke ─────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      26 |     
+      27 |     // 验证基本元素存在
+    > 28 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      29 |     await expect(page.locator('[data-testid="message-input"]')).toBeVisible();
+      30 |     await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+      31 |     
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:28:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-聊天页面基本功能-smoke-iPad/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › API健康检查 @smoke" classname="smoke.spec.ts" time="0.111">
+</testcase>
+<testcase name="冒烟测试 › 数据集页面加载 @smoke" classname="smoke.spec.ts" time="0.694">
+<failure message="smoke.spec.ts:60:7 数据集页面加载 @smoke" type="FAILURE">
+<![CDATA[  [iPad] › smoke.spec.ts:60:7 › 冒烟测试 › 数据集页面加载 @smoke ──────────────────────────────────────────────
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('h1, h2') resolved to 3 elements:
+        1) <h1 class="text-3xl font-bold text-gray-900 mb-2">知识库管理</h1> aka getByRole('heading', { name: '知识库管理' })
+        2) <h2 class="text-xl font-semibold text-gray-900 mb-4">上传文档</h2> aka getByRole('heading', { name: '上传文档', exact: true })
+        3) <h2 class="text-xl font-semibold text-gray-900">数据集列表</h2> aka getByRole('heading', { name: '数据集列表' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('h1, h2')
+
+
+      65 |     
+      66 |     // 验证页面基本元素（根据实际页面调整）
+    > 67 |     await expect(page.locator('h1, h2')).toBeVisible();
+         |                                          ^
+      68 |   });
+      69 |
+      70 |   test('分析页面加载 @smoke', async ({ page }) => {
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:67:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-数据集页面加载-smoke-iPad/error-context.md is missing]]>
+</system-err>
+</testcase>
+<testcase name="冒烟测试 › 分析页面加载 @smoke" classname="smoke.spec.ts" time="1.459">
+</testcase>
+<testcase name="冒烟测试 › 响应式设计基本验证 @smoke" classname="smoke.spec.ts" time="10.296">
+<failure message="smoke.spec.ts:80:7 响应式设计基本验证 @smoke" type="FAILURE">
+<![CDATA[  [iPad] › smoke.spec.ts:80:7 › 冒烟测试 › 响应式设计基本验证 @smoke ────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[data-testid="chat-container"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('[data-testid="chat-container"]')
+
+
+      83 |     // 桌面视图
+      84 |     await page.setViewportSize({ width: 1200, height: 800 });
+    > 85 |     await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+         |                                                                  ^
+      86 |     
+      87 |     // 移动视图
+      88 |     await page.setViewportSize({ width: 375, height: 667 });
+        at /Users/lintao/important/ai-customer/voicehelper/tests/e2e/tests/smoke.spec.ts:85:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/error-context.md
+]]>
+</failure>
+<system-err>
+<![CDATA[
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/test-failed-1.png is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/video.webm is missing
+Warning: attachment test-results/smoke-冒烟测试-响应式设计基本验证-smoke-iPad/error-context.md is missing]]>
+</system-err>
+</testcase>
+</testsuite>
+</testsuites>

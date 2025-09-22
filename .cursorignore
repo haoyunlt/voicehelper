@@ -4,7 +4,9 @@
 # ==================== 核心排除目录 ====================
 # 依赖和构建产物 - 最影响性能的目录
 node_modules/
+**/node_modules/**
 __pycache__/
+**/__pycache__/**
 dist/
 build/
 out/
@@ -197,3 +199,22 @@ coverage.xml
 package-lock.json
 yarn.lock
 Pipfile.lock
+
+# ==================== 前端性能优化 ====================
+# 强制排除所有 node_modules 相关
+frontend/node_modules/**
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/.next/**
+frontend/out/**
+frontend/dist/**
+frontend/build/**
+
+# 测试相关大文件
+frontend/__tests__/**
+frontend/coverage/**
+frontend/.nyc_output/**
+
+# 算法测试数据
+algo/tests/e2e/node_modules/**
+algo/tests/e2e/package-lock.json

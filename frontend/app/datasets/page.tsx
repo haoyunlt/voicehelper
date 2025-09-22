@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Upload, FileText, Trash2, Eye } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '../../components/ui/button'
 
 interface Dataset {
   id: string

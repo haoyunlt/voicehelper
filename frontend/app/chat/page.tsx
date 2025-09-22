@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Send, Upload, Paperclip } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '../../components/ui/button'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import VoiceInput from '@/components/chat/VoiceInput'
+import VoiceInput from '../../components/chat/VoiceInput'
 
 interface Message {
   id: string
@@ -208,7 +208,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4" data-testid="chat-container">
         <div className="max-w-4xl mx-auto space-y-6">
           {messages.length === 0 && (
             <div className="text-center py-12">
@@ -224,7 +224,10 @@ export default function ChatPage() {
 
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-3xl ${message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white'} rounded-lg px-4 py-3 shadow-sm`}>
+              <div 
+                className={`max-w-3xl ${message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white'} rounded-lg px-4 py-3 shadow-sm`}
+                data-testid={message.role === 'user' ? 'user-message' : 'assistant-message'}
+              >
                 {/* 消息类型指示器 */}
                 {message.modality && (
                   <div className="text-xs opacity-60 mb-1">
@@ -283,12 +286,14 @@ export default function ChatPage() {
                 className="w-full resize-none border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 rows={1}
                 style={{ minHeight: '40px', maxHeight: '120px' }}
+                data-testid="message-input"
               />
             </div>
             <Button 
               onClick={sendMessage}
               disabled={!input.trim() || isLoading}
               className="shrink-0"
+              data-testid="send-button"
             >
               <Send className="w-4 h-4" />
             </Button>

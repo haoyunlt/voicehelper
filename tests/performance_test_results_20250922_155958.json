@@ -1,0 +1,67 @@
+{
+  "test_type": "quick",
+  "timestamp": "2025-09-22T15:59:57.419608",
+  "tests": {
+    "system_resources": {
+      "test_name": "system_resources",
+      "success": true,
+      "duration": 1.0,
+      "metrics": {
+        "cpu_percent": 8.5,
+        "memory_percent": 87.9,
+        "memory_available_gb": 5.786567687988281,
+        "disk_percent": 1.1323141979548508,
+        "disk_free_gb": 124.24288558959961,
+        "process_memory_mb": 37.0390625,
+        "process_memory_percent": 0.0753641128540039
+      },
+      "error_message": null
+    },
+    "api_performance": {
+      "test_name": "api_performance",
+      "success": true,
+      "duration": 0.12656807899475098,
+      "metrics": {
+        "后端健康检查": {
+          "avg_response_time_ms": 3.131985664367676,
+          "min_response_time_ms": 2.2411346435546875,
+          "max_response_time_ms": 4.853963851928711,
+          "p95_response_time_ms": 4.853963851928711,
+          "success_rate": 1.0,
+          "status": "success"
+        },
+        "算法服务健康检查": {
+          "avg_response_time_ms": 2.2176027297973633,
+          "min_response_time_ms": 1.5370845794677734,
+          "max_response_time_ms": 3.1249523162841797,
+          "p95_response_time_ms": 3.1249523162841797,
+          "success_rate": 1.0,
+          "status": "success"
+        },
+        "前端页面": {
+          "avg_response_time_ms": 4.147934913635254,
+          "min_response_time_ms": 3.1960010528564453,
+          "max_response_time_ms": 6.150960922241211,
+          "p95_response_time_ms": 6.150960922241211,
+          "success_rate": 1.0,
+          "status": "success"
+        }
+      },
+      "error_message": null
+    },
+    "memory_usage": {
+      "test_name": "memory_usage",
+      "success": true,
+      "duration": 0.021311044692993164,
+      "metrics": {
+        "initial_memory_mb": 37.8359375,
+        "peak_memory_mb": 49.296875,
+        "final_memory_mb": 41.95703125,
+        "memory_increase_mb": 11.4609375,
+        "memory_retained_mb": 4.12109375,
+        "memory_efficiency": 0.6404226312201773
+      },
+      "error_message": null
+    }
+  }
+}

@@ -343,8 +343,8 @@ class TestMultimodalFusionEngine:
         
         inputs = MultimodalInput(
             text="文本输入",
-            image=b"图像数据",
-            audio=b"音频数据"
+            image=b"image_data",
+            audio=b"audio_data"
         )
         
         # 调用融合处理

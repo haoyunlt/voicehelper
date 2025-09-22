@@ -1,0 +1,115 @@
+{
+  "test_type": "comprehensive",
+  "timestamp": "2025-09-22T16:01:40.132109",
+  "tests": {
+    "system_resources": {
+      "test_name": "system_resources",
+      "success": true,
+      "duration": 1.0,
+      "metrics": {
+        "cpu_percent": 11.7,
+        "memory_percent": 88.1,
+        "memory_available_gb": 5.721469879150391,
+        "disk_percent": 1.1323141979548508,
+        "disk_free_gb": 124.23527526855469,
+        "process_memory_mb": 34.97265625,
+        "process_memory_percent": 0.0711679458618164
+      },
+      "error_message": null
+    },
+    "api_performance": {
+      "test_name": "api_performance",
+      "success": true,
+      "duration": 0.07675290107727051,
+      "metrics": {
+        "后端健康检查": {
+          "avg_response_time_ms": 1.7506122589111328,
+          "min_response_time_ms": 1.561880111694336,
+          "max_response_time_ms": 1.8999576568603516,
+          "p95_response_time_ms": 1.8999576568603516,
+          "success_rate": 1.0,
+          "status": "success"
+        },
+        "算法服务健康检查": {
+          "avg_response_time_ms": 1.5352725982666016,
+          "min_response_time_ms": 1.216888427734375,
+          "max_response_time_ms": 2.4688243865966797,
+          "p95_response_time_ms": 2.4688243865966797,
+          "success_rate": 1.0,
+          "status": "success"
+        },
+        "前端页面": {
+          "avg_response_time_ms": 2.8186559677124023,
+          "min_response_time_ms": 2.2792816162109375,
+          "max_response_time_ms": 3.367900848388672,
+          "p95_response_time_ms": 3.367900848388672,
+          "success_rate": 1.0,
+          "status": "success"
+        }
+      },
+      "error_message": null
+    },
+    "memory_usage": {
+      "test_name": "memory_usage",
+      "success": true,
+      "duration": 0.017369985580444336,
+      "metrics": {
+        "initial_memory_mb": 35.5703125,
+        "peak_memory_mb": 46.9765625,
+        "final_memory_mb": 39.01171875,
+        "memory_increase_mb": 11.40625,
+        "memory_retained_mb": 3.44140625,
+        "memory_efficiency": 0.6982876712328767
+      },
+      "error_message": null
+    },
+    "concurrency": {
+      "test_name": "concurrency",
+      "success": true,
+      "duration": 30.102922916412354,
+      "metrics": {
+        "concurrent_users": 10,
+        "test_duration": 30.102187871932983,
+        "total_requests": 2620,
+        "successful_requests": 2620,
+        "success_rate": 100.0,
+        "throughput_rps": 87.03686293988169,
+        "avg_response_time_ms": 7.323536709064745,
+        "p95_response_time_ms": 11.145830154418945
+      },
+      "error_message": null
+    },
+    "batch_processing": {
+      "test_name": "batch_processing",
+      "success": true,
+      "duration": 3.107239007949829,
+      "metrics": {
+        "batch_size_1": {
+          "batch_time": 0.10125613212585449,
+          "individual_time": 0.10115885734558105,
+          "improvement_percent": -0.09616041820354426,
+          "throughput_improvement": 0.999039319612243
+        },
+        "batch_size_4": {
+          "batch_time": 0.03360700607299805,
+          "individual_time": 0.4047369956970215,
+          "improvement_percent": 91.69658162453833,
+          "throughput_improvement": 12.043232735992282
+        },
+        "batch_size_8": {
+          "batch_time": 0.022016048431396484,
+          "individual_time": 0.8091320991516113,
+          "improvement_percent": 97.27905388323109,
+          "throughput_improvement": 36.75192220224817
+        },
+        "batch_size_16": {
+          "batch_time": 0.016958951950073242,
+          "individual_time": 1.61826491355896,
+          "improvement_percent": 98.95202869394379,
+          "throughput_improvement": 95.42245996822764
+        }
+      },
+      "error_message": null
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-09-22 15:45:41",
+  "overall_score": 90,
+  "test_results": {
+    "system_resources": {
+      "cpu_percent": 13.1,
+      "memory_percent": 87.8,
+      "memory_available_gb": 5.85,
+      "disk_percent": 1.13,
+      "disk_free_gb": 124.27
+    },
+    "api_response_times": {
+      "后端健康检查": {
+        "response_time_ms": 10.72,
+        "status_code": 200,
+        "success": true
+      },
+      "算法服务健康检查": {
+        "response_time_ms": 3.04,
+        "status_code": 200,
+        "success": true
+      },
+      "前端页面": {
+        "response_time_ms": 8.75,
+        "status_code": 200,
+        "success": true
+      }
+    },
+    "concurrent_test": {
+      "concurrent_users": 10,
+      "successful_requests": 10,
+      "success_rate": 100.0,
+      "total_time_ms": 8.57,
+      "avg_response_time_ms": 4.68
+    },
+    "memory_test": {
+      "initial_memory_mb": 34.27,
+      "final_memory_mb": 37.33,
+      "memory_increase_mb": 3.07,
+      "memory_percent": 0.07
+    }
+  },
+  "recommendations": [
+    "系统性能良好，继续保持！"
+  ]
+}

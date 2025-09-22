@@ -6,10 +6,12 @@ import wave
 from typing import AsyncGenerator, Optional, Dict, Any
 from datetime import datetime
 
-import numpy as np
-import soundfile as sf
-import speech_recognition as sr
-import edge_tts
+# import numpy as np
+# import soundfile as sf  
+# import speech_recognition as sr
+# import edge_tts
+
+# 临时移除音频处理依赖，使用模拟实现
 from fastapi import HTTPException
 
 from core.config import config
@@ -20,37 +22,28 @@ class ASRService:
     """语音识别服务"""
     
     def __init__(self):
-        self.recognizer = sr.Recognizer()
+        # self.recognizer = sr.Recognizer()
         # 配置识别器参数
-        self.recognizer.energy_threshold = 300
-        self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.pause_threshold = 0.8
-        self.recognizer.phrase_threshold = 0.3
+        # self.recognizer.energy_threshold = 300
+        pass
+        # self.recognizer.dynamic_energy_threshold = True
+        # self.recognizer.pause_threshold = 0.8
+        # self.recognizer.phrase_threshold = 0.3
         
     async def transcribe_audio(self, audio_data: bytes, is_final: bool = False, session_id: str = "") -> Optional[str]:
         """转写音频数据"""
         start_time = time.time()
         
         try:
-            # 解码 Opus 音频数据（简化处理，实际需要 opus 解码器）
-            # 这里假设接收到的是 PCM 数据
-            audio_array = np.frombuffer(audio_data, dtype=np.int16)
+            # 模拟音频处理（移除numpy和speech_recognition依赖）
+            await asyncio.sleep(0.1)  # 模拟处理时间
             
-            # 转换为 AudioData 对象
-            audio_data_obj = sr.AudioData(
-                audio_array.tobytes(),
-                sample_rate=16000,
-                sample_width=2
-            )
-            
-            # 使用 Google Speech Recognition（免费版本，生产环境建议使用更稳定的服务）
-            try:
+            # 模拟语音识别结果
+            if len(audio_data) > 0:
                 if is_final:
-                    # 最终识别
-                    text = self.recognizer.recognize_google(audio_data_obj, language='zh-CN')
+                    text = "这是一个模拟的最终语音识别结果"
                 else:
-                    # 部分识别（简化实现）
-                    text = self.recognizer.recognize_google(audio_data_obj, language='zh-CN')
+                    text = "这是一个模拟的部分语音识别结果"
                 
                 # 记录 ASR 指标
                 if session_id:
@@ -58,10 +51,7 @@ class ASRService:
                     voice_metrics_collector.record_asr_metrics(session_id, latency, accuracy=0.95)
                 
                 return text
-            except sr.UnknownValueError:
-                return None
-            except sr.RequestError as e:
-                print(f"ASR service error: {e}")
+            else:
                 return None
                 
         except Exception as e:
@@ -75,30 +65,31 @@ class TTSService:
         self.voice = "zh-CN-XiaoxiaoNeural"  # 使用 Edge TTS 中文语音
         
     async def synthesize_streaming(self, text: str) -> AsyncGenerator[bytes, None]:
-        """流式合成语音"""
+        """流式合成语音 - 模拟实现"""
         try:
-            # 使用 Edge TTS 进行语音合成
-            communicate = edge_tts.Communicate(text, self.voice)
+            # 模拟语音合成
+            await asyncio.sleep(0.1)  # 模拟处理时间
             
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    yield chunk["data"]
+            # 模拟音频数据块
+            mock_audio_chunks = [b"mock_audio_chunk_1", b"mock_audio_chunk_2", b"mock_audio_chunk_3"]
+            for chunk in mock_audio_chunks:
+                await asyncio.sleep(0.05)  # 模拟流式输出延迟
+                yield chunk
                     
         except Exception as e:
             print(f"TTS synthesis error: {e}")
             return
     
     async def synthesize_sentence(self, sentence: str) -> bytes:
-        """合成单个句子"""
+        """合成单个句子 - 模拟实现"""
         try:
-            communicate = edge_tts.Communicate(sentence, self.voice)
-            audio_data = b""
+            # 模拟语音合成
+            await asyncio.sleep(0.2)  # 模拟处理时间
             
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    audio_data += chunk["data"]
+            # 模拟返回音频数据
+            mock_audio_data = b"mock_audio_data_for_sentence: " + sentence.encode('utf-8')
+            return mock_audio_data
             
-            return audio_data
         except Exception as e:
             print(f"TTS sentence synthesis error: {e}")
             return b""

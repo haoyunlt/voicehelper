@@ -1,0 +1,204 @@
+{
+  "benchmark_id": "baseline_20250922_160002",
+  "timestamp": "2025-09-22T16:00:02.633955",
+  "system_info": {
+    "platform": "posix",
+    "cpu_count": 16,
+    "cpu_count_logical": 16,
+    "memory_total_gb": 48.0,
+    "disk_total_gb": 926.3517189025879,
+    "python_version": "3.13.7 (main, Aug 14 2025, 11:12:11) [Clang 17.0.0 (clang-1700.0.13.3)]"
+  },
+  "tests": {
+    "service_health": {
+      "test_name": "service_health",
+      "timestamp": "2025-09-22T16:00:02.653206",
+      "duration": 0.01902484893798828,
+      "success": true,
+      "metrics": {
+        "backend": {
+          "status": "healthy",
+          "status_code": 200,
+          "response_time_ms": 8.574962615966797,
+          "available": true,
+          "response_data": {
+            "build_time": "unknown",
+            "git_commit": "unknown",
+            "status": "ok",
+            "timestamp": 1758528002,
+            "version": "dev"
+          }
+        },
+        "algorithm": {
+          "status": "healthy",
+          "status_code": 200,
+          "response_time_ms": 4.080295562744141,
+          "available": true,
+          "response_data": {
+            "status": "healthy"
+          }
+        },
+        "frontend": {
+          "status": "healthy",
+          "status_code": 200,
+          "response_time_ms": 6.260156631469727,
+          "available": true
+        }
+      },
+      "baseline_metrics": null,
+      "comparison": null
+    },
+    "api_baseline": {
+      "test_name": "api_baseline",
+      "timestamp": "2025-09-22T16:00:02.831351",
+      "duration": 0.1780548095703125,
+      "success": true,
+      "metrics": {
+        "backend_health": {
+          "avg_response_time_ms": 1.181788444519043,
+          "median_response_time_ms": 1.1168718338012695,
+          "min_response_time_ms": 0.9281635284423828,
+          "max_response_time_ms": 2.5281906127929688,
+          "p95_response_time_ms": 1.554250717163086,
+          "p99_response_time_ms": 2.5281906127929688,
+          "std_dev_ms": 0.2761556255890944,
+          "success_rate": 100.0,
+          "total_requests": 50,
+          "successful_requests": 50
+        },
+        "backend_ping": {
+          "avg_response_time_ms": 1.037740707397461,
+          "median_response_time_ms": 1.0040998458862305,
+          "min_response_time_ms": 0.8831024169921875,
+          "max_response_time_ms": 1.4040470123291016,
+          "p95_response_time_ms": 1.2638568878173828,
+          "p99_response_time_ms": 1.4040470123291016,
+          "std_dev_ms": 0.12106464656365624,
+          "success_rate": 100.0,
+          "total_requests": 50,
+          "successful_requests": 50
+        },
+        "algorithm_health": {
+          "avg_response_time_ms": 1.327652931213379,
+          "median_response_time_ms": 1.153111457824707,
+          "min_response_time_ms": 0.9939670562744141,
+          "max_response_time_ms": 3.5393238067626953,
+          "p95_response_time_ms": 2.277851104736328,
+          "p99_response_time_ms": 3.5393238067626953,
+          "std_dev_ms": 0.4480204546898006,
+          "success_rate": 100.0,
+          "total_requests": 50,
+          "successful_requests": 50
+        }
+      },
+      "baseline_metrics": null,
+      "comparison": null
+    },
+    "throughput_baseline": {
+      "test_name": "throughput_baseline",
+      "timestamp": "2025-09-22T16:00:32.840391",
+      "duration": 30.008965015411377,
+      "success": true,
+      "metrics": {
+        "duration_seconds": 30.000937938690186,
+        "total_requests": 23235,
+        "successful_requests": 23235,
+        "failed_requests": 0,
+        "success_rate": 100.0,
+        "throughput_rps": 774.4757863065137,
+        "avg_response_time_ms": 1.2651723919567406,
+        "p95_response_time_ms": 2.4940967559814453
+      },
+      "baseline_metrics": null,
+      "comparison": null
+    },
+    "concurrency_baseline": {
+      "test_name": "concurrency_baseline",
+      "timestamp": "2025-09-22T16:00:32.938267",
+      "duration": 0.09779024124145508,
+      "success": true,
+      "metrics": {
+        "concurrent_1": {
+          "concurrent_users": 1,
+          "total_requests": 2,
+          "successful_requests": 2,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 3.0465126037597656,
+          "p95_response_time_ms": 3.428936004638672
+        },
+        "concurrent_2": {
+          "concurrent_users": 2,
+          "total_requests": 4,
+          "successful_requests": 4,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 2.9348134994506836,
+          "p95_response_time_ms": 3.7620067596435547
+        },
+        "concurrent_5": {
+          "concurrent_users": 5,
+          "total_requests": 10,
+          "successful_requests": 10,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 4.910564422607422,
+          "p95_response_time_ms": 6.376028060913086
+        },
+        "concurrent_10": {
+          "concurrent_users": 10,
+          "total_requests": 20,
+          "successful_requests": 20,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 8.592569828033447,
+          "p95_response_time_ms": 11.777162551879883
+        },
+        "concurrent_15": {
+          "concurrent_users": 15,
+          "total_requests": 30,
+          "successful_requests": 30,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 9.005133310953775,
+          "p95_response_time_ms": 13.396024703979492
+        },
+        "concurrent_20": {
+          "concurrent_users": 20,
+          "total_requests": 40,
+          "successful_requests": 40,
+          "success_rate": 100.0,
+          "avg_response_time_ms": 11.334151029586792,
+          "p95_response_time_ms": 17.4410343170166
+        }
+      },
+      "baseline_metrics": null,
+      "comparison": null
+    },
+    "resource_baseline": {
+      "test_name": "resource_baseline",
+      "timestamp": "2025-09-22T16:01:03.104756",
+      "duration": 30.16641616821289,
+      "success": true,
+      "metrics": {
+        "cpu": {
+          "avg_percent": 9.15,
+          "max_percent": 12.3,
+          "min_percent": 8.2,
+          "std_dev": 0.84842653553911
+        },
+        "memory": {
+          "avg_percent": 88.06,
+          "max_percent": 88.1,
+          "min_percent": 88.0,
+          "std_dev": 0.04982728791224115
+        },
+        "disk_io": {
+          "avg_read_rate_bps": 7861.665589282044,
+          "avg_write_rate_bps": 317429.7686477374
+        },
+        "network_io": {
+          "avg_recv_rate_bps": 8776.217441002675,
+          "avg_sent_rate_bps": 7461.138337004094
+        }
+      },
+      "baseline_metrics": null,
+      "comparison": null
+    }
+  }
+}

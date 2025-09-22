@@ -28,6 +28,16 @@ COPY --from=builder /app/main .
 # 设置时区
 ENV TZ=Asia/Shanghai
 
+# 设置环境变量
+ENV PORT=8080
+ENV GIN_MODE=release
+ENV DATABASE_URL=postgres://chatbot:chatbot123@postgres:5432/chatbot?sslmode=disable
+ENV REDIS_URL=redis://redis:6379
+ENV ALGO_SERVICE_URL=http://algo-service:8000
+ENV JWT_SECRET=11e8ba7f6690ebbe069afd0bf43cfcc3ad5bacefb1fe816c04f90bb022749995
+ENV ADMIN_SECRET_KEY=b29d40c1ea82b3331a76b7479526e67fcbf7e5d09719ddf8e6c607dae81756fa
+ENV LOG_LEVEL=info
+
 EXPOSE 8080
 
 CMD ["./main"]

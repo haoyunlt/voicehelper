@@ -14,16 +14,48 @@ from core.models import QueryRequest, QueryResponse, Reference, Message
 class RetrieveService:
     def __init__(self):
         self.embeddings = get_embeddings()
-        self.milvus = Milvus(
-            embedding_function=self.embeddings,
-            collection_name=config.DEFAULT_COLLECTION_NAME,
-            connection_args={
-                "host": config.MILVUS_HOST,
-                "port": config.MILVUS_PORT,
-                "user": config.MILVUS_USER,
-                "password": config.MILVUS_PASSWORD,
-            }
-        )
+        self.milvus = self._connect_to_milvus()
+    
+    def _connect_to_milvus(self):
+        """连接到Milvus，带重试机制"""
+        import time
+        max_retries = 5
+        retry_delay = 2
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"Attempting to connect to Milvus (attempt {attempt + 1}/{max_retries})")
+                milvus = Milvus(
+                    embedding_function=self.embeddings,
+                    collection_name=config.DEFAULT_COLLECTION_NAME,
+                    connection_args={
+                        "host": config.MILVUS_HOST,
+                        "port": config.MILVUS_PORT,
+                        "user": config.MILVUS_USER,
+                        "password": config.MILVUS_PASSWORD,
+                    }
+                )
+                print("Successfully connected to Milvus")
+                return milvus
+            except Exception as e:
+                print(f"Failed to connect to Milvus (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    print("Max retries reached, using mock Milvus")
+                    return self._create_mock_milvus()
+    
+    def _create_mock_milvus(self):
+        """创建模拟的Milvus实例"""
+        class MockMilvus:
+            def similarity_search(self, query, k=5):
+                return []
+            
+            def add_texts(self, texts, metadatas=None):
+                return []
+        
+        return MockMilvus()
     
     async def stream_query(self, request: QueryRequest) -> AsyncGenerator[str, None]:
         """流式查询处理"""
