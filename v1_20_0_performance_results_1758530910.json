@@ -1,0 +1,94 @@
+{
+  "timestamp": "2025-09-22T16:48:30.928235",
+  "overall_score": 50.0,
+  "grade": "D (不及格)",
+  "test_results": {
+    "voice_latency_optimization": {
+      "test_name": "voice_latency_optimization",
+      "duration": 1758530881.2099452,
+      "success": true,
+      "metrics": {
+        "average_latency": 75.74594020843506,
+        "success_rate": 100.0,
+        "passed_tests": 4,
+        "total_tests": 4,
+        "latency_results": [
+          {
+            "audio_length": 1,
+            "expected_latency": 100,
+            "actual_latency": 74.8910903930664,
+            "passed": true
+          },
+          {
+            "audio_length": 3,
+            "expected_latency": 150,
+            "actual_latency": 75.84381103515625,
+            "passed": true
+          },
+          {
+            "audio_length": 5,
+            "expected_latency": 200,
+            "actual_latency": 75.73390007019043,
+            "passed": true
+          },
+          {
+            "audio_length": 10,
+            "expected_latency": 300,
+            "actual_latency": 76.51495933532715,
+            "passed": true
+          }
+        ]
+      },
+      "timestamp": "2025-09-22T16:48:01.209951"
+    },
+    "emotion_recognition_accuracy": {
+      "test_name": "emotion_recognition_accuracy",
+      "duration": 1758530881.012567,
+      "success": true,
+      "metrics": {
+        "accuracy": 40.0,
+        "correct_predictions": 4,
+        "total_samples": 10,
+        "avg_processing_time": 10.553479194641113,
+        "avg_confidence": 0.6407373785634655,
+        "confidence_scores": [
+          0.6999999999999998,
+          0.5714285714285714,
+          0.4,
+          1.0,
+          0.5714285714285715,
+          0.5714285714285714,
+          1.0,
+          0.6153846153846154,
+          0.36231884057971014,
+          0.6153846153846154
+        ]
+      },
+      "timestamp": "2025-09-22T16:48:01.012592"
+    },
+    "test_3": {
+      "success": false,
+      "error": "ProcessRequest.__init__() got an unexpected keyword argument 'request_type'"
+    },
+    "system_stability": {
+      "test_name": "system_stability",
+      "duration": 30.021013975143433,
+      "success": false,
+      "metrics": {
+        "total_requests": 352,
+        "error_count": 0,
+        "success_rate": 100.0,
+        "avg_latency": 85.27782694859938,
+        "p95_latency": 87.2640609741211,
+        "test_duration": 30.021013975143433
+      },
+      "timestamp": "2025-09-22T16:48:30.928002"
+    }
+  },
+  "summary": {
+    "total_tests": 4,
+    "passed_tests": 2,
+    "failed_tests": 2,
+    "success_rate": "50.0%"
+  }
+}

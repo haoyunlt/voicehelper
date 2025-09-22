@@ -477,7 +477,7 @@ class AdvancedEmotionRecognition:
 
 # 导入生产级情感识别系统
 try:
-    from .production_emotion_recognition import analyze_production_emotion
+    from .production_emotion_model import predict_emotion_production, production_emotion_model
     USE_PRODUCTION_MODEL = True
 except ImportError:
     USE_PRODUCTION_MODEL = False
@@ -493,17 +493,17 @@ async def analyze_emotion(
     """情感分析便捷函数 - 优先使用生产级模型"""
     if USE_PRODUCTION_MODEL:
         # 使用生产级情感识别系统
-        result = await analyze_production_emotion(
+        result = await predict_emotion_production(
             audio_data=audio,
             text=text,
-            user_id=user_id
+            context={"user_id": user_id}
         )
         
         # 转换为原有格式
         return EmotionAnalysisResult(
-            primary_emotion=result.primary_emotion,
+            primary_emotion=result.emotion,
             confidence=result.confidence,
-            emotion_vector=result.emotion_vector,
+            emotion_vector=result.probabilities,
             temporal_pattern={"stability": 1.0, "trend": "stable"},
             processing_time=result.processing_time
         )

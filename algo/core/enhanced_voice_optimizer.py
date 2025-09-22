@@ -12,6 +12,13 @@ from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 from collections import deque
 
+# 导入缓存监控系统
+try:
+    from .cache_monitoring_system import enhanced_cache_predictor, record_cache_hit, record_cache_miss
+    CACHE_MONITORING_ENABLED = True
+except ImportError:
+    CACHE_MONITORING_ENABLED = False
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -300,6 +307,14 @@ class EnhancedVoiceOptimizer:
                     user_id=self.current_user_id,
                     context=asr_result.text
                 )
+                
+                # 记录缓存监控
+                if CACHE_MONITORING_ENABLED:
+                    await enhanced_cache_predictor.predict_and_cache(
+                        user_id=self.current_user_id,
+                        context=asr_result.text,
+                        request_type="voice_processing"
+                    )
             
             # 计算总延迟
             total_latency = time.time() - start_time
