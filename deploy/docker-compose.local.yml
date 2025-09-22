@@ -111,7 +111,7 @@ services:
 
   # ==================== 图数据库 ====================
   neo4j:
-    image: neo4j:5.0-community
+    image: neo4j:5.15-community
     container_name: chatbot-neo4j
     restart: unless-stopped
     environment:
@@ -154,7 +154,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./deploy/local/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
       - chatbot-network

@@ -1,0 +1,75 @@
+{
+  "timestamp": 1758487470.8979409,
+  "overall_score": 77.31255545132754,
+  "grade": "B (合格)",
+  "test_results": {
+    "emotion_recognition": {
+      "accuracy": 0.9,
+      "avg_processing_time_ms": 33.7787389755249,
+      "total_tests": 10,
+      "correct_predictions": 9,
+      "score": 86.55531525611877
+    },
+    "long_text_processing": {
+      "success_rate": 1.0,
+      "avg_processing_time_s": 8.42047119140625,
+      "avg_compression_ratio": 0.022083206696450315,
+      "total_tests": 4,
+      "successful_tests": 4,
+      "score": 40.07064314174252
+    },
+    "code_understanding": {
+      "analysis_success_rate": 0.3333333333333333,
+      "generation_success_rate": 1.0,
+      "avg_analysis_time_ms": 0.9002685546875,
+      "avg_generation_time_ms": 24.911244710286457,
+      "total_tests": 3,
+      "score": 77.3475858900282
+    },
+    "high_concurrency": {
+      "avg_qps": 4637.673296874822,
+      "avg_success_rate": 0.9992500000000001,
+      "test_results": [
+        {
+          "requests": 100,
+          "duration": 0.1398026943206787,
+          "qps": 715.2937966318482,
+          "success_rate": 1.0
+        },
+        {
+          "requests": 500,
+          "duration": 0.16758179664611816,
+          "qps": 2983.6176124537446,
+          "success_rate": 1.0
+        },
+        {
+          "requests": 1000,
+          "duration": 0.18805384635925293,
+          "qps": 5317.6258787582965,
+          "success_rate": 0.998
+        },
+        {
+          "requests": 2000,
+          "duration": 0.20977210998535156,
+          "qps": 9534.155899655396,
+          "success_rate": 0.999
+        }
+      ],
+      "score": 96.33923296874823
+    },
+    "system_integration": {
+      "long_text_processing": 85,
+      "code_understanding": 90,
+      "emotion_recognition": 75.0,
+      "concurrent_processing": 95,
+      "overall_score": 86.25
+    }
+  },
+  "summary": {
+    "emotion_recognition": "✅ 已完成",
+    "long_text_processing": "✅ 已完成",
+    "code_understanding": "✅ 已完成",
+    "high_concurrency": "✅ 已完成",
+    "system_integration": "✅ 已完成"
+  }
+}
