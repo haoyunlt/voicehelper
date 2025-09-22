@@ -1,0 +1,298 @@
+# VoiceHelper 统一日志配置
+# 适用于所有服务和组件
+
+# ==================== 全局日志配置 ====================
+global:
+  # 默认日志级别
+  level: "info"
+  
+  # 日志格式：json | text
+  format: "json"
+  
+  # 时间戳格式
+  timestamp_format: "2006-01-02T15:04:05.000Z07:00"
+  
+  # 输出目标：stdout | file | both
+  output: "stdout"
+  
+  # 日志文件配置（当output包含file时）
+  file:
+    path: "/var/log/voicehelper"
+    max_size: "100MB"
+    max_age: "7d"
+    max_backups: 10
+    compress: true
+
+# ==================== 环境特定配置 ====================
+environments:
+  development:
+    level: "debug"
+    format: "text"
+    output: "stdout"
+    
+  testing:
+    level: "warn"
+    format: "json"
+    output: "stdout"
+    
+  staging:
+    level: "info"
+    format: "json"
+    output: "both"
+    
+  production:
+    level: "warn"
+    format: "json"
+    output: "both"
+
+# ==================== 服务特定配置 ====================
+services:
+  # 后端API服务
+  backend:
+    level: "info"
+    modules:
+      auth: "info"
+      chat: "info"
+      dataset: "info"
+      voice: "debug"  # 语音服务需要更详细日志
+      middleware: "warn"
+      
+  # 算法服务
+  algo:
+    level: "info"
+    modules:
+      rag: "info"
+      embedding: "warn"
+      llm: "info"
+      voice_processing: "debug"
+      
+  # 前端服务
+  frontend:
+    level: "warn"
+    modules:
+      api: "info"
+      auth: "info"
+      
+  # 管理后台
+  admin:
+    level: "info"
+    
+  # 移动端
+  mobile:
+    level: "warn"
+    
+  # 桌面端
+  desktop:
+    level: "warn"
+
+# ==================== 日志类型配置 ====================
+log_types:
+  # 启动日志
+  startup:
+    level: "info"
+    include_system_info: true
+    
+  # 请求日志
+  request:
+    level: "info"
+    include_headers: false
+    include_body: false
+    max_body_size: "1KB"
+    
+  # 响应日志
+  response:
+    level: "info"
+    include_headers: false
+    include_body: false
+    max_body_size: "1KB"
+    
+  # 错误日志
+  error:
+    level: "error"
+    include_stack_trace: true
+    include_context: true
+    
+  # 性能日志
+  performance:
+    level: "info"
+    include_metrics: true
+    
+  # 安全日志
+  security:
+    level: "warn"
+    include_ip: true
+    include_user_agent: true
+    
+  # 业务日志
+  business:
+    level: "info"
+    include_user_context: true
+    
+  # 系统日志
+  system:
+    level: "info"
+    include_resource_usage: true
+
+# ==================== 字段配置 ====================
+fields:
+  # 必需字段（所有日志都包含）
+  required:
+    - timestamp
+    - level
+    - message
+    - service
+    - version
+    - environment
+    
+  # 可选字段
+  optional:
+    - request_id
+    - trace_id
+    - user_id
+    - tenant_id
+    - session_id
+    - ip_address
+    - user_agent
+    - module
+    - function
+    - file
+    - line
+    
+  # 性能字段
+  performance:
+    - duration_ms
+    - memory_usage
+    - cpu_usage
+    - db_queries
+    - cache_hits
+    - cache_misses
+    
+  # 业务字段
+  business:
+    - action
+    - resource
+    - resource_id
+    - status
+    - error_code
+
+# ==================== 采样配置 ====================
+sampling:
+  # 是否启用采样
+  enabled: false
+  
+  # 采样率（0.0-1.0）
+  rate: 0.1
+  
+  # 按日志级别采样
+  by_level:
+    debug: 0.01
+    info: 0.1
+    warn: 0.5
+    error: 1.0
+    
+  # 按日志类型采样
+  by_type:
+    request: 0.1
+    response: 0.1
+    performance: 0.5
+    error: 1.0
+
+# ==================== 过滤配置 ====================
+filters:
+  # 敏感信息过滤
+  sensitive_fields:
+    - password
+    - token
+    - secret
+    - key
+    - authorization
+    - cookie
+    - session
+    
+  # 忽略的路径
+  ignore_paths:
+    - "/health"
+    - "/metrics"
+    - "/favicon.ico"
+    
+  # 忽略的用户代理
+  ignore_user_agents:
+    - "kube-probe"
+    - "Prometheus"
+    - "Grafana"
+
+# ==================== 输出配置 ====================
+outputs:
+  # 控制台输出
+  console:
+    enabled: true
+    format: "text"  # text | json
+    colors: true
+    
+  # 文件输出
+  file:
+    enabled: false
+    path: "/var/log/voicehelper/app.log"
+    format: "json"
+    rotation:
+      max_size: "100MB"
+      max_age: "7d"
+      max_backups: 10
+      compress: true
+      
+  # 系统日志
+  syslog:
+    enabled: false
+    network: "udp"
+    address: "localhost:514"
+    facility: "local0"
+    
+  # 远程日志服务
+  remote:
+    enabled: false
+    endpoint: "https://logs.example.com/api/v1/logs"
+    api_key: "${LOG_API_KEY}"
+    batch_size: 100
+    flush_interval: "5s"
+
+# ==================== 监控配置 ====================
+monitoring:
+  # 日志指标
+  metrics:
+    enabled: true
+    prefix: "voicehelper_logs"
+    
+  # 告警配置
+  alerts:
+    error_rate_threshold: 0.05  # 5%
+    response_time_threshold: "5s"
+    
+  # 健康检查
+  health_check:
+    enabled: true
+    interval: "30s"
+
+# ==================== 合规配置 ====================
+compliance:
+  # 数据保留
+  retention:
+    default: "30d"
+    by_type:
+      security: "90d"
+      audit: "365d"
+      error: "90d"
+      
+  # 数据脱敏
+  anonymization:
+    enabled: true
+    fields:
+      - user_id
+      - ip_address
+      - phone
+      - email
+      
+  # 审计要求
+  audit:
+    enabled: true
+    include_all_requests: false
+    include_sensitive_operations: true

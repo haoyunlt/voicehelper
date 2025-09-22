@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"chatbot/pkg/metrics"
+	"voicehelper/backend/pkg/metrics"
 
 	"github.com/gin-gonic/gin"
 )

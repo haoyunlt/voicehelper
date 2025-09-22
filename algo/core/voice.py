@@ -10,7 +10,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 
-from core.config import config
+from core.config import default_rag_config
 from core.models import VoiceQueryRequest, VoiceQueryResponse, Reference
 from core.metrics import voice_metrics_collector
 from core.enhanced_voice_services import (

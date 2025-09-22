@@ -6,13 +6,13 @@ from datetime import datetime
 from typing import Dict, Any, List
 from pathlib import Path
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import (
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import (
     PyPDFLoader, TextLoader, UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader, WebBaseLoader
 )
 
-from core.config import config
+from core.config import default_rag_config
 from core.embeddings import get_embeddings
 from core.models import IngestRequest, TaskStatus
 
@@ -20,15 +20,15 @@ class IngestService:
     def __init__(self):
         self.embeddings = get_embeddings()
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=config.DEFAULT_CHUNK_SIZE,
-            chunk_overlap=config.DEFAULT_CHUNK_OVERLAP,
+            chunk_size=default_rag_config.document.chunk_size,
+            chunk_overlap=default_rag_config.document.chunk_overlap,
             separators=["\n\n", "\n", "。", "！", "？", "；", " ", ""]
         )
         self.tasks: Dict[str, TaskStatus] = {}
         # 使用本地存储替代 Milvus
         self.vector_store = {}  # 存储向量数据
         self.documents_store = {}  # 存储文档数据
-        self.storage_path = Path("/app/data")
+        self.storage_path = Path("data")
         self.storage_path.mkdir(exist_ok=True)
         self._load_local_storage()
     

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"chatbot/pkg/discovery"
-	"chatbot/pkg/integration"
+	"voicehelper/backend/pkg/discovery"
+	"voicehelper/backend/pkg/integration"
 	"net/http"
 	"strconv"
 	"time"

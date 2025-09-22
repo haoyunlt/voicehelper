@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"chatbot/internal/repository"
-	"chatbot/internal/service"
-	"chatbot/pkg/storage"
-	"chatbot/pkg/utils"
+	"voicehelper/backend/internal/repository"
+	"voicehelper/backend/internal/service"
+	"voicehelper/backend/pkg/storage"
+	"voicehelper/backend/pkg/utils"
 	"context"
 	"encoding/json"
 	"fmt"

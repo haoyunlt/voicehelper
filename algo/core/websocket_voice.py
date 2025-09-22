@@ -53,8 +53,8 @@ class WebSocketVoiceHandler:
         self.active_sessions: Dict[str, WebSocketSession] = {}
         self.cleanup_interval = 300  # 5分钟清理一次
         
-        # 启动清理任务
-        asyncio.create_task(self._cleanup_sessions())
+        # 清理任务将在事件循环启动后创建
+        self._cleanup_task = None
     
     async def handle_connection(self, websocket: WebSocketServerProtocol, path: str):
         """处理WebSocket连接（websockets库）"""

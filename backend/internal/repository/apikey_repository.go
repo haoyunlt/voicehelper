@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"chatbot/pkg/ratelimit"
+	"voicehelper/backend/pkg/ratelimit"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"

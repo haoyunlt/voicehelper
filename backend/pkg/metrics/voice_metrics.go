@@ -363,23 +363,23 @@ func abs(d time.Duration) time.Duration {
 	return d
 }
 
-// MetricsCollector 指标收集器
-type MetricsCollector struct {
+// VoiceMetricsCollector 语音指标收集器
+type VoiceMetricsCollector struct {
 	latencyTrackers map[string]*LatencyTracker
 	qualityTrackers map[string]*AudioQualityTracker
 	mutex           sync.RWMutex
 }
 
-// NewMetricsCollector 创建指标收集器
-func NewMetricsCollector() *MetricsCollector {
-	return &MetricsCollector{
+// NewVoiceMetricsCollector 创建语音指标收集器
+func NewVoiceMetricsCollector() *VoiceMetricsCollector {
+	return &VoiceMetricsCollector{
 		latencyTrackers: make(map[string]*LatencyTracker),
 		qualityTrackers: make(map[string]*AudioQualityTracker),
 	}
 }
 
 // GetLatencyTracker 获取延迟追踪器
-func (mc *MetricsCollector) GetLatencyTracker(sessionID, traceID string) *LatencyTracker {
+func (mc *VoiceMetricsCollector) GetLatencyTracker(sessionID, traceID string) *LatencyTracker {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
 
@@ -394,7 +394,7 @@ func (mc *MetricsCollector) GetLatencyTracker(sessionID, traceID string) *Latenc
 }
 
 // GetQualityTracker 获取质量追踪器
-func (mc *MetricsCollector) GetQualityTracker(sessionID string) *AudioQualityTracker {
+func (mc *VoiceMetricsCollector) GetQualityTracker(sessionID string) *AudioQualityTracker {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
 
@@ -408,7 +408,7 @@ func (mc *MetricsCollector) GetQualityTracker(sessionID string) *AudioQualityTra
 }
 
 // CleanupSession 清理会话相关的追踪器
-func (mc *MetricsCollector) CleanupSession(sessionID string) {
+func (mc *VoiceMetricsCollector) CleanupSession(sessionID string) {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
 
@@ -424,4 +424,4 @@ func (mc *MetricsCollector) CleanupSession(sessionID string) {
 }
 
 // 全局指标收集器实例
-var GlobalMetricsCollector = NewMetricsCollector()
+var GlobalVoiceMetricsCollector = NewVoiceMetricsCollector()

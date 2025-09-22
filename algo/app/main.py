@@ -79,7 +79,12 @@ try:
     ingest_service = IngestService()
     retrieve_service = RetrieveService()
     voice_service = VoiceService(retrieve_service)
-    enhanced_voice_service = EnhancedVoiceService()
+    # 创建默认语音配置
+    from core.enhanced_voice_services import VoiceConfig, VoiceProvider
+    voice_config = VoiceConfig()
+    voice_config.primary_asr_provider = VoiceProvider.LOCAL
+    voice_config.primary_tts_provider = VoiceProvider.EDGE_TTS
+    enhanced_voice_service = EnhancedVoiceService(voice_config, retrieve_service)
     websocket_handler = WebSocketVoiceHandler(enhanced_voice_service)
     
     logger.startup("算法服务组件初始化完成", context={

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"chatbot/internal/service"
+	"voicehelper/backend/internal/service"
 	"encoding/json"
 	"fmt"
 	"net/http"

@@ -1,0 +1,344 @@
+{
+  "metadata": {
+    "name": "语音合成(TTS)测试数据集",
+    "version": "1.0.0",
+    "description": "用于测试文本转语音质量和自然度的数据集",
+    "created_at": "2025-01-21",
+    "total_samples": 80,
+    "languages": ["zh-CN", "en-US"],
+    "voice_types": ["male", "female", "child", "elderly"]
+  },
+  "test_categories": {
+    "basic_sentences": {
+      "description": "基础句子合成",
+      "sample_count": 25,
+      "expected_quality": "MOS > 4.0"
+    },
+    "emotional_speech": {
+      "description": "情感语音合成",
+      "sample_count": 20,
+      "expected_quality": "MOS > 3.8"
+    },
+    "technical_content": {
+      "description": "技术内容合成",
+      "sample_count": 15,
+      "expected_quality": "MOS > 3.5"
+    },
+    "long_text": {
+      "description": "长文本合成",
+      "sample_count": 10,
+      "expected_quality": "MOS > 3.7"
+    },
+    "special_characters": {
+      "description": "特殊字符和符号",
+      "sample_count": 10,
+      "expected_quality": "MOS > 3.5"
+    }
+  },
+  "test_samples": [
+    {
+      "id": "tts_001",
+      "category": "basic_sentences",
+      "text": "欢迎使用我们的智能聊天机器人服务",
+      "language": "zh-CN",
+      "voice_type": "female",
+      "emotion": "neutral",
+      "expected_duration": 3.5,
+      "quality_metrics": {
+        "naturalness": "high",
+        "intelligibility": "high",
+        "prosody": "good"
+      }
+    },
+    {
+      "id": "tts_002",
+      "category": "emotional_speech",
+      "text": "太好了！您的问题已经成功解决了！",
+      "language": "zh-CN",
+      "voice_type": "female",
+      "emotion": "happy",
+      "expected_duration": 2.8,
+      "quality_metrics": {
+        "emotion_expression": "clear",
+        "naturalness": "high",
+        "enthusiasm": "appropriate"
+      }
+    },
+    {
+      "id": "tts_003",
+      "category": "emotional_speech",
+      "text": "非常抱歉给您带来了不便，我会立即为您处理",
+      "language": "zh-CN",
+      "voice_type": "male",
+      "emotion": "apologetic",
+      "expected_duration": 4.2,
+      "quality_metrics": {
+        "emotion_expression": "sincere",
+        "tone": "apologetic",
+        "clarity": "high"
+      }
+    },
+    {
+      "id": "tts_004",
+      "category": "technical_content",
+      "text": "API接口支持RESTful协议，返回JSON格式数据",
+      "language": "zh-CN",
+      "voice_type": "male",
+      "emotion": "neutral",
+      "expected_duration": 4.0,
+      "technical_terms": ["API", "RESTful", "JSON"],
+      "quality_metrics": {
+        "pronunciation_accuracy": "high",
+        "technical_term_handling": "correct"
+      }
+    },
+    {
+      "id": "tts_005",
+      "category": "long_text",
+      "text": "我们的智能聊天机器人采用了最先进的自然语言处理技术，能够理解用户的意图，提供准确的回答。系统支持多轮对话，具备上下文理解能力，可以处理复杂的业务场景。",
+      "language": "zh-CN",
+      "voice_type": "female",
+      "emotion": "neutral",
+      "expected_duration": 12.0,
+      "quality_metrics": {
+        "consistency": "high",
+        "flow": "smooth",
+        "breath_management": "natural"
+      }
+    },
+    {
+      "id": "tts_006",
+      "category": "special_characters",
+      "text": "订单号：ORD-2025-001，金额：￥1,299.99，联系电话：400-123-4567",
+      "language": "zh-CN",
+      "voice_type": "female",
+      "emotion": "neutral",
+      "expected_duration": 6.5,
+      "special_elements": ["numbers", "currency", "phone_number", "order_id"],
+      "quality_metrics": {
+        "number_pronunciation": "accurate",
+        "punctuation_handling": "appropriate"
+      }
+    },
+    {
+      "id": "tts_007",
+      "category": "emotional_speech",
+      "text": "我理解您的担忧，让我为您详细解释一下安全措施",
+      "language": "zh-CN",
+      "voice_type": "female",
+      "emotion": "reassuring",
+      "expected_duration": 4.5,
+      "quality_metrics": {
+        "empathy": "clear",
+        "reassurance": "effective",
+        "tone": "caring"
+      }
+    },
+    {
+      "id": "tts_008",
+      "category": "basic_sentences",
+      "text": "Hello, welcome to our AI chatbot service",
+      "language": "en-US",
+      "voice_type": "female",
+      "emotion": "neutral",
+      "expected_duration": 2.8,
+      "quality_metrics": {
+        "accent": "standard_american",
+        "clarity": "high",
+        "naturalness": "high"
+      }
+    }
+  ],
+  "challenging_cases": [
+    {
+      "id": "challenge_tts_001",
+      "category": "mixed_language",
+      "text": "我们的API支持OAuth 2.0认证",
+      "description": "中英文混合",
+      "difficulty": "medium",
+      "expected_behavior": "正确切换语言发音"
+    },
+    {
+      "id": "challenge_tts_002",
+      "category": "abbreviations",
+      "text": "请访问我们的官网www.example.com或发邮件到info@example.com",
+      "description": "网址和邮箱地址",
+      "difficulty": "medium",
+      "expected_behavior": "正确读出网址和邮箱"
+    },
+    {
+      "id": "challenge_tts_003",
+      "category": "mathematical_expressions",
+      "text": "计算结果是：2+3=5，概率为85.6%",
+      "description": "数学表达式",
+      "difficulty": "medium",
+      "expected_behavior": "正确读出数学符号和百分比"
+    },
+    {
+      "id": "challenge_tts_004",
+      "category": "emotional_transition",
+      "text": "很抱歉出现了问题。不过请放心，我们会立即解决！",
+      "description": "情感转换",
+      "difficulty": "high",
+      "expected_behavior": "从道歉转向积极语调"
+    }
+  ],
+  "voice_characteristics": {
+    "female_voice": {
+      "pitch_range": "200-400 Hz",
+      "speaking_rate": "150-180 WPM",
+      "tone": "warm, professional",
+      "use_cases": ["customer_service", "general_inquiry"]
+    },
+    "male_voice": {
+      "pitch_range": "100-200 Hz",
+      "speaking_rate": "140-170 WPM",
+      "tone": "authoritative, friendly",
+      "use_cases": ["technical_support", "formal_announcement"]
+    },
+    "child_voice": {
+      "pitch_range": "250-500 Hz",
+      "speaking_rate": "120-150 WPM",
+      "tone": "playful, innocent",
+      "use_cases": ["educational_content", "entertainment"]
+    },
+    "elderly_voice": {
+      "pitch_range": "150-300 Hz",
+      "speaking_rate": "100-130 WPM",
+      "tone": "wise, gentle",
+      "use_cases": ["storytelling", "guidance"]
+    }
+  },
+  "emotion_specifications": {
+    "neutral": {
+      "pitch_variation": "moderate",
+      "speed": "normal",
+      "volume": "normal",
+      "tone": "professional"
+    },
+    "happy": {
+      "pitch_variation": "high",
+      "speed": "slightly_fast",
+      "volume": "slightly_loud",
+      "tone": "upbeat"
+    },
+    "sad": {
+      "pitch_variation": "low",
+      "speed": "slow",
+      "volume": "soft",
+      "tone": "melancholic"
+    },
+    "angry": {
+      "pitch_variation": "high",
+      "speed": "fast",
+      "volume": "loud",
+      "tone": "intense"
+    },
+    "apologetic": {
+      "pitch_variation": "low",
+      "speed": "slow",
+      "volume": "soft",
+      "tone": "sincere"
+    },
+    "reassuring": {
+      "pitch_variation": "moderate",
+      "speed": "slow",
+      "volume": "warm",
+      "tone": "comforting"
+    }
+  },
+  "evaluation_metrics": {
+    "quality_metrics": {
+      "mean_opinion_score": {
+        "target": ">4.0",
+        "description": "主观音质评分 (1-5分)"
+      },
+      "intelligibility_score": {
+        "target": ">95%",
+        "description": "可懂度评分"
+      },
+      "naturalness_score": {
+        "target": ">4.0",
+        "description": "自然度评分 (1-5分)"
+      }
+    },
+    "technical_metrics": {
+      "synthesis_speed": {
+        "target": "<100ms",
+        "description": "合成延迟"
+      },
+      "audio_quality": {
+        "sample_rate": "22kHz+",
+        "bit_depth": "16bit+",
+        "format": "WAV/MP3"
+      },
+      "file_size": {
+        "target": "<1MB/min",
+        "description": "音频文件大小"
+      }
+    },
+    "emotion_metrics": {
+      "emotion_recognition_accuracy": {
+        "target": ">85%",
+        "description": "情感表达识别准确率"
+      },
+      "emotion_intensity": {
+        "target": "appropriate",
+        "description": "情感强度适当性"
+      },
+      "emotion_consistency": {
+        "target": ">90%",
+        "description": "情感表达一致性"
+      }
+    }
+  },
+  "test_protocol": {
+    "setup": [
+      "1. 初始化TTS引擎",
+      "2. 加载语音模型和情感模型",
+      "3. 设置音频输出参数"
+    ],
+    "execution": [
+      "1. 输入测试文本",
+      "2. 指定语音类型和情感",
+      "3. 生成音频文件",
+      "4. 记录合成时间"
+    ],
+    "evaluation": [
+      "1. 主观听测评估",
+      "2. 客观指标计算",
+      "3. 情感表达分析",
+      "4. 生成评估报告"
+    ]
+  },
+  "subjective_evaluation": {
+    "listening_test_setup": {
+      "participants": "20-30人",
+      "background": "不同年龄、性别、教育背景",
+      "environment": "安静环境，使用耳机",
+      "duration": "每个样本播放2次"
+    },
+    "evaluation_criteria": [
+      {
+        "aspect": "naturalness",
+        "question": "这段语音听起来自然吗？",
+        "scale": "1-5分 (1=非常不自然, 5=非常自然)"
+      },
+      {
+        "aspect": "intelligibility",
+        "question": "这段语音清晰易懂吗？",
+        "scale": "1-5分 (1=完全听不懂, 5=完全清楚)"
+      },
+      {
+        "aspect": "emotion_appropriateness",
+        "question": "情感表达是否恰当？",
+        "scale": "1-5分 (1=完全不合适, 5=非常合适)"
+      },
+      {
+        "aspect": "overall_quality",
+        "question": "整体音质如何？",
+        "scale": "1-5分 (1=很差, 5=很好)"
+      }
+    ]
+  }
+}

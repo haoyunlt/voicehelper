@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"voicehelper/backend/pkg/cache"
@@ -55,24 +54,6 @@ func CORS() gin.HandlerFunc {
 	})
 }
 
-// RequestIDMiddleware 请求ID中间件
-func RequestID() gin.HandlerFunc {
-	return gin.HandlerFunc(func(c *gin.Context) {
-		requestID := c.GetHeader("X-Request-ID")
-		if requestID == "" {
-			requestID = uuid.New().String()
-		}
-
-		c.Header("X-Request-ID", requestID)
-		c.Set("request_id", requestID)
-
-		// 添加到日志上下文
-		ctx := context.WithValue(c.Request.Context(), "request_id", requestID)
-		c.Request = c.Request.WithContext(ctx)
-
-		c.Next()
-	})
-}
 
 // RateLimit 限流中间件
 func RateLimit(redisClient *cache.RedisClient) gin.HandlerFunc {

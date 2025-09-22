@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"chatbot/pkg/security"
+	"voicehelper/backend/pkg/security"
 	"encoding/json"
 	"fmt"
 	"net/http"

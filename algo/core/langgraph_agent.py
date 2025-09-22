@@ -14,8 +14,8 @@ import uuid
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolExecutor
 from langgraph.checkpoint import MemorySaver
-from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain.tools import BaseTool
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_core.tools import BaseTool
 from loguru import logger
 
 from core.llm import LLMService

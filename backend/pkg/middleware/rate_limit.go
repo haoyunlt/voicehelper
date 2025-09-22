@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"chatbot/pkg/ratelimit"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+	"voicehelper/backend/pkg/ratelimit"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

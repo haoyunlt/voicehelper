@@ -1,0 +1,499 @@
+{
+  "metadata": {
+    "name": "智能代理工具调用测试数据集",
+    "version": "1.0.0",
+    "description": "用于测试智能代理工具调用准确性和执行效果的数据集",
+    "created_at": "2025-01-21",
+    "total_scenarios": 80,
+    "tool_categories": ["filesystem", "http", "database", "github", "calculation", "datetime"],
+    "complexity_levels": ["simple", "medium", "complex", "multi_step"]
+  },
+  "available_tools": {
+    "filesystem": {
+      "read_file": {
+        "description": "读取文件内容",
+        "parameters": {
+          "file_path": "string - 文件路径"
+        },
+        "returns": "文件内容"
+      },
+      "write_file": {
+        "description": "写入文件内容",
+        "parameters": {
+          "file_path": "string - 文件路径",
+          "content": "string - 文件内容"
+        },
+        "returns": "操作结果"
+      },
+      "list_directory": {
+        "description": "列出目录内容",
+        "parameters": {
+          "directory_path": "string - 目录路径"
+        },
+        "returns": "文件和目录列表"
+      }
+    },
+    "http": {
+      "get_request": {
+        "description": "发送HTTP GET请求",
+        "parameters": {
+          "url": "string - 请求URL",
+          "headers": "object - 请求头（可选）"
+        },
+        "returns": "响应内容"
+      },
+      "post_request": {
+        "description": "发送HTTP POST请求",
+        "parameters": {
+          "url": "string - 请求URL",
+          "data": "object - 请求数据",
+          "headers": "object - 请求头（可选）"
+        },
+        "returns": "响应内容"
+      }
+    },
+    "database": {
+      "query_database": {
+        "description": "查询数据库",
+        "parameters": {
+          "query": "string - SQL查询语句",
+          "database": "string - 数据库名称"
+        },
+        "returns": "查询结果"
+      },
+      "update_database": {
+        "description": "更新数据库",
+        "parameters": {
+          "query": "string - SQL更新语句",
+          "database": "string - 数据库名称"
+        },
+        "returns": "更新结果"
+      }
+    },
+    "github": {
+      "get_repository_info": {
+        "description": "获取GitHub仓库信息",
+        "parameters": {
+          "owner": "string - 仓库所有者",
+          "repo": "string - 仓库名称"
+        },
+        "returns": "仓库信息"
+      },
+      "create_issue": {
+        "description": "创建GitHub Issue",
+        "parameters": {
+          "owner": "string - 仓库所有者",
+          "repo": "string - 仓库名称",
+          "title": "string - Issue标题",
+          "body": "string - Issue内容"
+        },
+        "returns": "创建结果"
+      }
+    },
+    "calculation": {
+      "calculate": {
+        "description": "执行数学计算",
+        "parameters": {
+          "expression": "string - 数学表达式"
+        },
+        "returns": "计算结果"
+      },
+      "statistical_analysis": {
+        "description": "统计分析",
+        "parameters": {
+          "data": "array - 数据数组",
+          "analysis_type": "string - 分析类型"
+        },
+        "returns": "分析结果"
+      }
+    },
+    "datetime": {
+      "get_current_time": {
+        "description": "获取当前时间",
+        "parameters": {
+          "timezone": "string - 时区（可选）"
+        },
+        "returns": "当前时间"
+      },
+      "format_date": {
+        "description": "格式化日期",
+        "parameters": {
+          "date": "string - 日期",
+          "format": "string - 格式模板"
+        },
+        "returns": "格式化后的日期"
+      }
+    }
+  },
+  "test_scenarios": [
+    {
+      "id": "tool_001",
+      "complexity": "simple",
+      "category": "filesystem",
+      "user_request": "请读取config.json文件的内容",
+      "expected_tool_calls": [
+        {
+          "tool": "read_file",
+          "parameters": {
+            "file_path": "config.json"
+          }
+        }
+      ],
+      "expected_response": "文件内容已读取，包含系统配置信息",
+      "success_criteria": [
+        "正确识别需要使用read_file工具",
+        "参数file_path设置正确",
+        "能够处理文件内容并给出合适回应"
+      ]
+    },
+    {
+      "id": "tool_002",
+      "complexity": "simple",
+      "category": "calculation",
+      "user_request": "帮我计算 (25 + 37) * 8 - 15 的结果",
+      "expected_tool_calls": [
+        {
+          "tool": "calculate",
+          "parameters": {
+            "expression": "(25 + 37) * 8 - 15"
+          }
+        }
+      ],
+      "expected_response": "计算结果是481",
+      "success_criteria": [
+        "正确识别需要使用calculate工具",
+        "数学表达式传递正确",
+        "能够返回准确的计算结果"
+      ]
+    },
+    {
+      "id": "tool_003",
+      "complexity": "medium",
+      "category": "http",
+      "user_request": "请获取https://api.github.com/users/octocat的用户信息",
+      "expected_tool_calls": [
+        {
+          "tool": "get_request",
+          "parameters": {
+            "url": "https://api.github.com/users/octocat"
+          }
+        }
+      ],
+      "expected_response": "已获取用户信息，包含用户名、头像、仓库数等详细信息",
+      "success_criteria": [
+        "正确识别需要使用get_request工具",
+        "URL参数设置正确",
+        "能够解析API响应并提供有用信息"
+      ]
+    },
+    {
+      "id": "tool_004",
+      "complexity": "medium",
+      "category": "database",
+      "user_request": "查询用户表中注册时间在2024年的所有用户",
+      "expected_tool_calls": [
+        {
+          "tool": "query_database",
+          "parameters": {
+            "query": "SELECT * FROM users WHERE created_at >= '2024-01-01' AND created_at < '2025-01-01'",
+            "database": "main"
+          }
+        }
+      ],
+      "expected_response": "查询到X名2024年注册的用户",
+      "success_criteria": [
+        "正确识别需要使用query_database工具",
+        "SQL查询语句语法正确",
+        "时间范围条件设置准确"
+      ]
+    },
+    {
+      "id": "tool_005",
+      "complexity": "complex",
+      "category": "multi_tool",
+      "user_request": "请帮我创建一个项目报告，包含当前时间、项目统计数据，并保存到report.txt文件中",
+      "expected_tool_calls": [
+        {
+          "tool": "get_current_time",
+          "parameters": {}
+        },
+        {
+          "tool": "query_database",
+          "parameters": {
+            "query": "SELECT COUNT(*) as total_projects, AVG(completion_rate) as avg_completion FROM projects",
+            "database": "main"
+          }
+        },
+        {
+          "tool": "write_file",
+          "parameters": {
+            "file_path": "report.txt",
+            "content": "项目报告\\n生成时间: [时间]\\n项目总数: [数量]\\n平均完成率: [百分比]"
+          }
+        }
+      ],
+      "expected_response": "项目报告已生成并保存到report.txt文件",
+      "success_criteria": [
+        "正确识别需要多个工具协作",
+        "工具调用顺序合理",
+        "能够整合多个工具的结果",
+        "最终输出符合要求"
+      ]
+    },
+    {
+      "id": "tool_006",
+      "complexity": "complex",
+      "category": "github",
+      "user_request": "请检查我的GitHub仓库'myproject'的状态，如果有超过10个open issues，就创建一个提醒issue",
+      "expected_tool_calls": [
+        {
+          "tool": "get_repository_info",
+          "parameters": {
+            "owner": "[用户名]",
+            "repo": "myproject"
+          }
+        },
+        {
+          "tool": "create_issue",
+          "parameters": {
+            "owner": "[用户名]",
+            "repo": "myproject",
+            "title": "Issue数量提醒",
+            "body": "当前有超过10个未解决的issues，请及时处理"
+          }
+        }
+      ],
+      "expected_response": "已检查仓库状态，当前有X个open issues，已创建提醒issue",
+      "success_criteria": [
+        "正确获取仓库信息",
+        "能够判断issue数量条件",
+        "条件满足时创建新issue",
+        "issue标题和内容合适"
+      ]
+    }
+  ],
+  "error_handling_scenarios": [
+    {
+      "id": "error_001",
+      "scenario": "file_not_found",
+      "user_request": "请读取不存在的文件nonexistent.txt",
+      "expected_behavior": "识别文件不存在错误，提供友好的错误信息",
+      "tool_calls": [
+        {
+          "tool": "read_file",
+          "parameters": {
+            "file_path": "nonexistent.txt"
+          },
+          "expected_error": "FileNotFoundError"
+        }
+      ]
+    },
+    {
+      "id": "error_002",
+      "scenario": "invalid_url",
+      "user_request": "请访问无效的URL地址",
+      "expected_behavior": "识别URL无效错误，建议检查URL格式",
+      "tool_calls": [
+        {
+          "tool": "get_request",
+          "parameters": {
+            "url": "invalid-url"
+          },
+          "expected_error": "InvalidURLError"
+        }
+      ]
+    },
+    {
+      "id": "error_003",
+      "scenario": "database_connection_error",
+      "user_request": "查询数据库中的用户信息",
+      "expected_behavior": "识别数据库连接错误，建议检查连接配置",
+      "tool_calls": [
+        {
+          "tool": "query_database",
+          "parameters": {
+            "query": "SELECT * FROM users",
+            "database": "unavailable_db"
+          },
+          "expected_error": "DatabaseConnectionError"
+        }
+      ]
+    }
+  ],
+  "ambiguous_requests": [
+    {
+      "id": "ambiguous_001",
+      "user_request": "帮我处理那个文件",
+      "expected_behavior": "请求澄清具体的文件路径和处理方式",
+      "clarification_questions": [
+        "请问您指的是哪个文件？",
+        "您希望对文件进行什么操作？（读取、写入、删除等）"
+      ]
+    },
+    {
+      "id": "ambiguous_002",
+      "user_request": "查询一些数据",
+      "expected_behavior": "请求澄清查询的具体内容和条件",
+      "clarification_questions": [
+        "请问您要查询哪个数据表？",
+        "需要查询什么样的数据？",
+        "有什么特定的查询条件吗？"
+      ]
+    },
+    {
+      "id": "ambiguous_003",
+      "user_request": "计算一下",
+      "expected_behavior": "请求提供具体的计算表达式或数据",
+      "clarification_questions": [
+        "请问您需要计算什么？",
+        "请提供具体的数学表达式或数据"
+      ]
+    }
+  ],
+  "multi_step_workflows": [
+    {
+      "id": "workflow_001",
+      "name": "数据分析报告生成",
+      "description": "从数据库获取数据，进行统计分析，生成报告文件",
+      "user_request": "请生成本月的销售数据分析报告",
+      "expected_steps": [
+        {
+          "step": 1,
+          "description": "获取当前时间确定本月范围",
+          "tool": "get_current_time"
+        },
+        {
+          "step": 2,
+          "description": "查询本月销售数据",
+          "tool": "query_database"
+        },
+        {
+          "step": 3,
+          "description": "进行统计分析",
+          "tool": "statistical_analysis"
+        },
+        {
+          "step": 4,
+          "description": "生成报告文件",
+          "tool": "write_file"
+        }
+      ],
+      "success_criteria": [
+        "步骤执行顺序正确",
+        "每步结果正确传递到下一步",
+        "最终生成完整的分析报告"
+      ]
+    },
+    {
+      "id": "workflow_002",
+      "name": "项目部署检查",
+      "description": "检查项目配置，验证API连接，更新部署状态",
+      "user_request": "请检查项目部署状态并更新记录",
+      "expected_steps": [
+        {
+          "step": 1,
+          "description": "读取项目配置文件",
+          "tool": "read_file"
+        },
+        {
+          "step": 2,
+          "description": "测试API连接",
+          "tool": "get_request"
+        },
+        {
+          "step": 3,
+          "description": "更新部署状态到数据库",
+          "tool": "update_database"
+        }
+      ],
+      "success_criteria": [
+        "配置文件读取成功",
+        "API连接测试通过",
+        "数据库状态更新正确"
+      ]
+    }
+  ],
+  "evaluation_metrics": {
+    "tool_selection_accuracy": {
+      "target": ">90%",
+      "description": "正确选择工具的比例"
+    },
+    "parameter_accuracy": {
+      "target": ">85%",
+      "description": "工具参数设置正确的比例"
+    },
+    "execution_success_rate": {
+      "target": ">80%",
+      "description": "工具执行成功的比例"
+    },
+    "error_handling_quality": {
+      "target": ">85%",
+      "description": "错误处理的质量评分"
+    },
+    "multi_step_completion_rate": {
+      "target": ">75%",
+      "description": "多步骤任务完成率"
+    },
+    "response_relevance": {
+      "target": ">90%",
+      "description": "响应内容相关性评分"
+    }
+  },
+  "test_protocol": {
+    "setup": [
+      "1. 初始化智能代理系统",
+      "2. 加载工具定义和权限配置",
+      "3. 准备测试环境和数据",
+      "4. 设置监控和日志记录"
+    ],
+    "execution": [
+      "1. 输入用户请求",
+      "2. 记录工具选择和参数",
+      "3. 执行工具调用",
+      "4. 记录执行结果和响应时间",
+      "5. 评估响应质量"
+    ],
+    "evaluation": [
+      "1. 对比预期和实际工具调用",
+      "2. 验证参数正确性",
+      "3. 检查执行结果",
+      "4. 评估错误处理",
+      "5. 计算各项指标"
+    ]
+  },
+  "safety_considerations": {
+    "permission_checks": [
+      "验证工具调用权限",
+      "检查参数安全性",
+      "防止恶意操作"
+    ],
+    "resource_limits": [
+      "限制文件操作范围",
+      "控制网络请求频率",
+      "监控系统资源使用"
+    ],
+    "data_protection": [
+      "敏感数据脱敏",
+      "访问日志记录",
+      "数据传输加密"
+    ]
+  },
+  "performance_benchmarks": {
+    "tool_selection_time": {
+      "target": "<100ms",
+      "description": "工具选择决策时间"
+    },
+    "parameter_generation_time": {
+      "target": "<200ms",
+      "description": "参数生成时间"
+    },
+    "total_response_time": {
+      "target": "<5s",
+      "description": "包含工具执行的总响应时间"
+    },
+    "concurrent_requests": {
+      "target": ">50",
+      "description": "并发处理能力"
+    }
+  }
+}

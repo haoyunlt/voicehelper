@@ -1,0 +1,36 @@
+{
+  "name": "voicehelper-e2e-tests",
+  "version": "1.0.0",
+  "description": "VoiceHelper端到端测试套件",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:chat": "playwright test tests/chat.spec.ts",
+    "test:voice": "playwright test tests/voice.spec.ts",
+    "test:datasets": "playwright test tests/datasets.spec.ts",
+    "test:api": "playwright test tests/api.spec.ts",
+    "test:performance": "playwright test tests/performance.spec.ts",
+    "test:smoke": "playwright test --grep '@smoke'",
+    "test:regression": "playwright test --grep '@regression'",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install",
+    "install-deps": "playwright install-deps"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "voicehelper",
+    "automation"
+  ],
+  "author": "VoiceHelper Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}

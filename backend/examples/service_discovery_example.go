@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"chatbot/pkg/discovery"
+	"voicehelper/backend/pkg/discovery"
 )
 
 func main() {

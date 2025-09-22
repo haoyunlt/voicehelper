@@ -43,19 +43,14 @@
 
 | 文档 | 描述 | 适用人群 |
 |------|------|----------|
-| [统一迭代计划](UNIFIED_ITERATION_PLAN.md) | 2025-2026年完整版本规划 | 产品经理、决策者、技术团队 |
-| [迭代计划总结](ITERATION_SUMMARY.md) | 迭代计划快速概览 | 所有角色 |
-| [版本发布说明](V1_20_0_RELEASE_NOTES.md) | 最新版本功能和变更 | 所有用户 |
+| [统一迭代计划2026](UNIFIED_ITERATION_PLAN_2026.md) | 2026-2027年完整版本规划 | 产品经理、决策者、技术团队 |
+| [文档整理清理总结](DOCUMENT_CLEANUP_SUMMARY.md) | 文档合并和清理报告 | 技术团队、文档维护者 |
+| [版本发布说明](V1_26_0_RELEASE_NOTES.md) | 最新版本功能和变更 | 所有用户 |
 | [统一竞争分析报告](UNIFIED_COMPETITIVE_ANALYSIS.md) | 市场竞争力分析 | 产品经理、市场团队 |
 | [代码和文档Review报告](CODE_AND_DOCUMENTATION_REVIEW.md) | 代码质量和文档完整性评估 | 技术团队、架构师 |
-| [v1.20.0完成报告](V1_20_0_COMPLETION_REPORT.md) | v1.20.0版本完成总结 | 技术团队、产品经理 |
-| [v1.20.1发布说明](V1_20_1_RELEASE_NOTES.md) | v1.20.1版本功能和改进 | 所有用户 |
-| [v1.22.0发布说明](V1_22_0_RELEASE_NOTES.md) | v1.22.0版本功能和改进 | 所有用户 |
-| [v1.23.0发布说明](V1_23_0_RELEASE_NOTES.md) | v1.23.0版本功能和改进 | 所有用户 |
-| [v1.24.0发布说明](V1_24_0_RELEASE_NOTES.md) | v1.24.0版本功能和改进 | 所有用户 |
-| [v1.25.0发布说明](V1_25_0_RELEASE_NOTES.md) | v1.25.0版本功能和改进 | 所有用户 |
-| [v1.26.0发布说明](V1_26_0_RELEASE_NOTES.md) | v1.26.0版本功能和改进 | 所有用户 |
-| [统一迭代计划2025](UNIFIED_ITERATION_PLAN_2025.md) | 2025-2026年完整版本规划 | 产品经理、决策者、技术团队 |
+| [代码审查报告2025](CODE_REVIEW_REPORT_2025.md) | 详细的代码质量分析 | 技术团队、架构师 |
+| [代码优化TODO清单](CODE_OPTIMIZATION_TODO.md) | 技术债务和优化任务 | 开发团队、技术负责人 |
+| [技术债务清单](TECHNICAL_DEBT_INVENTORY.md) | 详细的技术债务管理 | 技术团队、项目经理 |
 
 ## 🎯 按角色分类
 
@@ -157,7 +152,8 @@
 | 2025-12-24 | [VoiceHelper深度技术文档](VOICEHELPER_DEEP_DIVE.md) | 新增完整技术架构和实现细节 | v2.0 |
 | 2025-12-24 | [日志系统与错误码指南](LOGGING_AND_ERROR_CODES.md) | 新增统一日志系统和错误码体系 | v1.0 |
 | 2025-12-24 | [测试指南](TESTING_GUIDE.md) | 新增完整测试策略和执行方法 | v1.0 |
-| 2025-12-24 | [统一迭代计划2025](UNIFIED_ITERATION_PLAN_2025.md) | 新增2025-2026年完整版本规划 | v1.0 |
+| 2025-09-22 | [统一迭代计划2026](UNIFIED_ITERATION_PLAN_2026.md) | 新增2026-2027年完整版本规划 | v1.0 |
+| 2025-09-22 | [文档整理清理总结](DOCUMENT_CLEANUP_SUMMARY.md) | 文档合并和清理报告 | v1.0 |
 | 2025-12-24 | 所有版本发布说明 | 更新到v1.26.0版本信息 | v1.26.0 |
 
 ## 🤝 贡献指南
