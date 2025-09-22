@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { LoggerProvider } from '@/components/LoggerProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '智能聊天机器人',
-  description: '基于豆包大模型的企业级聊天机器人',
+  title: 'VoiceHelper - 智能语音助手',
+  description: '基于RAG技术的企业级智能语音助手',
 }
 
 export default function RootLayout({
@@ -17,7 +19,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        {children}
+        <LoggerProvider>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </LoggerProvider>
       </body>
     </html>
   )

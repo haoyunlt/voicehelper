@@ -1,350 +1,174 @@
 /**
- * SDK错误类定义
+ * VoiceHelper JavaScript SDK 错误码系统
  */
 
-/**
- * 基础Chatbot错误类
- */
-export class ChatbotError extends Error {
-  public readonly name = 'ChatbotError';
+export enum ErrorCode {
+  SUCCESS = 0,
+  
+  // SDK错误
+  SDK_INTERNAL_ERROR = 702001,
+  SDK_INITIALIZATION_FAILED = 702002,
+  SDK_NETWORK_ERROR = 731001,
+  SDK_AUTH_ERROR = 721001,
+  SDK_INVALID_PARAMETER = 711001,
+  SDK_BROWSER_NOT_SUPPORTED = 741001,
+  SDK_WEBSOCKET_ERROR = 751001,
+  SDK_LOCALSTORAGE_ERROR = 761001,
+  
+  // 通用错误
+  SYSTEM_INTERNAL_ERROR = 902001,
+  NETWORK_TIMEOUT = 933001,
+  
+  // 语音服务错误
+  VOICE_ASR_FAILED = 411004,
+  VOICE_TTS_FAILED = 411005,
+  
+  // RAG服务错误
+  RAG_RETRIEVAL_FAILED = 511004,
+  
+  // 认证错误
+  AUTH_TOKEN_EXPIRED = 211002,
+}
 
-  constructor(message: string, public readonly cause?: Error) {
-    super(message);
+export interface ErrorInfo {
+  code: ErrorCode;
+  message: string;
+  description: string;
+  category: string;
+  service: string;
+}
+
+const errorInfoMap: Record<ErrorCode, ErrorInfo> = {
+  [ErrorCode.SUCCESS]: {
+    code: ErrorCode.SUCCESS,
+    message: "Success",
+    description: "操作成功",
+    category: "Success",
+    service: "Common"
+  },
+  [ErrorCode.SDK_INTERNAL_ERROR]: {
+    code: ErrorCode.SDK_INTERNAL_ERROR,
+    message: "SDK Internal Error",
+    description: "SDK内部错误",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_NETWORK_ERROR]: {
+    code: ErrorCode.SDK_NETWORK_ERROR,
+    message: "SDK Network Error",
+    description: "SDK网络错误",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_AUTH_ERROR]: {
+    code: ErrorCode.SDK_AUTH_ERROR,
+    message: "SDK Authentication Error",
+    description: "SDK认证错误",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_INVALID_PARAMETER]: {
+    code: ErrorCode.SDK_INVALID_PARAMETER,
+    message: "SDK Invalid Parameter",
+    description: "SDK参数无效",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_BROWSER_NOT_SUPPORTED]: {
+    code: ErrorCode.SDK_BROWSER_NOT_SUPPORTED,
+    message: "Browser Not Supported",
+    description: "浏览器不支持",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_WEBSOCKET_ERROR]: {
+    code: ErrorCode.SDK_WEBSOCKET_ERROR,
+    message: "WebSocket Error",
+    description: "WebSocket错误",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SDK_LOCALSTORAGE_ERROR]: {
+    code: ErrorCode.SDK_LOCALSTORAGE_ERROR,
+    message: "LocalStorage Error",
+    description: "本地存储错误",
+    category: "SDK",
+    service: "SDK"
+  },
+  [ErrorCode.SYSTEM_INTERNAL_ERROR]: {
+    code: ErrorCode.SYSTEM_INTERNAL_ERROR,
+    message: "System Internal Error",
+    description: "系统内部错误",
+    category: "System",
+    service: "Common"
+  },
+  [ErrorCode.NETWORK_TIMEOUT]: {
+    code: ErrorCode.NETWORK_TIMEOUT,
+    message: "Network Timeout",
+    description: "网络超时",
+    category: "Network",
+    service: "Common"
+  },
+  [ErrorCode.VOICE_ASR_FAILED]: {
+    code: ErrorCode.VOICE_ASR_FAILED,
+    message: "ASR Failed",
+    description: "语音识别失败",
+    category: "Voice",
+    service: "Voice"
+  },
+  [ErrorCode.VOICE_TTS_FAILED]: {
+    code: ErrorCode.VOICE_TTS_FAILED,
+    message: "TTS Failed",
+    description: "语音合成失败",
+    category: "Voice",
+    service: "Voice"
+  },
+  [ErrorCode.RAG_RETRIEVAL_FAILED]: {
+    code: ErrorCode.RAG_RETRIEVAL_FAILED,
+    message: "RAG Retrieval Failed",
+    description: "RAG检索失败",
+    category: "RAG",
+    service: "RAG"
+  },
+  [ErrorCode.AUTH_TOKEN_EXPIRED]: {
+    code: ErrorCode.AUTH_TOKEN_EXPIRED,
+    message: "Token Expired",
+    description: "Token过期",
+    category: "Auth",
+    service: "Auth"
+  },
+};
+
+export function getErrorInfo(code: ErrorCode): ErrorInfo {
+  return errorInfoMap[code] || {
+    code,
+    message: "Unknown Error",
+    description: `未知错误码: ${code}`,
+    category: "Unknown",
+    service: "Unknown"
+  };
+}
+
+export class VoiceHelperSDKError extends Error {
+  public readonly code: ErrorCode;
+  public readonly errorInfo: ErrorInfo;
+  public readonly details?: Record<string, any>;
+
+  constructor(code: ErrorCode, message?: string, details?: Record<string, any>) {
+    const errorInfo = getErrorInfo(code);
+    super(message || errorInfo.message);
     
-    // 确保错误堆栈正确显示
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-  }
-}
-
-/**
- * API错误类
- */
-export class APIError extends ChatbotError {
-  public readonly name = 'APIError';
-
-  constructor(
-    message: string,
-    public readonly status: number,
-    public readonly code?: string,
-    public readonly details?: Record<string, any>
-  ) {
-    super(message);
+    this.code = code;
+    this.errorInfo = errorInfo;
+    this.details = details;
+    this.name = 'VoiceHelperSDKError';
   }
 
-  /**
-   * 判断是否为客户端错误 (4xx)
-   */
-  get isClientError(): boolean {
-    return this.status >= 400 && this.status < 500;
-  }
-
-  /**
-   * 判断是否为服务器错误 (5xx)
-   */
-  get isServerError(): boolean {
-    return this.status >= 500;
-  }
-
-  /**
-   * 判断是否为认证错误
-   */
-  get isAuthError(): boolean {
-    return this.status === 401 || this.status === 403;
-  }
-
-  /**
-   * 判断是否为限流错误
-   */
-  get isRateLimitError(): boolean {
-    return this.status === 429;
-  }
-}
-
-/**
- * 网络错误类
- */
-export class NetworkError extends ChatbotError {
-  public readonly name = 'NetworkError';
-
-  constructor(message: string, cause?: Error) {
-    super(message, cause);
-  }
-}
-
-/**
- * 验证错误类
- */
-export class ValidationError extends ChatbotError {
-  public readonly name = 'ValidationError';
-
-  constructor(
-    message: string,
-    public readonly field?: string,
-    public readonly value?: any
-  ) {
-    super(message);
-  }
-}
-
-/**
- * 配置错误类
- */
-export class ConfigError extends ChatbotError {
-  public readonly name = 'ConfigError';
-
-  constructor(message: string) {
-    super(message);
-  }
-}
-
-/**
- * WebSocket错误类
- */
-export class WebSocketError extends ChatbotError {
-  public readonly name = 'WebSocketError';
-
-  constructor(
-    message: string,
-    public readonly code?: number,
-    public readonly reason?: string
-  ) {
-    super(message);
-  }
-}
-
-/**
- * 流式处理错误类
- */
-export class StreamError extends ChatbotError {
-  public readonly name = 'StreamError';
-
-  constructor(message: string, cause?: Error) {
-    super(message, cause);
-  }
-}
-
-/**
- * 文件处理错误类
- */
-export class FileError extends ChatbotError {
-  public readonly name = 'FileError';
-
-  constructor(
-    message: string,
-    public readonly fileName?: string,
-    public readonly fileSize?: number
-  ) {
-    super(message);
-  }
-}
-
-/**
- * 错误工厂函数
- */
-export class ErrorFactory {
-  /**
-   * 根据HTTP状态码创建相应的错误
-   */
-  static fromHTTPStatus(
-    status: number,
-    message: string,
-    code?: string,
-    details?: Record<string, any>
-  ): APIError {
-    return new APIError(message, status, code, details);
-  }
-
-  /**
-   * 从axios错误创建ChatbotError
-   */
-  static fromAxiosError(error: any): ChatbotError {
-    if (error.response) {
-      // 服务器返回了错误响应
-      return new APIError(
-        error.response.data?.error || error.message,
-        error.response.status,
-        error.response.data?.code,
-        error.response.data?.details
-      );
-    } else if (error.request) {
-      // 请求发出但没有收到响应
-      return new NetworkError('No response received from server', error);
-    } else {
-      // 请求配置错误
-      return new ChatbotError('Request configuration error: ' + error.message, error);
-    }
-  }
-
-  /**
-   * 从WebSocket错误创建WebSocketError
-   */
-  static fromWebSocketError(error: any, code?: number, reason?: string): WebSocketError {
-    return new WebSocketError(error.message || 'WebSocket error', code, reason);
-  }
-
-  /**
-   * 验证文件大小
-   */
-  static validateFileSize(file: File, maxSize: number): void {
-    if (file.size > maxSize) {
-      throw new FileError(
-        `File size ${file.size} exceeds maximum allowed size ${maxSize}`,
-        file.name,
-        file.size
-      );
-    }
-  }
-
-  /**
-   * 验证文件类型
-   */
-  static validateFileType(file: File, allowedTypes: string[]): void {
-    if (!allowedTypes.includes(file.type)) {
-      throw new FileError(
-        `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`,
-        file.name
-      );
-    }
-  }
-
-  /**
-   * 验证必需参数
-   */
-  static validateRequired(value: any, fieldName: string): void {
-    if (value === undefined || value === null || value === '') {
-      throw new ValidationError(`${fieldName} is required`, fieldName, value);
-    }
-  }
-
-  /**
-   * 验证字符串长度
-   */
-  static validateStringLength(
-    value: string,
-    fieldName: string,
-    minLength?: number,
-    maxLength?: number
-  ): void {
-    if (minLength !== undefined && value.length < minLength) {
-      throw new ValidationError(
-        `${fieldName} must be at least ${minLength} characters long`,
-        fieldName,
-        value
-      );
-    }
-    if (maxLength !== undefined && value.length > maxLength) {
-      throw new ValidationError(
-        `${fieldName} must be no more than ${maxLength} characters long`,
-        fieldName,
-        value
-      );
-    }
-  }
-
-  /**
-   * 验证数值范围
-   */
-  static validateNumberRange(
-    value: number,
-    fieldName: string,
-    min?: number,
-    max?: number
-  ): void {
-    if (min !== undefined && value < min) {
-      throw new ValidationError(
-        `${fieldName} must be at least ${min}`,
-        fieldName,
-        value
-      );
-    }
-    if (max !== undefined && value > max) {
-      throw new ValidationError(
-        `${fieldName} must be no more than ${max}`,
-        fieldName,
-        value
-      );
-    }
-  }
-}
-
-/**
- * 错误处理工具函数
- */
-export class ErrorUtils {
-  /**
-   * 判断错误是否可重试
-   */
-  static isRetryable(error: Error): boolean {
-    if (error instanceof APIError) {
-      // 5xx服务器错误和429限流错误可重试
-      return error.isServerError || error.isRateLimitError;
-    }
-    if (error instanceof NetworkError) {
-      // 网络错误可重试
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * 获取错误的用户友好消息
-   */
-  static getUserFriendlyMessage(error: Error): string {
-    if (error instanceof APIError) {
-      switch (error.status) {
-        case 400:
-          return '请求参数有误，请检查输入内容';
-        case 401:
-          return '身份验证失败，请重新登录';
-        case 403:
-          return '权限不足，无法执行此操作';
-        case 404:
-          return '请求的资源不存在';
-        case 429:
-          return '请求过于频繁，请稍后再试';
-        case 500:
-          return '服务器内部错误，请稍后再试';
-        case 502:
-        case 503:
-        case 504:
-          return '服务暂时不可用，请稍后再试';
-        default:
-          return error.message;
-      }
-    }
-    if (error instanceof NetworkError) {
-      return '网络连接失败，请检查网络设置';
-    }
-    if (error instanceof ValidationError) {
-      return error.message;
-    }
-    if (error instanceof FileError) {
-      return error.message;
-    }
-    return '发生未知错误，请稍后再试';
-  }
-
-  /**
-   * 记录错误日志
-   */
-  static logError(error: Error, context?: Record<string, any>): void {
-    const errorInfo = {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      context,
+  toJSON() {
+    return {
+      ...this.errorInfo,
+      customMessage: this.message !== this.errorInfo.message ? this.message : undefined,
+      details: this.details,
     };
-
-    if (error instanceof APIError) {
-      Object.assign(errorInfo, {
-        status: error.status,
-        code: error.code,
-        details: error.details,
-      });
-    }
-
-    console.error('Chatbot SDK Error:', errorInfo);
   }
 }

@@ -14,7 +14,10 @@ import {
 import { autoUpdater } from 'electron-updater';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { VoiceHelperSDK } from '@voicehelper/sdk';
+import { initLogger, getLogger, ErrorCode, VoiceHelperError } from '../common/logger';
+import type DesktopLogger from '../common/logger';
 
 // 应用配置
 interface AppConfig {
@@ -41,10 +44,27 @@ class VoiceHelperApp {
   private voiceSDK: VoiceHelperSDK | null = null;
   private config: AppConfig;
   private configPath: string;
+  private logger: DesktopLogger;
 
   constructor() {
+    // 初始化日志系统
+    this.logger = initLogger('voicehelper-desktop');
+    
     this.configPath = path.join(app.getPath('userData'), 'config.json');
     this.config = this.loadConfig();
+    
+    // 记录应用启动
+    this.logger.startup('VoiceHelper桌面应用启动', {
+      version: app.getVersion(),
+      platform: process.platform,
+      arch: process.arch,
+      nodeVersion: process.version,
+      electronVersion: process.versions.electron,
+      userDataPath: app.getPath('userData'),
+      configPath: this.configPath,
+      pid: process.pid,
+    });
+    
     this.setupApp();
   }
 
@@ -67,11 +87,31 @@ class VoiceHelperApp {
 
     try {
       if (fs.existsSync(this.configPath)) {
-        const savedConfig = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
+        this.logger?.fileSystem('read', this.configPath, { operation: 'load_config' });
+        const configData = fs.readFileSync(this.configPath, 'utf8');
+        const savedConfig = JSON.parse(configData);
+        
+        this.logger?.info('配置文件加载成功', {
+          configPath: this.configPath,
+          hasApiKey: !!savedConfig.apiKey,
+          theme: savedConfig.theme,
+        });
+        
         return { ...defaultConfig, ...savedConfig };
+      } else {
+        this.logger?.info('配置文件不存在，使用默认配置', {
+          configPath: this.configPath,
+        });
       }
     } catch (error) {
-      console.error('Failed to load config:', error);
+      this.logger?.errorWithCode(
+        ErrorCode.DESKTOP_FILE_READ_ERROR,
+        '配置文件加载失败',
+        {
+          configPath: this.configPath,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
     }
 
     return defaultConfig;
@@ -79,112 +119,230 @@ class VoiceHelperApp {
 
   private saveConfig(): void {
     try {
-      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+      this.logger.fileSystem('write', this.configPath, { operation: 'save_config' });
+      const configData = JSON.stringify(this.config, null, 2);
+      fs.writeFileSync(this.configPath, configData);
+      
+      this.logger.info('配置文件保存成功', {
+        configPath: this.configPath,
+        hasApiKey: !!this.config.apiKey,
+        theme: this.config.theme,
+      });
     } catch (error) {
-      console.error('Failed to save config:', error);
+      this.logger.errorWithCode(
+        ErrorCode.DESKTOP_FILE_WRITE_ERROR,
+        '配置文件保存失败',
+        {
+          configPath: this.configPath,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
     }
   }
 
   private setupApp(): void {
-    // 设置应用协议
-    protocol.registerSchemesAsPrivileged([
-      { scheme: 'voicehelper', privileges: { secure: true, standard: true } }
-    ]);
+    try {
+      // 设置应用协议
+      protocol.registerSchemesAsPrivileged([
+        { scheme: 'voicehelper', privileges: { secure: true, standard: true } }
+      ]);
 
-    // 应用事件监听
-    app.whenReady().then(() => {
-      this.createWindow();
-      this.setupTray();
-      this.setupGlobalShortcuts();
-      this.setupAutoUpdater();
-      this.setupIPC();
-      this.initializeSDK();
-    });
+      this.logger.info('应用协议注册成功', { scheme: 'voicehelper' });
 
-    app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
-        app.quit();
-      }
-    });
+      // 应用事件监听
+      app.whenReady().then(() => {
+        this.logger.startup('Electron应用就绪', {
+          readyTime: Date.now(),
+          locale: app.getLocale(),
+          systemLocale: app.getSystemLocale(),
+        });
 
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
         this.createWindow();
-      }
-    });
+        this.setupTray();
+        this.setupGlobalShortcuts();
+        this.setupAutoUpdater();
+        this.setupIPC();
+        this.initializeSDK();
+      }).catch((error) => {
+        this.logger.errorWithCode(
+          ErrorCode.DESKTOP_INITIALIZATION_FAILED,
+          'Electron应用初始化失败',
+          { error: error.message }
+        );
+      });
 
-    app.on('before-quit', () => {
-      this.saveConfig();
-    });
+      app.on('window-all-closed', () => {
+        this.logger.info('所有窗口已关闭', { platform: process.platform });
+        if (process.platform !== 'darwin') {
+          this.logger.shutdown('应用退出 (非macOS)', { reason: 'window-all-closed' });
+          app.quit();
+        }
+      });
 
-    // 设置主题
-    nativeTheme.themeSource = this.config.theme;
+      app.on('activate', () => {
+        this.logger.info('应用激活', { windowCount: BrowserWindow.getAllWindows().length });
+        if (BrowserWindow.getAllWindows().length === 0) {
+          this.createWindow();
+        }
+      });
+
+      app.on('before-quit', () => {
+        this.logger.shutdown('应用准备退出', { reason: 'before-quit' });
+        this.saveConfig();
+        
+        // 清理全局快捷键
+        globalShortcut.unregisterAll();
+        
+        // 清理过期日志
+        this.logger.cleanOldLogs(7);
+      });
+
+      // 设置主题
+      nativeTheme.themeSource = this.config.theme;
+      this.logger.info('主题设置完成', { theme: this.config.theme });
+
+    } catch (error) {
+      this.logger.errorWithCode(
+        ErrorCode.DESKTOP_INITIALIZATION_FAILED,
+        '应用设置失败',
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+    }
   }
 
   private createWindow(): void {
-    // 创建主窗口
-    this.mainWindow = new BrowserWindow({
-      width: this.config.windowBounds.width,
-      height: this.config.windowBounds.height,
-      x: this.config.windowBounds.x,
-      y: this.config.windowBounds.y,
-      minWidth: 800,
-      minHeight: 600,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        enableRemoteModule: false,
-        preload: path.join(__dirname, '../preload/preload.js'),
-        webSecurity: true
-      },
-      titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-      show: false,
-      icon: path.join(__dirname, '../../assets/icon.png')
-    });
-
-    // 加载应用
-    if (process.env.NODE_ENV === 'development') {
-      this.mainWindow.loadURL('http://localhost:3000');
-      this.mainWindow.webContents.openDevTools();
-    } else {
-      this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-    }
-
-    // 窗口事件
-    this.mainWindow.once('ready-to-show', () => {
-      this.mainWindow?.show();
+    try {
+      const startTime = Date.now();
       
-      if (process.env.NODE_ENV === 'development') {
-        this.mainWindow?.webContents.openDevTools();
-      }
-    });
+      // 创建主窗口
+      this.mainWindow = new BrowserWindow({
+        width: this.config.windowBounds.width,
+        height: this.config.windowBounds.height,
+        x: this.config.windowBounds.x,
+        y: this.config.windowBounds.y,
+        minWidth: 800,
+        minHeight: 600,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          enableRemoteModule: false,
+          preload: path.join(__dirname, '../preload/preload.js'),
+          webSecurity: true
+        },
+        titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+        show: false,
+        icon: path.join(__dirname, '../../assets/icon.png')
+      });
 
-    this.mainWindow.on('close', (event) => {
-      if (this.config.minimizeToTray && this.tray) {
-        event.preventDefault();
-        this.mainWindow?.hide();
+      const windowId = this.mainWindow.id;
+      
+      this.logger.window('create', windowId, {
+        bounds: this.config.windowBounds,
+        platform: process.platform,
+        preloadPath: path.join(__dirname, '../preload/preload.js'),
+      });
+
+      // 加载应用
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const loadUrl = isDevelopment 
+        ? 'http://localhost:3000' 
+        : path.join(__dirname, '../renderer/index.html');
+
+      this.logger.info('开始加载窗口内容', {
+        windowId,
+        isDevelopment,
+        loadUrl,
+      });
+
+      if (isDevelopment) {
+        this.mainWindow.loadURL(loadUrl);
+        this.mainWindow.webContents.openDevTools();
       } else {
-        // 保存窗口位置
-        const bounds = this.mainWindow?.getBounds();
-        if (bounds) {
-          this.config.windowBounds = bounds;
-          this.saveConfig();
-        }
+        this.mainWindow.loadFile(loadUrl);
       }
-    });
 
-    this.mainWindow.on('closed', () => {
-      this.mainWindow = null;
-    });
+      // 窗口事件
+      this.mainWindow.once('ready-to-show', () => {
+        const loadTime = Date.now() - startTime;
+        this.logger.performance('window_load', loadTime, {
+          windowId,
+          isDevelopment,
+        });
+        
+        this.mainWindow?.show();
+        this.logger.window('show', windowId);
+        
+        if (isDevelopment) {
+          this.mainWindow?.webContents.openDevTools();
+          this.logger.debug('开发者工具已打开', { windowId });
+        }
+      });
 
-    // 外部链接在默认浏览器中打开
-    this.mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
-      return { action: 'deny' };
-    });
+      this.mainWindow.on('close', (event) => {
+        this.logger.window('close_attempt', windowId, {
+          minimizeToTray: this.config.minimizeToTray,
+          hasTray: !!this.tray,
+        });
 
-    // 设置菜单
-    this.setupMenu();
+        if (this.config.minimizeToTray && this.tray) {
+          event.preventDefault();
+          this.mainWindow?.hide();
+          this.logger.window('hide', windowId, { reason: 'minimize_to_tray' });
+        } else {
+          // 保存窗口位置
+          const bounds = this.mainWindow?.getBounds();
+          if (bounds) {
+            this.config.windowBounds = bounds;
+            this.saveConfig();
+            this.logger.info('窗口位置已保存', { windowId, bounds });
+          }
+        }
+      });
+
+      this.mainWindow.on('closed', () => {
+        this.logger.window('closed', windowId);
+        this.mainWindow = null;
+      });
+
+      // 监听窗口错误
+      this.mainWindow.webContents.on('crashed', () => {
+        this.logger.errorWithCode(
+          ErrorCode.DESKTOP_WINDOW_CRASH,
+          '窗口渲染进程崩溃',
+          { windowId }
+        );
+      });
+
+      this.mainWindow.webContents.on('unresponsive', () => {
+        this.logger.warning('窗口渲染进程无响应', { windowId });
+      });
+
+      this.mainWindow.webContents.on('responsive', () => {
+        this.logger.info('窗口渲染进程恢复响应', { windowId });
+      });
+
+      // 外部链接在默认浏览器中打开
+      this.mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        this.logger.security('external_link_blocked', {
+          windowId,
+          url,
+          userAgent: this.mainWindow?.webContents.getUserAgent(),
+        });
+        shell.openExternal(url);
+        return { action: 'deny' };
+      });
+
+      // 设置菜单
+      this.setupMenu();
+
+    } catch (error) {
+      this.logger.errorWithCode(
+        ErrorCode.DESKTOP_WINDOW_CREATE_FAILED,
+        '窗口创建失败',
+        { error: error instanceof Error ? error.message : String(error) }
+      );
+      throw error;
+    }
   }
 
   private setupTray(): void {
