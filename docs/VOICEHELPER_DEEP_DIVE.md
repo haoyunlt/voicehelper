@@ -47,6 +47,22 @@
       - [Jaeger (分布式追踪)](#jaeger-分布式追踪)
     - [1.3 核心数据结构](#13-核心数据结构)
       - [1.3.1 对话服务核心结构](#131-对话服务核心结构)
+      - [8.1.2 结构化日志系统](#812-结构化日志系统)
+    - [8.2 智能缓存系统](#82-智能缓存系统)
+      - [8.2.1 多级缓存架构](#821-多级缓存架构)
+      - [8.2.2 智能缓存预热](#822-智能缓存预热)
+    - [8.3 智能批处理系统](#83-智能批处理系统)
+      - [8.3.1 自适应批处理调度器](#831-自适应批处理调度器)
+      - [8.3.2 集成批处理系统](#832-集成批处理系统)
+    - [8.4 高并发处理系统](#84-高并发处理系统)
+      - [8.4.1 连接池管理](#841-连接池管理)
+    - [8.5 性能监控与指标](#85-性能监控与指标)
+      - [8.5.1 系统性能指标](#851-系统性能指标)
+      - [8.5.2 监控指标定义](#852-监控指标定义)
+    - [8.6 性能优化策略](#86-性能优化策略)
+      - [8.6.1 内存优化方案](#861-内存优化方案)
+      - [8.6.2 批处理优化](#862-批处理优化)
+    - [8.7 性能监控中间件](#87-性能监控中间件)
   - [12. 版本迭代历程与未来规划](#12-版本迭代历程与未来规划)
     - [12.1 已发布版本功能清单](#121-已发布版本功能清单)
       - [12.1.1 🚀 v1.8.0 体验升级版（已完成）](#1211--v180-体验升级版已完成)
@@ -57,7 +73,7 @@
       - [Week 4: 融合架构优化](#week-4-融合架构优化)
       - [🏆 技术指标达成情况](#-技术指标达成情况)
       - [12.1.2 🌟 v1.9.0 生态建设版（已完成）](#1212--v190-生态建设版已完成)
-      - [✅ 已实现功能](#-已实现功能-1)
+      - [✅ v1.9.0已实现功能](#-v190已实现功能)
       - [MCP生态扩展（100%完成）](#mcp生态扩展100完成)
       - [大规模服务扩展（100%完成）](#大规模服务扩展100完成)
       - [开发者平台建设（100%完成）](#开发者平台建设100完成)
@@ -161,6 +177,24 @@
     - [14.4 关键API性能指标](#144-关键api性能指标)
       - [14.4.1 响应时间指标](#1441-响应时间指标)
       - [14.4.2 并发处理能力](#1442-并发处理能力)
+  - [15. 统一错误码与日志系统](#15-统一错误码与日志系统)
+    - [15.1 错误码体系架构](#151-错误码体系架构)
+      - [15.1.1 错误码编码规则](#1511-错误码编码规则)
+      - [15.1.2 错误码分类体系](#1512-错误码分类体系)
+    - [15.2 结构化日志系统](#152-结构化日志系统)
+      - [15.2.1 跨平台日志架构](#1521-跨平台日志架构)
+    - [15.3 多平台日志实现](#153-多平台日志实现)
+      - [15.3.1 前端Next.js日志系统](#1531-前端nextjs日志系统)
+      - [15.3.2 桌面Electron日志系统](#1532-桌面electron日志系统)
+    - [15.4 日志系统特性](#154-日志系统特性)
+      - [15.4.1 统一日志格式](#1541-统一日志格式)
+      - [15.4.2 日志级别定义](#1542-日志级别定义)
+      - [15.4.3 日志类型分类](#1543-日志类型分类)
+    - [15.5 错误处理最佳实践](#155-错误处理最佳实践)
+      - [15.5.1 错误码使用规范](#1551-错误码使用规范)
+    - [15.6 监控与告警](#156-监控与告警)
+      - [15.6.1 日志监控指标](#1561-日志监控指标)
+      - [15.6.2 告警规则](#1562-告警规则)
 
 ## 概述
 
@@ -807,6 +841,1647 @@ class QueryRequest:
     filters: Optional[Dict[str, Any]] = None
     stream: bool = True
 ```text
+
+## 2. 模块详细技术解析
+
+### 2.1 后端服务模块详解
+
+#### 2.1.1 API Gateway模块
+
+**模块概述**: API Gateway是系统的入口点，负责请求路由、认证、限流、监控等功能。
+
+**关键函数**:
+```go
+// 文件路径: backend/cmd/server/main.go
+func setupRouter(logger logger.Logger) *gin.Engine {
+    r := gin.New()
+    
+    // 中间件配置
+    r.Use(logger.GinLoggerMiddleware())
+    r.Use(gin.Recovery())
+    r.Use(cors.New(cors.Config{
+        AllowOrigins:     []string{"*"},
+        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowHeaders:     []string{"*"},
+        ExposeHeaders:    []string{"Content-Length"},
+        AllowCredentials: true,
+    }))
+    
+    // 路由配置
+    api := r.Group("/api/v1")
+    {
+        api.GET("/health", healthCheck)
+        api.GET("/version", getVersion)
+        api.GET("/ping", ping)
+        api.POST("/error-test", errorTest)
+        
+        // 认证路由
+        auth := api.Group("/auth")
+        {
+            auth.POST("/login", loginHandler)
+            auth.POST("/register", registerHandler)
+            auth.POST("/refresh", refreshTokenHandler)
+        }
+        
+        // 聊天路由
+        chat := api.Group("/chat")
+        chat.Use(authMiddleware())
+        {
+            chat.POST("/", chatHandler)
+            chat.GET("/history", getChatHistory)
+            chat.DELETE("/:id", deleteChat)
+        }
+    }
+    
+    return r
+}
+
+// 健康检查函数
+func healthCheck(c *gin.Context) {
+    logger := logger.GetLogger()
+    
+    status := map[string]interface{}{
+        "status":    "healthy",
+        "timestamp": time.Now().Unix(),
+        "version":   "1.9.0",
+        "uptime":    time.Since(startTime).Seconds(),
+    }
+    
+    logger.Info("Health check requested", map[string]interface{}{
+        "client_ip": c.ClientIP(),
+        "user_agent": c.GetHeader("User-Agent"),
+    })
+    
+    c.JSON(http.StatusOK, status)
+}
+
+// 认证中间件
+func authMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        token := c.GetHeader("Authorization")
+        if token == "" {
+            logger.GetLogger().ErrorWithCode(
+                errors.AuthTokenMissing,
+                "Missing authorization token",
+                map[string]interface{}{
+                    "client_ip": c.ClientIP(),
+                    "path": c.Request.URL.Path,
+                },
+            )
+            c.JSON(http.StatusUnauthorized, gin.H{
+                "error_code": int(errors.AuthTokenMissing),
+                "message": "Missing authorization token",
+            })
+            c.Abort()
+            return
+        }
+        
+        // 验证Token
+        claims, err := validateToken(token)
+        if err != nil {
+            logger.GetLogger().ErrorWithCode(
+                errors.AuthTokenInvalid,
+                "Invalid token",
+                map[string]interface{}{
+                    "client_ip": c.ClientIP(),
+                    "error": err.Error(),
+                },
+            )
+            c.JSON(http.StatusUnauthorized, gin.H{
+                "error_code": int(errors.AuthTokenInvalid),
+                "message": "Invalid token",
+            })
+            c.Abort()
+            return
+        }
+        
+        c.Set("user_id", claims.UserID)
+        c.Next()
+    }
+}
+```
+
+**功能说明**:
+- **请求路由**: 根据URL路径将请求路由到相应的服务
+- **认证授权**: JWT Token验证，用户身份识别
+- **限流控制**: 基于IP和用户的请求频率限制
+- **监控日志**: 记录所有请求的详细信息
+- **错误处理**: 统一的错误码和错误响应格式
+
+**调用链路**:
+```
+客户端请求 → API Gateway → 认证中间件 → 业务路由 → 后端服务 → 响应处理 → 客户端
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Gateway as API Gateway
+    participant Auth as 认证服务
+    participant Service as 业务服务
+    participant DB as 数据库
+    
+    Client->>Gateway: HTTP请求
+    Gateway->>Gateway: 记录请求日志
+    Gateway->>Auth: 验证Token
+    Auth-->>Gateway: 返回用户信息
+    Gateway->>Service: 转发请求
+    Service->>DB: 查询数据
+    DB-->>Service: 返回数据
+    Service-->>Gateway: 返回响应
+    Gateway->>Gateway: 记录响应日志
+    Gateway-->>Client: HTTP响应
+```
+
+#### 2.1.2 对话服务模块
+
+**模块概述**: 处理用户对话请求，管理对话历史，调用AI服务生成回复。
+
+**关键函数**:
+```go
+// 文件路径: backend/internal/handler/chat.go
+func chatHandler(c *gin.Context) {
+    logger := logger.GetLogger()
+    startTime := time.Now()
+    
+    var req ChatRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        logger.ErrorWithCode(
+            errors.ChatInvalidRequest,
+            "Invalid chat request",
+            map[string]interface{}{
+                "user_id": c.GetString("user_id"),
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error_code": int(errors.ChatInvalidRequest),
+            "message": "Invalid request format",
+        })
+        return
+    }
+    
+    // 验证请求内容
+    if req.Message == "" {
+        logger.ErrorWithCode(
+            errors.ChatMessageEmpty,
+            "Empty message",
+            map[string]interface{}{
+                "user_id": c.GetString("user_id"),
+            },
+        )
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error_code": int(errors.ChatMessageEmpty),
+            "message": "Message cannot be empty",
+        })
+        return
+    }
+    
+    // 调用AI服务
+    response, err := callAIService(req)
+    if err != nil {
+        logger.ErrorWithCode(
+            errors.ChatServiceUnavailable,
+            "AI service error",
+            map[string]interface{}{
+                "user_id": c.GetString("user_id"),
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error_code": int(errors.ChatServiceUnavailable),
+            "message": "AI service temporarily unavailable",
+        })
+        return
+    }
+    
+    // 保存对话历史
+    err = saveChatHistory(c.GetString("user_id"), req.Message, response.Message)
+    if err != nil {
+        logger.ErrorWithCode(
+            errors.ChatSaveHistoryFailed,
+            "Failed to save chat history",
+            map[string]interface{}{
+                "user_id": c.GetString("user_id"),
+                "error": err.Error(),
+            },
+        )
+    }
+    
+    // 记录性能指标
+    duration := time.Since(startTime).Milliseconds()
+    logger.Performance("chat_processing", float64(duration), map[string]interface{}{
+        "user_id": c.GetString("user_id"),
+        "message_length": len(req.Message),
+        "response_length": len(response.Message),
+    })
+    
+    c.JSON(http.StatusOK, response)
+}
+
+// 调用AI服务
+func callAIService(req ChatRequest) (*ChatResponse, error) {
+    // 构建AI服务请求
+    aiReq := AIServiceRequest{
+        Message: req.Message,
+        UserID:  req.UserID,
+        Context: req.Context,
+    }
+    
+    // 调用AI服务
+    resp, err := aiClient.Chat(aiReq)
+    if err != nil {
+        return nil, err
+    }
+    
+    return &ChatResponse{
+        Message: resp.Message,
+        MessageID: generateMessageID(),
+        Timestamp: time.Now().Unix(),
+    }, nil
+}
+```
+
+**功能说明**:
+- **消息处理**: 接收用户消息，验证格式和内容
+- **AI调用**: 调用AI服务生成回复
+- **历史管理**: 保存对话历史到数据库
+- **性能监控**: 记录处理时间和性能指标
+- **错误处理**: 统一的错误码和错误响应
+
+**调用链路**:
+```
+用户消息 → 对话服务 → 消息验证 → AI服务调用 → 回复生成 → 历史保存 → 响应返回
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Chat as 对话服务
+    participant AI as AI服务
+    participant DB as 数据库
+    
+    User->>Chat: 发送消息
+    Chat->>Chat: 验证消息格式
+    Chat->>AI: 调用AI服务
+    AI->>AI: 生成回复
+    AI-->>Chat: 返回回复
+    Chat->>DB: 保存对话历史
+    DB-->>Chat: 确认保存
+    Chat-->>User: 返回回复
+```
+
+#### 2.1.3 用户服务模块
+
+**模块概述**: 管理用户信息、认证、权限等功能。
+
+**关键函数**:
+```go
+// 文件路径: backend/internal/handler/user.go
+func loginHandler(c *gin.Context) {
+    logger := logger.GetLogger()
+    
+    var req LoginRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        logger.ErrorWithCode(
+            errors.AuthInvalidRequest,
+            "Invalid login request",
+            map[string]interface{}{
+                "client_ip": c.ClientIP(),
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error_code": int(errors.AuthInvalidRequest),
+            "message": "Invalid request format",
+        })
+        return
+    }
+    
+    // 验证用户凭据
+    user, err := validateCredentials(req.Username, req.Password)
+    if err != nil {
+        logger.ErrorWithCode(
+            errors.AuthInvalidCredentials,
+            "Invalid credentials",
+            map[string]interface{}{
+                "username": req.Username,
+                "client_ip": c.ClientIP(),
+            },
+        )
+        c.JSON(http.StatusUnauthorized, gin.H{
+            "error_code": int(errors.AuthInvalidCredentials),
+            "message": "Invalid username or password",
+        })
+        return
+    }
+    
+    // 生成JWT Token
+    token, err := generateToken(user.ID, user.Username)
+    if err != nil {
+        logger.ErrorWithCode(
+            errors.AuthTokenGenerationFailed,
+            "Failed to generate token",
+            map[string]interface{}{
+                "user_id": user.ID,
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error_code": int(errors.AuthTokenGenerationFailed),
+            "message": "Failed to generate token",
+        })
+        return
+    }
+    
+    // 记录登录成功
+    logger.Info("User login successful", map[string]interface{}{
+        "user_id": user.ID,
+        "username": user.Username,
+        "client_ip": c.ClientIP(),
+    })
+    
+    c.JSON(http.StatusOK, gin.H{
+        "token": token,
+        "user": gin.H{
+            "id": user.ID,
+            "username": user.Username,
+            "email": user.Email,
+        },
+    })
+}
+
+// 用户注册
+func registerHandler(c *gin.Context) {
+    logger := logger.GetLogger()
+    
+    var req RegisterRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        logger.ErrorWithCode(
+            errors.AuthInvalidRequest,
+            "Invalid register request",
+            map[string]interface{}{
+                "client_ip": c.ClientIP(),
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error_code": int(errors.AuthInvalidRequest),
+            "message": "Invalid request format",
+        })
+        return
+    }
+    
+    // 验证用户名是否已存在
+    if userExists(req.Username) {
+        logger.ErrorWithCode(
+            errors.AuthUserAlreadyExists,
+            "User already exists",
+            map[string]interface{}{
+                "username": req.Username,
+            },
+        )
+        c.JSON(http.StatusConflict, gin.H{
+            "error_code": int(errors.AuthUserAlreadyExists),
+            "message": "Username already exists",
+        })
+        return
+    }
+    
+    // 创建用户
+    user, err := createUser(req)
+    if err != nil {
+        logger.ErrorWithCode(
+            errors.AuthUserCreationFailed,
+            "Failed to create user",
+            map[string]interface{}{
+                "username": req.Username,
+                "error": err.Error(),
+            },
+        )
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error_code": int(errors.AuthUserCreationFailed),
+            "message": "Failed to create user",
+        })
+        return
+    }
+    
+    logger.Info("User registered successfully", map[string]interface{}{
+        "user_id": user.ID,
+        "username": user.Username,
+    })
+    
+    c.JSON(http.StatusCreated, gin.H{
+        "message": "User created successfully",
+        "user": gin.H{
+            "id": user.ID,
+            "username": user.Username,
+        },
+    })
+}
+```
+
+**功能说明**:
+- **用户认证**: 用户名密码验证，JWT Token生成
+- **用户注册**: 新用户创建，用户名唯一性检查
+- **权限管理**: 用户角色和权限控制
+- **会话管理**: Token刷新和失效处理
+- **安全日志**: 记录认证相关的安全事件
+
+**调用链路**:
+```
+认证请求 → 用户服务 → 凭据验证 → 数据库查询 → Token生成 → 响应返回
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant User as 用户服务
+    participant DB as 数据库
+    participant Auth as 认证服务
+    
+    Client->>User: 登录请求
+    User->>DB: 查询用户信息
+    DB-->>User: 返回用户数据
+    User->>Auth: 验证密码
+    Auth-->>User: 验证结果
+    User->>Auth: 生成Token
+    Auth-->>User: 返回Token
+    User-->>Client: 返回认证结果
+```
+
+### 2.2 前端模块详解
+
+#### 2.2.1 Next.js Web前端模块
+
+**模块概述**: 基于Next.js的现代化Web应用，提供响应式用户界面和实时交互功能。
+
+**关键函数**:
+```typescript
+// 文件路径: frontend/app/chat/page.tsx
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { Logger } from '@/lib/logger'
+import { ErrorCode } from '@/lib/errors'
+
+export default function ChatPage() {
+    const [messages, setMessages] = useState<Message[]>([])
+    const [input, setInput] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const logger = new Logger('chat-page')
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    // 发送消息
+    const sendMessage = async (message: string) => {
+        if (!message.trim()) return
+
+        setIsLoading(true)
+        logger.info('Sending message', {
+            message_length: message.length,
+            user_id: getCurrentUserId()
+        })
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({
+                    message: message,
+                    context: messages.slice(-5) // 最近5条消息作为上下文
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                logger.errorWithCode(
+                    ErrorCode.FRONTEND_API_ERROR,
+                    'Failed to send message',
+                    {
+                        status: response.status,
+                        error_code: errorData.error_code,
+                        message: message
+                    }
+                )
+                throw new Error(errorData.message)
+            }
+
+            const data = await response.json()
+            
+            // 添加用户消息
+            setMessages(prev => [...prev, {
+                id: generateId(),
+                type: 'user',
+                content: message,
+                timestamp: Date.now()
+            }])
+
+            // 添加AI回复
+            setMessages(prev => [...prev, {
+                id: data.message_id,
+                type: 'assistant',
+                content: data.message,
+                timestamp: data.timestamp
+            }])
+
+            logger.info('Message sent successfully', {
+                message_id: data.message_id,
+                response_length: data.message.length
+            })
+
+        } catch (error) {
+            logger.errorWithCode(
+                ErrorCode.FRONTEND_API_ERROR,
+                'Failed to send message',
+                {
+                    error: error.message,
+                    message: message
+                }
+            )
+            // 显示错误提示
+            showError('发送消息失败，请重试')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    // 语音输入处理
+    const handleVoiceInput = async () => {
+        logger.info('Starting voice input')
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            const mediaRecorder = new MediaRecorder(stream)
+            const audioChunks: Blob[] = []
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data)
+            }
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
+                
+                // 发送语音到后端进行识别
+                const formData = new FormData()
+                formData.append('audio', audioBlob)
+                
+                const response = await fetch('/api/voice/transcribe', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: formData
+                })
+
+                if (response.ok) {
+                    const data = await response.json()
+                    setInput(data.text)
+                    logger.info('Voice transcription successful', {
+                        text_length: data.text.length
+                    })
+                }
+            }
+
+            mediaRecorder.start()
+            
+            // 3秒后停止录音
+            setTimeout(() => {
+                mediaRecorder.stop()
+                stream.getTracks().forEach(track => track.stop())
+            }, 3000)
+
+        } catch (error) {
+            logger.errorWithCode(
+                ErrorCode.FRONTEND_VOICE_ERROR,
+                'Voice input failed',
+                { error: error.message }
+            )
+        }
+    }
+
+    // 页面加载时记录访问
+    useEffect(() => {
+        logger.pageView('/chat', {
+            referrer: document.referrer,
+            user_agent: navigator.userAgent
+        })
+    }, [])
+
+    // 自动滚动到底部
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [messages])
+
+    return (
+        <div className="chat-container">
+            <div className="messages">
+                {messages.map((message) => (
+                    <div key={message.id} className={`message ${message.type}`}>
+                        <div className="content">{message.content}</div>
+                        <div className="timestamp">
+                            {new Date(message.timestamp).toLocaleTimeString()}
+                        </div>
+                    </div>
+                ))}
+                {isLoading && (
+                    <div className="message assistant">
+                        <div className="typing-indicator">AI正在思考...</div>
+                    </div>
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+            
+            <div className="input-area">
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage(input)}
+                    placeholder="输入消息..."
+                    disabled={isLoading}
+                />
+                <button onClick={() => handleVoiceInput()}>
+                    🎤
+                </button>
+                <button 
+                    onClick={() => sendMessage(input)}
+                    disabled={isLoading || !input.trim()}
+                >
+                    发送
+                </button>
+            </div>
+        </div>
+    )
+}
+```
+
+**功能说明**:
+- **实时聊天**: 支持文本和语音输入，实时显示AI回复
+- **语音识别**: 集成WebRTC API，支持语音转文字
+- **响应式设计**: 适配不同屏幕尺寸的设备
+- **错误处理**: 统一的错误码处理和用户友好提示
+- **性能监控**: 记录页面访问、用户行为、API调用等指标
+
+**调用链路**:
+```
+用户输入 → 前端验证 → API调用 → 后端处理 → 响应返回 → 界面更新
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Frontend as 前端
+    participant API as API Gateway
+    participant Backend as 后端服务
+    participant AI as AI服务
+    
+    User->>Frontend: 输入消息
+    Frontend->>Frontend: 验证输入
+    Frontend->>API: 发送请求
+    API->>Backend: 转发请求
+    Backend->>AI: 调用AI服务
+    AI-->>Backend: 返回回复
+    Backend-->>API: 返回响应
+    API-->>Frontend: 返回数据
+    Frontend->>Frontend: 更新界面
+    Frontend-->>User: 显示回复
+```
+
+### 2.3 AI算法引擎模块详解
+
+#### 2.3.1 RAG引擎模块
+
+**模块概述**: 基于检索增强生成的AI引擎，提供智能问答和知识检索功能。
+
+**关键函数**:
+```python
+# 文件路径: algo/core/retrieve.py
+class RAGEngine:
+    """RAG引擎主类"""
+    
+    def __init__(self, config: RAGConfig):
+        self.config = config
+        self.vector_store = MilvusClient(uri=config.milvus_uri)
+        self.embedding_model = SentenceTransformer(config.embedding_model)
+        self.llm_client = LLMClient(config.llm_config)
+        self.cache = IntegratedCacheService(config.cache_config)
+        self.logger = initLogger('rag-engine')
+        
+    async def retrieve(self, query: str, user_id: str = None) -> RAGResponse:
+        """检索相关文档"""
+        start_time = time.time()
+        
+        try:
+            self.logger.info("RAG retrieval started", {
+                "query": query[:100],  # 只记录前100个字符
+                "user_id": user_id,
+                "log_type": "rag_retrieval_start"
+            })
+            
+            # 1. 查询预处理
+            processed_query = await self._preprocess_query(query)
+            
+            # 2. 向量检索
+            vector_results = await self._vector_search(processed_query)
+            
+            # 3. 关键词检索
+            keyword_results = await self._keyword_search(processed_query)
+            
+            # 4. 混合检索和重排序
+            combined_results = await self._hybrid_retrieval(
+                vector_results, keyword_results, processed_query
+            )
+            
+            # 5. 生成回复
+            response = await self._generate_response(
+                query, combined_results, user_id
+            )
+            
+            # 记录性能指标
+            duration = time.time() - start_time
+            self.logger.performance("rag_retrieval", duration, {
+                "query_length": len(query),
+                "results_count": len(combined_results),
+                "response_length": len(response.content),
+                "user_id": user_id
+            })
+            
+            return response
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.RAG_SERVICE_ERROR,
+                "RAG retrieval failed",
+                {
+                    "query": query[:100],
+                    "user_id": user_id,
+                    "error": str(e)
+                }
+            )
+            raise
+    
+    async def _vector_search(self, query: str) -> List[Document]:
+        """向量检索"""
+        try:
+            # 生成查询向量
+            query_vector = self.embedding_model.encode(query)
+            
+            # 向量检索
+            search_params = {
+                "metric_type": "COSINE",
+                "params": {"nprobe": 10}
+            }
+            
+            results = self.vector_store.search(
+                collection_name="documents",
+                data=[query_vector],
+                anns_field="embedding",
+                param=search_params,
+                limit=20
+            )
+            
+            documents = []
+            for hit in results[0]:
+                doc = Document(
+                    id=hit.id,
+                    content=hit.entity.get("content"),
+                    score=hit.score,
+                    metadata=hit.entity.get("metadata", {})
+                )
+                documents.append(doc)
+            
+            self.logger.info("Vector search completed", {
+                "query_length": len(query),
+                "results_count": len(documents),
+                "log_type": "vector_search"
+            })
+            
+            return documents
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.RAG_VECTOR_SEARCH_ERROR,
+                "Vector search failed",
+                {"query": query[:100], "error": str(e)}
+            )
+            raise
+    
+    async def _hybrid_retrieval(self, vector_results: List[Document], 
+                              keyword_results: List[Document], 
+                              query: str) -> List[Document]:
+        """混合检索和重排序"""
+        try:
+            # 合并结果
+            all_results = vector_results + keyword_results
+            
+            # 去重
+            unique_results = {}
+            for doc in all_results:
+                if doc.id not in unique_results:
+                    unique_results[doc.id] = doc
+                else:
+                    # 保留分数更高的
+                    if doc.score > unique_results[doc.id].score:
+                        unique_results[doc.id] = doc
+            
+            # 重排序
+            reranked_results = await self._rerank_documents(
+                list(unique_results.values()), query
+            )
+            
+            # 返回前10个结果
+            return reranked_results[:10]
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.RAG_RERANK_ERROR,
+                "Document reranking failed",
+                {"error": str(e)}
+            )
+            raise
+    
+    async def _generate_response(self, query: str, documents: List[Document], 
+                               user_id: str = None) -> RAGResponse:
+        """生成回复"""
+        try:
+            # 构建上下文
+            context = self._build_context(documents)
+            
+            # 构建提示词
+            prompt = self._build_prompt(query, context)
+            
+            # 调用LLM生成回复
+            response = await self.llm_client.generate(
+                prompt=prompt,
+                max_tokens=1000,
+                temperature=0.7
+            )
+            
+            # 构建响应对象
+            rag_response = RAGResponse(
+                content=response.content,
+                sources=[doc.id for doc in documents[:5]],  # 前5个来源
+                confidence=response.confidence,
+                metadata={
+                    "query": query,
+                    "user_id": user_id,
+                    "timestamp": time.time(),
+                    "model": self.config.llm_config.model_name
+                }
+            )
+            
+            self.logger.info("Response generated", {
+                "query_length": len(query),
+                "response_length": len(response.content),
+                "sources_count": len(rag_response.sources),
+                "confidence": response.confidence,
+                "user_id": user_id
+            })
+            
+            return rag_response
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.RAG_GENERATION_ERROR,
+                "Response generation failed",
+                {"query": query[:100], "error": str(e)}
+            )
+            raise
+```
+
+**功能说明**:
+- **向量检索**: 使用Milvus向量数据库进行语义相似度搜索
+- **关键词检索**: 基于传统的关键词匹配检索
+- **混合检索**: 结合向量和关键词检索结果
+- **智能重排序**: 使用机器学习模型对检索结果重新排序
+- **上下文生成**: 构建包含检索文档的上下文信息
+- **回复生成**: 调用大语言模型生成最终回复
+
+**调用链路**:
+```
+用户查询 → 查询预处理 → 向量检索 → 关键词检索 → 混合检索 → 重排序 → 上下文构建 → LLM生成 → 回复返回
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant RAG as RAG引擎
+    participant Vector as 向量数据库
+    participant Keyword as 关键词检索
+    participant LLM as 大语言模型
+    
+    User->>RAG: 发送查询
+    RAG->>RAG: 查询预处理
+    RAG->>Vector: 向量检索
+    Vector-->>RAG: 返回向量结果
+    RAG->>Keyword: 关键词检索
+    Keyword-->>RAG: 返回关键词结果
+    RAG->>RAG: 混合检索和重排序
+    RAG->>LLM: 生成回复
+    LLM-->>RAG: 返回生成结果
+    RAG-->>User: 返回最终回复
+```
+
+### 2.4 数据存储模块详解
+
+#### 2.4.1 PostgreSQL关系型数据库模块
+
+**模块概述**: 存储用户信息、对话历史、系统配置等结构化数据。
+
+**关键函数**:
+```go
+// 文件路径: backend/pkg/database/postgres.go
+type PostgresDB struct {
+    db     *sql.DB
+    logger logger.Logger
+}
+
+// 初始化数据库连接
+func NewPostgresDB(config DatabaseConfig) (*PostgresDB, error) {
+    dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+        config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode)
+    
+    db, err := sql.Open("postgres", dsn)
+    if err != nil {
+        return nil, fmt.Errorf("failed to open database: %w", err)
+    }
+    
+    // 设置连接池参数
+    db.SetMaxOpenConns(config.MaxOpenConns)
+    db.SetMaxIdleConns(config.MaxIdleConns)
+    db.SetConnMaxLifetime(config.ConnMaxLifetime)
+    
+    // 测试连接
+    if err := db.Ping(); err != nil {
+        return nil, fmt.Errorf("failed to ping database: %w", err)
+    }
+    
+    return &PostgresDB{
+        db:     db,
+        logger: logger.GetLogger(),
+    }, nil
+}
+
+// 用户相关操作
+func (p *PostgresDB) CreateUser(user *User) error {
+    query := `
+        INSERT INTO users (id, username, email, password_hash, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6)
+    `
+    
+    _, err := p.db.Exec(query, user.ID, user.Username, user.Email, 
+        user.PasswordHash, user.CreatedAt, user.UpdatedAt)
+    
+    if err != nil {
+        p.logger.ErrorWithCode(
+            errors.DatabaseUserCreationFailed,
+            "Failed to create user",
+            map[string]interface{}{
+                "user_id": user.ID,
+                "username": user.Username,
+                "error": err.Error(),
+            },
+        )
+        return err
+    }
+    
+    p.logger.Info("User created successfully", map[string]interface{}{
+        "user_id": user.ID,
+        "username": user.Username,
+    })
+    
+    return nil
+}
+
+// 对话历史操作
+func (p *PostgresDB) SaveChatMessage(userID, message, response string) error {
+    query := `
+        INSERT INTO chat_messages (id, user_id, user_message, ai_response, created_at)
+        VALUES ($1, $2, $3, $4, $5)
+    `
+    
+    messageID := generateMessageID()
+    _, err := p.db.Exec(query, messageID, userID, message, response, time.Now())
+    
+    if err != nil {
+        p.logger.ErrorWithCode(
+            errors.DatabaseChatSaveFailed,
+            "Failed to save chat message",
+            map[string]interface{}{
+                "user_id": userID,
+                "message_id": messageID,
+                "error": err.Error(),
+            },
+        )
+        return err
+    }
+    
+    p.logger.Info("Chat message saved", map[string]interface{}{
+        "user_id": userID,
+        "message_id": messageID,
+    })
+    
+    return nil
+}
+
+// 获取对话历史
+func (p *PostgresDB) GetChatHistory(userID string, limit int) ([]ChatMessage, error) {
+    query := `
+        SELECT id, user_message, ai_response, created_at
+        FROM chat_messages
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2
+    `
+    
+    rows, err := p.db.Query(query, userID, limit)
+    if err != nil {
+        p.logger.ErrorWithCode(
+            errors.DatabaseChatQueryFailed,
+            "Failed to query chat history",
+            map[string]interface{}{
+                "user_id": userID,
+                "error": err.Error(),
+            },
+        )
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var messages []ChatMessage
+    for rows.Next() {
+        var msg ChatMessage
+        err := rows.Scan(&msg.ID, &msg.UserMessage, &msg.AIResponse, &msg.CreatedAt)
+        if err != nil {
+            p.logger.ErrorWithCode(
+                errors.DatabaseChatScanFailed,
+                "Failed to scan chat message",
+                map[string]interface{}{
+                    "user_id": userID,
+                    "error": err.Error(),
+                },
+            )
+            continue
+        }
+        messages = append(messages, msg)
+    }
+    
+    p.logger.Info("Chat history retrieved", map[string]interface{}{
+        "user_id": userID,
+        "message_count": len(messages),
+    })
+    
+    return messages, nil
+}
+```
+
+**功能说明**:
+- **用户管理**: 用户注册、登录、信息更新
+- **对话历史**: 保存和查询用户对话记录
+- **系统配置**: 存储系统参数和配置信息
+- **事务处理**: 保证数据一致性和完整性
+- **连接池管理**: 优化数据库连接性能
+
+**调用链路**:
+```
+业务请求 → 数据库服务 → SQL查询 → 结果处理 → 响应返回
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant Service as 业务服务
+    participant DB as PostgreSQL
+    participant Pool as 连接池
+    
+    Service->>Pool: 获取连接
+    Pool-->>Service: 返回连接
+    Service->>DB: 执行SQL查询
+    DB-->>Service: 返回结果
+    Service->>Pool: 释放连接
+    Pool->>Pool: 连接回收
+```
+
+#### 2.4.2 Redis缓存数据库模块
+
+**模块概述**: 提供高性能缓存服务，存储会话信息、临时数据和热点数据。
+
+**关键函数**:
+```go
+// 文件路径: backend/pkg/cache/redis.go
+type RedisCache struct {
+    client *redis.Client
+    logger logger.Logger
+}
+
+// 初始化Redis连接
+func NewRedisCache(config RedisConfig) (*RedisCache, error) {
+    client := redis.NewClient(&redis.Options{
+        Addr:     config.Addr,
+        Password: config.Password,
+        DB:       config.DB,
+        PoolSize: config.PoolSize,
+    })
+    
+    // 测试连接
+    _, err := client.Ping().Result()
+    if err != nil {
+        return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+    }
+    
+    return &RedisCache{
+        client: client,
+        logger: logger.GetLogger(),
+    }, nil
+}
+
+// 设置缓存
+func (r *RedisCache) Set(key string, value interface{}, expiration time.Duration) error {
+    err := r.client.Set(key, value, expiration).Err()
+    if err != nil {
+        r.logger.ErrorWithCode(
+            errors.CacheSetFailed,
+            "Failed to set cache",
+            map[string]interface{}{
+                "key": key,
+                "error": err.Error(),
+            },
+        )
+        return err
+    }
+    
+    r.logger.Info("Cache set successfully", map[string]interface{}{
+        "key": key,
+        "expiration": expiration.Seconds(),
+    })
+    
+    return nil
+}
+
+// 获取缓存
+func (r *RedisCache) Get(key string) (string, error) {
+    value, err := r.client.Get(key).Result()
+    if err != nil {
+        if err == redis.Nil {
+            r.logger.Info("Cache miss", map[string]interface{}{
+                "key": key,
+            })
+            return "", nil
+        }
+        
+        r.logger.ErrorWithCode(
+            errors.CacheGetFailed,
+            "Failed to get cache",
+            map[string]interface{}{
+                "key": key,
+                "error": err.Error(),
+            },
+        )
+        return "", err
+    }
+    
+    r.logger.Info("Cache hit", map[string]interface{}{
+        "key": key,
+    })
+    
+    return value, nil
+}
+
+// 删除缓存
+func (r *RedisCache) Delete(key string) error {
+    err := r.client.Del(key).Err()
+    if err != nil {
+        r.logger.ErrorWithCode(
+            errors.CacheDeleteFailed,
+            "Failed to delete cache",
+            map[string]interface{}{
+                "key": key,
+                "error": err.Error(),
+            },
+        )
+        return err
+    }
+    
+    r.logger.Info("Cache deleted", map[string]interface{}{
+        "key": key,
+    })
+    
+    return nil
+}
+
+// 批量操作
+func (r *RedisCache) MSet(keyValues map[string]interface{}) error {
+    err := r.client.MSet(keyValues).Err()
+    if err != nil {
+        r.logger.ErrorWithCode(
+            errors.CacheMSetFailed,
+            "Failed to set multiple cache",
+            map[string]interface{}{
+                "key_count": len(keyValues),
+                "error": err.Error(),
+            },
+        )
+        return err
+    }
+    
+    r.logger.Info("Multiple cache set", map[string]interface{}{
+        "key_count": len(keyValues),
+    })
+    
+    return nil
+}
+```
+
+**功能说明**:
+- **会话存储**: 存储用户会话和登录状态
+- **数据缓存**: 缓存热点数据和查询结果
+- **分布式锁**: 实现分布式环境下的锁机制
+- **发布订阅**: 支持消息发布和订阅功能
+- **过期管理**: 自动清理过期数据
+
+**调用链路**:
+```
+缓存请求 → Redis客户端 → 命令执行 → 结果返回 → 日志记录
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant Service as 业务服务
+    participant Redis as Redis缓存
+    participant Memory as 内存缓存
+    
+    Service->>Memory: 检查本地缓存
+    Memory-->>Service: 缓存未命中
+    Service->>Redis: 查询Redis缓存
+    Redis-->>Service: 返回缓存数据
+    Service->>Memory: 更新本地缓存
+    Service-->>Service: 返回数据
+```
+
+#### 2.4.3 Milvus向量数据库模块
+
+**模块概述**: 存储和检索文档向量，支持语义相似度搜索。
+
+**关键函数**:
+```python
+# 文件路径: algo/core/vector_store.py
+class MilvusVectorStore:
+    """Milvus向量数据库客户端"""
+    
+    def __init__(self, config: MilvusConfig):
+        self.config = config
+        self.client = MilvusClient(uri=config.uri)
+        self.logger = initLogger('milvus-client')
+        
+    async def create_collection(self, collection_name: str, schema: dict):
+        """创建集合"""
+        try:
+            # 检查集合是否存在
+            if self.client.has_collection(collection_name):
+                self.logger.info(f"Collection {collection_name} already exists")
+                return
+            
+            # 创建集合
+            self.client.create_collection(
+                collection_name=collection_name,
+                schema=schema
+            )
+            
+            # 创建索引
+            index_params = {
+                "metric_type": "COSINE",
+                "index_type": "IVF_FLAT",
+                "params": {"nlist": 1024}
+            }
+            
+            self.client.create_index(
+                collection_name=collection_name,
+                field_name="embedding",
+                index_params=index_params
+            )
+            
+            self.logger.info(f"Collection {collection_name} created successfully")
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.VECTOR_COLLECTION_CREATE_FAILED,
+                f"Failed to create collection {collection_name}",
+                {"error": str(e)}
+            )
+            raise
+    
+    async def insert_documents(self, collection_name: str, documents: List[Document]):
+        """插入文档向量"""
+        try:
+            # 准备数据
+            data = []
+            for doc in documents:
+                data.append({
+                    "id": doc.id,
+                    "content": doc.content,
+                    "embedding": doc.embedding,
+                    "metadata": doc.metadata
+                })
+            
+            # 插入数据
+            result = self.client.insert(
+                collection_name=collection_name,
+                data=data
+            )
+            
+            # 刷新集合
+            self.client.flush(collection_name=collection_name)
+            
+            self.logger.info(f"Inserted {len(documents)} documents", {
+                "collection": collection_name,
+                "document_count": len(documents)
+            })
+            
+            return result
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.VECTOR_INSERT_FAILED,
+                "Failed to insert documents",
+                {"collection": collection_name, "error": str(e)}
+            )
+            raise
+    
+    async def search_similar(self, collection_name: str, query_vector: List[float], 
+                           top_k: int = 10) -> List[SearchResult]:
+        """搜索相似向量"""
+        try:
+            # 搜索参数
+            search_params = {
+                "metric_type": "COSINE",
+                "params": {"nprobe": 10}
+            }
+            
+            # 执行搜索
+            results = self.client.search(
+                collection_name=collection_name,
+                data=[query_vector],
+                anns_field="embedding",
+                param=search_params,
+                limit=top_k
+            )
+            
+            # 处理结果
+            search_results = []
+            for hit in results[0]:
+                result = SearchResult(
+                    id=hit.id,
+                    score=hit.score,
+                    content=hit.entity.get("content"),
+                    metadata=hit.entity.get("metadata", {})
+                )
+                search_results.append(result)
+            
+            self.logger.info(f"Search completed", {
+                "collection": collection_name,
+                "query_vector_length": len(query_vector),
+                "results_count": len(search_results)
+            })
+            
+            return search_results
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.VECTOR_SEARCH_FAILED,
+                "Vector search failed",
+                {"collection": collection_name, "error": str(e)}
+            )
+            raise
+```
+
+**功能说明**:
+- **向量存储**: 存储文档的向量表示
+- **相似度搜索**: 基于余弦相似度的向量检索
+- **索引优化**: 使用IVF索引提高搜索性能
+- **批量操作**: 支持批量插入和查询
+- **元数据管理**: 存储文档的元数据信息
+
+**调用链路**:
+```
+查询请求 → 向量化处理 → Milvus搜索 → 结果排序 → 返回文档
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant RAG as RAG引擎
+    participant Embedding as 向量化模型
+    participant Milvus as Milvus数据库
+    participant Index as 索引系统
+    
+    RAG->>Embedding: 查询向量化
+    Embedding-->>RAG: 返回向量
+    RAG->>Milvus: 向量搜索
+    Milvus->>Index: 索引查询
+    Index-->>Milvus: 返回候选结果
+    Milvus-->>RAG: 返回相似文档
+    RAG->>RAG: 结果排序和过滤
+```
+
+### 2.5 外部集成模块详解
+
+#### 2.5.1 大语言模型集成模块
+
+**模块概述**: 集成多种大语言模型，提供统一的AI服务接口。
+
+**关键函数**:
+```python
+# 文件路径: algo/core/llm_client.py
+class LLMClient:
+    """大语言模型客户端"""
+    
+    def __init__(self, config: LLMConfig):
+        self.config = config
+        self.clients = {}
+        self.logger = initLogger('llm-client')
+        self._initialize_clients()
+    
+    def _initialize_clients(self):
+        """初始化模型客户端"""
+        try:
+            # 豆包大模型客户端
+            if self.config.doubao_enabled:
+                self.clients['doubao'] = DoubaoClient(
+                    api_key=self.config.doubao_api_key,
+                    base_url=self.config.doubao_base_url
+                )
+            
+            # OpenAI客户端
+            if self.config.openai_enabled:
+                self.clients['openai'] = OpenAI(
+                    api_key=self.config.openai_api_key,
+                    base_url=self.config.openai_base_url
+                )
+            
+            # 本地模型客户端
+            if self.config.local_enabled:
+                self.clients['local'] = LocalModelClient(
+                    model_path=self.config.local_model_path
+                )
+            
+            self.logger.info("LLM clients initialized", {
+                "enabled_models": list(self.clients.keys())
+            })
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.LLM_CLIENT_INIT_FAILED,
+                "Failed to initialize LLM clients",
+                {"error": str(e)}
+            )
+            raise
+    
+    async def generate(self, prompt: str, model: str = None, **kwargs) -> LLMResponse:
+        """生成文本"""
+        try:
+            # 选择模型
+            if model is None:
+                model = self.config.default_model
+            
+            if model not in self.clients:
+                raise ValueError(f"Model {model} not available")
+            
+            client = self.clients[model]
+            
+            # 记录请求
+            self.logger.info("LLM generation started", {
+                "model": model,
+                "prompt_length": len(prompt),
+                "log_type": "llm_generation_start"
+            })
+            
+            # 调用模型
+            if model == 'doubao':
+                response = await self._call_doubao(client, prompt, **kwargs)
+            elif model == 'openai':
+                response = await self._call_openai(client, prompt, **kwargs)
+            elif model == 'local':
+                response = await self._call_local(client, prompt, **kwargs)
+            else:
+                raise ValueError(f"Unsupported model: {model}")
+            
+            # 记录响应
+            self.logger.info("LLM generation completed", {
+                "model": model,
+                "response_length": len(response.content),
+                "tokens_used": response.tokens_used,
+                "cost": response.cost
+            })
+            
+            return response
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.LLM_GENERATION_FAILED,
+                "LLM generation failed",
+                {
+                    "model": model,
+                    "prompt": prompt[:100],
+                    "error": str(e)
+                }
+            )
+            raise
+    
+    async def _call_doubao(self, client, prompt: str, **kwargs) -> LLMResponse:
+        """调用豆包大模型"""
+        try:
+            response = await client.chat.completions.create(
+                model=kwargs.get('model', 'doubao-pro'),
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=kwargs.get('max_tokens', 1000),
+                temperature=kwargs.get('temperature', 0.7)
+            )
+            
+            return LLMResponse(
+                content=response.choices[0].message.content,
+                tokens_used=response.usage.total_tokens,
+                cost=response.usage.total_tokens * 0.001,  # 假设每token 0.001元
+                model='doubao'
+            )
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.DOUBAO_API_ERROR,
+                "Doubao API call failed",
+                {"error": str(e)}
+            )
+            raise
+    
+    async def _call_openai(self, client, prompt: str, **kwargs) -> LLMResponse:
+        """调用OpenAI模型"""
+        try:
+            response = await client.chat.completions.create(
+                model=kwargs.get('model', 'gpt-3.5-turbo'),
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=kwargs.get('max_tokens', 1000),
+                temperature=kwargs.get('temperature', 0.7)
+            )
+            
+            return LLMResponse(
+                content=response.choices[0].message.content,
+                tokens_used=response.usage.total_tokens,
+                cost=response.usage.total_tokens * 0.002,  # 假设每token 0.002元
+                model='openai'
+            )
+            
+        except Exception as e:
+            self.logger.errorWithCode(
+                ErrorCode.OPENAI_API_ERROR,
+                "OpenAI API call failed",
+                {"error": str(e)}
+            )
+            raise
+```
+
+**功能说明**:
+- **多模型支持**: 支持豆包、OpenAI、本地模型等多种LLM
+- **统一接口**: 提供统一的调用接口和响应格式
+- **负载均衡**: 根据模型性能和成本自动选择
+- **错误处理**: 统一的错误处理和重试机制
+- **成本控制**: 记录token使用量和成本
+
+**调用链路**:
+```
+生成请求 → 模型选择 → API调用 → 响应处理 → 结果返回
+```
+
+**逻辑时序图**:
+```mermaid
+sequenceDiagram
+    participant RAG as RAG引擎
+    participant LLM as LLM客户端
+    participant Doubao as 豆包模型
+    participant OpenAI as OpenAI模型
+    participant Local as 本地模型
+    
+    RAG->>LLM: 生成请求
+    LLM->>LLM: 选择模型
+    alt 豆包模型
+        LLM->>Doubao: API调用
+        Doubao-->>LLM: 返回结果
+    else OpenAI模型
+        LLM->>OpenAI: API调用
+        OpenAI-->>LLM: 返回结果
+    else 本地模型
+        LLM->>Local: 本地调用
+        Local-->>LLM: 返回结果
+    end
+    LLM-->>RAG: 返回生成结果
+```
 
 ## 2. 前端模块深度解析
 
