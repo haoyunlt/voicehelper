@@ -9,45 +9,146 @@
   - [概述](#概述)
   - [1. VoiceHelper整体架构设计](#1-voicehelper整体架构设计)
     - [1.1 系统架构概览](#11-系统架构概览)
+    - [1.2 系统模块功能详解](#12-系统模块功能详解)
+      - [1.2.1 用户接入层模块](#121-用户接入层模块)
+      - [Web前端 (Next.js + React)](#web前端-nextjs--react)
+      - [移动端 (React Native)](#移动端-react-native)
+      - [桌面端 (Electron)](#桌面端-electron)
+      - [微信小程序](#微信小程序)
+      - [浏览器插件 (Chrome Extension)](#浏览器插件-chrome-extension)
+      - [1.2.2 API网关层模块](#122-api网关层模块)
+      - [API Gateway (Go + Gin)](#api-gateway-go--gin)
+      - [负载均衡器](#负载均衡器)
+      - [1.2.3 核心服务层模块](#123-核心服务层模块)
+      - [对话服务 (Go Service)](#对话服务-go-service)
+      - [用户服务 (Go Service)](#用户服务-go-service)
+      - [数据集服务 (Go Service)](#数据集服务-go-service)
+      - [1.2.4 AI算法引擎模块](#124-ai算法引擎模块)
+      - [RAG引擎 (Python + FastAPI)](#rag引擎-python--fastapi)
+      - [语音处理 (Python Service)](#语音处理-python-service)
+      - [多模态融合 (Python Service)](#多模态融合-python-service)
+      - [模型路由器 (Python Service)](#模型路由器-python-service)
+      - [批处理服务 (Python Service)](#批处理服务-python-service)
+      - [1.2.5 数据存储层模块](#125-数据存储层模块)
+      - [PostgreSQL (关系型数据库)](#postgresql-关系型数据库)
+      - [Redis (缓存数据库)](#redis-缓存数据库)
+      - [Milvus (向量数据库)](#milvus-向量数据库)
+      - [Neo4j (图数据库)](#neo4j-图数据库)
+      - [MinIO (对象存储)](#minio-对象存储)
+      - [1.2.6 外部服务集成模块](#126-外部服务集成模块)
+      - [豆包大模型 (Ark API)](#豆包大模型-ark-api)
+      - [OpenAI (备用模型)](#openai-备用模型)
+      - [微信生态集成](#微信生态集成)
+      - [云存储服务](#云存储服务)
+      - [1.2.7 监控运维层模块](#127-监控运维层模块)
+      - [Prometheus (指标收集)](#prometheus-指标收集)
+      - [Grafana (可视化面板)](#grafana-可视化面板)
+      - [ELK Stack (日志系统)](#elk-stack-日志系统)
+      - [Jaeger (分布式追踪)](#jaeger-分布式追踪)
+    - [1.3 核心数据结构](#13-核心数据结构)
+      - [1.3.1 对话服务核心结构](#131-对话服务核心结构)
   - [12. 版本迭代历程与未来规划](#12-版本迭代历程与未来规划)
     - [12.1 已发布版本功能清单](#121-已发布版本功能清单)
       - [12.1.1 🚀 v1.8.0 体验升级版（已完成）](#1211--v180-体验升级版已完成)
+      - [✅ 已实现功能](#-已实现功能)
+      - [Week 1: 语音延迟优化](#week-1-语音延迟优化)
+      - [Week 2: 情感表达增强](#week-2-情感表达增强)
+      - [Week 3: 视觉理解增强](#week-3-视觉理解增强)
+      - [Week 4: 融合架构优化](#week-4-融合架构优化)
+      - [🏆 技术指标达成情况](#-技术指标达成情况)
       - [12.1.2 🌟 v1.9.0 生态建设版（已完成）](#1212--v190-生态建设版已完成)
+      - [✅ 已实现功能](#-已实现功能-1)
+      - [MCP生态扩展（100%完成）](#mcp生态扩展100完成)
+      - [大规模服务扩展（100%完成）](#大规模服务扩展100完成)
+      - [开发者平台建设（100%完成）](#开发者平台建设100完成)
+      - [全平台客户端开发（100%完成）](#全平台客户端开发100完成)
+      - [🏆 最终服务集成状态](#-最终服务集成状态)
     - [12.2 🚀 未来版本迭代规划](#122--未来版本迭代规划)
       - [12.2.1 v2.0.0 企业完善版（计划中）](#1221-v200-企业完善版计划中)
+      - [🎯 Phase 1: 安全合规体系（2周）](#-phase-1-安全合规体系2周)
+      - [零信任架构实施](#零信任架构实施)
+      - [合规认证体系](#合规认证体系)
+      - [🎯 Phase 2: 高可用架构（2周）](#-phase-2-高可用架构2周)
+      - [多地域部署架构](#多地域部署架构)
+      - [AIOps智能运维](#aiops智能运维)
+      - [🏆 v2.0.0目标指标](#-v200目标指标)
       - [12.2.2 v2.1.0 智能化升级版（规划中）](#1222-v210-智能化升级版规划中)
+      - [🎯 核心特性规划](#-核心特性规划)
+      - [下一代RAG系统](#下一代rag系统)
+      - [Agent智能体系统](#agent智能体系统)
+      - [智能化运营平台](#智能化运营平台)
       - [12.2.3 v3.0.0 生态平台版（远期规划）](#1223-v300-生态平台版远期规划)
+      - [🎯 平台化战略](#-平台化战略)
+      - [开放API生态](#开放api生态)
+      - [行业解决方案](#行业解决方案)
     - [12.3 版本迭代时间线](#123-版本迭代时间线)
     - [12.4 技术演进路径](#124-技术演进路径)
       - [12.4.1 AI能力演进](#1241-ai能力演进)
       - [12.4.2 架构演进路径](#1242-架构演进路径)
+      - [当前架构 → 目标架构](#当前架构--目标架构)
     - [12.5 商业价值实现路径](#125-商业价值实现路径)
       - [12.5.1 技术护城河建设](#1251-技术护城河建设)
+      - [已建立优势](#已建立优势)
+      - [未来护城河](#未来护城河)
       - [12.5.2 市场竞争地位](#1252-市场竞争地位)
   - [13. 业界竞争力分析与市场定位](#13-业界竞争力分析与市场定位)
     - [13.1 🏆 业界主流产品对比分析](#131--业界主流产品对比分析)
       - [13.1.1 OpenAI ChatGPT系列对比](#1311-openai-chatgpt系列对比)
+      - [ChatGPT-4o (2024-2025) vs VoiceHelper v1.9.0](#chatgpt-4o-2024-2025-vs-voicehelper-v190)
+      - [核心技术对比](#核心技术对比)
       - [13.1.2 Anthropic Claude 3.5 Sonnet对比](#1312-anthropic-claude-35-sonnet对比)
+      - [Claude 3.5 vs VoiceHelper v1.9.0](#claude-35-vs-voicehelper-v190)
       - [13.1.3 Google Gemini Live对比](#1313-google-gemini-live对比)
+      - [Gemini Live vs VoiceHelper v1.9.0](#gemini-live-vs-voicehelper-v190)
     - [13.2 🎯 VoiceHelper竞争优势分析](#132--voicehelper竞争优势分析)
       - [13.2.1 核心技术优势（已实现）](#1321-核心技术优势已实现)
+      - [1. GraphRAG系统特性](#1-graphrag系统特性)
+      - [2. Agent架构特性](#2-agent架构特性)
+      - [3. 多模态融合特性](#3-多模态融合特性)
       - [13.2.2 生态建设现状](#1322-生态建设现状)
+      - [服务集成对比](#服务集成对比)
+      - [平台覆盖对比](#平台覆盖对比)
       - [13.2.3 性能指标对比](#1323-性能指标对比)
+      - [关键性能基准测试](#关键性能基准测试)
     - [13.3 🚀 竞争力提升路径](#133--竞争力提升路径)
       - [13.3.1 v2.0.0企业完善版竞争力提升](#1331-v200企业完善版竞争力提升)
+      - [目标：从第1梯队向市场领导者地位发展](#目标从第1梯队向市场领导者地位发展)
+      - [具体提升指标](#具体提升指标)
       - [13.3.2 长期竞争战略（v2.1.0-v3.0.0）](#1332-长期竞争战略v210-v300)
+      - [技术护城河建设](#技术护城河建设)
+      - [市场定位演进](#市场定位演进)
     - [13.4 风险分析与应对策略](#134-风险分析与应对策略)
       - [13.4.1 竞争风险识别](#1341-竞争风险识别)
+      - [技术风险](#技术风险)
+      - [市场风险](#市场风险)
       - [13.4.2 应对策略](#1342-应对策略)
+      - [技术应对策略](#技术应对策略)
+      - [市场应对策略](#市场应对策略)
     - [13.5 总结与展望](#135-总结与展望)
       - [13.5.1 竞争地位总结](#1351-竞争地位总结)
+      - [当前竞争优势（v1.9.0）](#当前竞争优势v190)
+      - [v2.0.0竞争展望](#v200竞争展望)
       - [13.5.2 发展建议](#1352-发展建议)
+      - [短期策略（v2.0.0，4周）](#短期策略v2004周)
+      - [中期策略（v2.1.0，6个月）](#中期策略v2106个月)
+      - [长期策略（v3.0.0，1年）](#长期策略v3001年)
   - [14. 系统API接口清单与调用链分析](#14-系统api接口清单与调用链分析)
     - [14.1 模块API接口总览](#141-模块api接口总览)
       - [14.1.1 前端应用模块 (Frontend)](#1411-前端应用模块-frontend)
+      - [Web应用 (Next.js) - 端口3000](#web应用-nextjs---端口3000)
+      - [微信小程序 - 页面路由](#微信小程序---页面路由)
+      - [桌面应用 (Electron) - IPC接口](#桌面应用-electron---ipc接口)
       - [14.1.2 后端服务模块 (Backend Go)](#1412-后端服务模块-backend-go)
+      - [API网关服务 - 端口8080](#api网关服务---端口8080)
+      - [对话服务API](#对话服务api)
+      - [语音服务API](#语音服务api)
+      - [集成服务API](#集成服务api)
       - [14.1.3 算法服务模块 (Python FastAPI)](#1413-算法服务模块-python-fastapi)
+      - [核心算法服务 - 端口8000](#核心算法服务---端口8000)
+      - [批处理服务API](#批处理服务api)
+      - [语音服务 - 端口8001](#语音服务---端口8001)
       - [14.1.4 数据存储服务](#1414-数据存储服务)
+      - [数据库服务端口](#数据库服务端口)
     - [14.2 API调用链路分析](#142-api调用链路分析)
       - [14.2.1 对话完成调用链](#1421-对话完成调用链)
       - [14.2.2 语音处理调用链](#1422-语音处理调用链)
@@ -202,11 +303,362 @@ graph TB
     class POSTGRES,REDIS,MILVUS,NEO4J,MINIO storage
     class ARK,OPENAI,WECHAT,OSS external
     class PROMETHEUS,GRAFANA,ELK,JAEGER monitor
-```text
+```
 
-### 1.2 核心数据结构
+### 1.2 系统模块功能详解
 
-#### 1.2.1 对话服务核心结构
+#### 1.2.1 用户接入层模块
+
+#### Web前端 (Next.js + React)
+
+- **核心功能**: 现代化Web应用界面，支持响应式设计和PWA特性
+- **技术栈**: Next.js 14 + React 18 + TypeScript + Tailwind CSS
+- **主要特性**:
+  - 实时语音交互：WebRTC音频采集，实时语音识别和合成
+  - 响应式设计：支持桌面端、平板、手机多种屏幕尺寸
+  - PWA支持：离线缓存、桌面安装、推送通知
+  - 流式对话：SSE实时显示AI回答，提升用户体验
+  - 多模态输入：支持文本、语音、图片、文件上传
+- **性能指标**: 首屏加载<2s，交互响应<100ms
+
+#### 移动端 (React Native)
+
+- **核心功能**: 跨平台移动应用，提供原生体验
+- **技术栈**: React Native + TypeScript + Redux Toolkit
+- **主要特性**:
+  - 原生语音API：集成iOS Speech Framework和Android SpeechRecognizer
+  - 离线缓存：本地SQLite存储对话历史和用户偏好
+  - 推送通知：Firebase Cloud Messaging集成
+  - 生物识别：Face ID/Touch ID/指纹解锁
+  - 后台处理：语音录制和播放的后台任务管理
+- **平台支持**: iOS 12+, Android 8.0+
+
+#### 桌面端 (Electron)
+
+- **核心功能**: 跨平台桌面应用，深度系统集成
+- **技术栈**: Electron + React + Node.js
+- **主要特性**:
+  - 系统集成：系统托盘、全局快捷键、开机自启
+  - 快捷键支持：自定义快捷键唤醒和操作
+  - 本地存储：用户数据和配置的本地加密存储
+  - 窗口管理：多窗口、置顶、最小化到托盘
+  - 自动更新：应用程序自动更新机制
+- **系统支持**: Windows 10+, macOS 10.15+, Linux Ubuntu 18.04+
+
+#### 微信小程序
+
+- **核心功能**: 轻量化移动端应用，快速启动
+- **技术栈**: 微信小程序原生框架 + JavaScript
+- **主要特性**:
+  - 轻量化交互：精简功能，专注核心对话体验
+  - 社交分享：对话内容分享到微信群聊和朋友圈
+  - 快速启动：无需安装，即用即走
+  - 微信生态：用户授权、支付、消息推送集成
+  - 语音输入：微信录音API集成，支持语音转文字
+- **性能要求**: 包体积<2MB，启动时间<3s
+
+#### 浏览器插件 (Chrome Extension)
+
+- **核心功能**: 浏览器智能扩展，网页内容分析
+- **技术栈**: Chrome Extension API + TypeScript + React
+- **主要特性**:
+  - 页面内容分析：自动提取网页关键信息和摘要
+  - 快速查询：选中文本快速查询和解释
+  - 上下文感知：基于当前网页内容的智能问答
+  - 悬浮窗口：非侵入式交互界面
+  - 多语言翻译：实时翻译和语言检测
+- **浏览器支持**: Chrome 88+, Firefox 78+, Edge 88+
+
+#### 1.2.2 API网关层模块
+
+#### API Gateway (Go + Gin)
+
+- **核心功能**: 统一API入口，请求路由和流量管理
+- **技术栈**: Go 1.21 + Gin框架 + JWT认证
+- **主要特性**:
+  - 路由分发：基于路径和方法的智能路由
+  - 认证授权：JWT Token验证和RBAC权限控制
+  - 限流熔断：令牌桶算法限流，熔断器故障保护
+  - 监控日志：请求链路追踪和性能指标收集
+  - 协议转换：HTTP/WebSocket/gRPC协议适配
+- **性能指标**: QPS 10000+，延迟P95<50ms
+
+#### 负载均衡器
+
+- **核心功能**: 流量分发和健康检查
+- **技术栈**: Nginx + Consul + HAProxy
+- **主要特性**:
+  - 健康检查：定期检测后端服务可用性
+  - 故障转移：自动剔除故障节点，流量重新分配
+  - 流量分发：轮询、加权轮询、最少连接等算法
+  - 会话保持：基于Cookie或IP的会话亲和性
+  - SSL终结：HTTPS证书管理和SSL卸载
+- **可用性**: 99.99%，故障切换时间<5s
+
+#### 1.2.3 核心服务层模块
+
+#### 对话服务 (Go Service)
+
+- **核心功能**: 对话逻辑处理和会话管理
+- **技术栈**: Go + gRPC + PostgreSQL + Redis
+- **主要特性**:
+  - 会话管理：多轮对话上下文维护和状态管理
+  - 上下文维护：对话历史压缩和关键信息提取
+  - 多轮对话：支持复杂对话流程和意图识别
+  - 意图识别：NLU模型集成，用户意图分类和槽位填充
+  - 个性化：用户偏好学习和个性化回复生成
+- **性能指标**: 并发会话10000+，响应时间<200ms
+
+#### 用户服务 (Go Service)
+
+- **核心功能**: 用户身份管理和权限控制
+- **技术栈**: Go + PostgreSQL + Redis + JWT
+- **主要特性**:
+  - 用户管理：注册、登录、资料管理、密码重置
+  - 权限控制：基于角色的访问控制(RBAC)
+  - 个性化配置：用户偏好、主题、语言等设置
+  - 使用统计：用户行为分析和使用量统计
+  - 多租户：企业级多租户隔离和管理
+- **安全特性**: 密码加密、会话管理、防暴力破解
+
+#### 数据集服务 (Go Service)
+
+- **核心功能**: 知识库管理和文档处理
+- **技术栈**: Go + PostgreSQL + MinIO + Elasticsearch
+- **主要特性**:
+  - 知识库管理：文档分类、标签、权限管理
+  - 文档处理：多格式文档解析和内容提取
+  - 版本控制：文档版本管理和变更追踪
+  - 质量评估：文档质量评分和推荐优化
+  - 批量操作：文档批量上传、更新、删除
+- **支持格式**: PDF, Word, Excel, PPT, TXT, Markdown, HTML
+
+#### 1.2.4 AI算法引擎模块
+
+#### RAG引擎 (Python + FastAPI)
+
+- **核心功能**: 检索增强生成，智能问答核心
+- **技术栈**: Python 3.11 + FastAPI + LangChain + Transformers
+- **主要特性**:
+  - 文档检索：基于向量相似度的语义检索
+  - 向量搜索：高维向量空间的相似度计算
+  - 重排序：Cross-encoder模型对检索结果重新排序
+  - 答案生成：基于检索上下文的答案生成
+  - 多策略融合：向量检索+关键词检索+图检索
+- **性能指标**: 检索延迟<50ms，召回率97%，准确率92%
+
+#### 语音处理 (Python Service)
+
+- **核心功能**: 端到端语音交互处理
+- **技术栈**: Python + Whisper + TTS + PyTorch
+- **主要特性**:
+  - 语音识别：Whisper模型，支持多语言ASR
+  - 语音合成：神经网络TTS，支持情感和韵律控制
+  - 情感分析：语音情感识别，准确率90%+
+  - 语音增强：噪声抑制和音频质量提升
+  - 实时处理：流式语音处理，延迟<150ms
+- **语言支持**: 中文、英文、日文、韩文等15种语言
+
+#### 多模态融合 (Python Service)
+
+- **核心功能**: 多模态数据理解和融合
+- **技术栈**: Python + OpenCV + PIL + Transformers
+- **主要特性**:
+  - 图像理解：物体检测、场景识别、OCR文字提取
+  - 视频分析：视频内容理解和关键帧提取
+  - 文档解析：PDF、Word等结构化文档解析
+  - 跨模态检索：图文匹配、视频问答等
+  - 特征融合：多模态特征对齐和融合
+- **支持模态**: 文本、图像、音频、视频、结构化数据
+
+#### 模型路由器 (Python Service)
+
+- **核心功能**: 智能模型选择和负载均衡
+- **技术栈**: Python + FastAPI + Redis + Prometheus
+- **主要特性**:
+  - 智能分发：基于任务类型和模型能力的智能路由
+  - 负载均衡：模型实例负载监控和流量分配
+  - 成本优化：基于成本和性能的模型选择策略
+  - 性能监控：模型响应时间和准确率监控
+  - 故障转移：模型故障自动切换和降级
+- **支持模型**: GPT-4, Claude, Gemini, 豆包等10+模型
+
+#### 批处理服务 (Python Service)
+
+- **核心功能**: 批量请求处理和性能优化
+- **技术栈**: Python + AsyncIO + Redis Queue
+- **主要特性**:
+  - 请求合并：相似请求批量处理，提升吞吐量
+  - 异步处理：非阻塞异步处理，提高并发能力
+  - 优先级调度：基于用户等级和任务紧急度的调度
+  - 资源优化：GPU资源池化和动态分配
+  - 队列管理：任务队列监控和容量管理
+- **性能提升**: 吞吐量提升300%，GPU利用率90%+
+
+#### 1.2.5 数据存储层模块
+
+#### PostgreSQL (关系型数据库)
+
+- **核心功能**: 主数据库，存储结构化数据
+- **版本**: PostgreSQL 15
+- **主要特性**:
+  - 用户数据：用户信息、权限、配置等
+  - 会话记录：对话历史、会话状态、统计数据
+  - 系统配置：系统参数、模型配置、业务规则
+  - 审计日志：操作日志、安全事件、合规记录
+  - ACID事务：数据一致性和完整性保证
+- **性能配置**: 连接池100，QPS 5000+，存储容量1TB+
+
+#### Redis (缓存数据库)
+
+- **核心功能**: 高性能缓存和会话存储
+- **版本**: Redis 7
+- **主要特性**:
+  - 会话缓存：用户会话状态和临时数据
+  - 热点数据：频繁访问的数据缓存
+  - 分布式锁：并发控制和资源同步
+  - 消息队列：异步任务和事件通知
+  - 限流计数：API限流和统计计数
+- **性能指标**: QPS 100000+，延迟<1ms，内存使用8GB
+
+#### Milvus (向量数据库)
+
+- **核心功能**: 高维向量存储和相似度检索
+- **版本**: Milvus 2.3.4
+- **主要特性**:
+  - 文档向量：文档嵌入向量存储和索引
+  - 语义搜索：基于向量相似度的语义检索
+  - 相似度计算：余弦相似度、欧氏距离等度量
+  - 索引优化：HNSW、IVF等高效索引算法
+  - 水平扩展：分布式部署和数据分片
+- **性能指标**: 支持千万级向量，检索延迟<50ms
+
+#### Neo4j (图数据库)
+
+- **核心功能**: 知识图谱存储和图查询
+- **版本**: Neo4j 5.0
+- **主要特性**:
+  - 知识图谱：实体关系图谱存储和管理
+  - 关系推理：基于图结构的多跳推理
+  - 路径查询：最短路径、关系路径查询
+  - 图算法：社区发现、中心性分析等
+  - Cypher查询：声明式图查询语言
+- **数据规模**: 节点100万+，关系500万+，查询延迟<100ms
+
+#### MinIO (对象存储)
+
+- **核心功能**: 分布式对象存储服务
+- **版本**: MinIO Latest
+- **主要特性**:
+  - 文件存储：文档、图片、音频、视频文件存储
+  - 多媒体资源：用户上传的多媒体内容管理
+  - 备份归档：数据备份和长期归档存储
+  - CDN加速：内容分发网络集成
+  - S3兼容：Amazon S3 API兼容
+- **存储容量**: 10TB+，并发访问1000+
+
+#### 1.2.6 外部服务集成模块
+
+#### 豆包大模型 (Ark API)
+
+- **核心功能**: 字节跳动豆包大模型API集成
+- **模型版本**: ep-20241201140014-vbzjz
+- **主要特性**:
+  - 对话生成：多轮对话和上下文理解
+  - 文本嵌入：文本向量化和语义表示
+  - 多轮对话：复杂对话流程支持
+  - 函数调用：工具调用和API集成
+  - 流式响应：实时流式内容生成
+- **性能指标**: 延迟<300ms，QPS 1000+
+
+#### OpenAI (备用模型)
+
+- **核心功能**: OpenAI模型API作为备用选择
+- **模型版本**: GPT-4, GPT-3.5-turbo, text-embedding-3-large
+- **主要特性**:
+  - GPT系列：强大的语言理解和生成能力
+  - 嵌入模型：高质量文本向量化
+  - 图像生成：DALL-E图像生成能力
+  - 代码生成：Codex代码理解和生成
+  - 多模态：文本、图像、音频处理
+- **使用场景**: 故障转移、特殊任务、性能对比
+
+#### 微信生态集成
+
+- **核心功能**: 微信小程序和生态服务集成
+- **主要特性**:
+  - 小程序API：微信小程序开发接口
+  - 支付接口：微信支付集成
+  - 用户授权：微信用户身份验证
+  - 消息推送：模板消息和订阅消息
+  - 社交分享：内容分享到微信群聊
+- **用户覆盖**: 微信生态12亿+用户
+
+#### 云存储服务
+
+- **核心功能**: 云端存储和CDN服务
+- **服务商**: 阿里云OSS、腾讯云COS、AWS S3
+- **主要特性**:
+  - 文件上传：大文件分片上传和断点续传
+  - CDN分发：全球内容分发网络
+  - 备份同步：多地域数据备份和同步
+  - 安全访问：访问控制和权限管理
+  - 成本优化：存储类型和生命周期管理
+- **存储规模**: 100TB+，全球CDN节点200+
+
+#### 1.2.7 监控运维层模块
+
+#### Prometheus (指标收集)
+
+- **核心功能**: 系统和业务指标收集监控
+- **版本**: Prometheus Latest
+- **主要特性**:
+  - 系统指标：CPU、内存、磁盘、网络监控
+  - 业务指标：QPS、延迟、错误率、用户活跃度
+  - 告警规则：基于阈值和趋势的智能告警
+  - 数据持久化：时序数据存储和查询
+  - 服务发现：自动发现和监控新服务
+- **数据保留**: 30天详细数据，1年聚合数据
+
+#### Grafana (可视化面板)
+
+- **核心功能**: 监控数据可视化和告警通知
+- **版本**: Grafana Latest
+- **主要特性**:
+  - 实时监控：实时数据展示和刷新
+  - 告警通知：邮件、短信、钉钉等多渠道通知
+  - 趋势分析：历史数据趋势和预测分析
+  - 报表生成：定期监控报表和PDF导出
+  - 权限管理：用户权限和数据访问控制
+- **仪表盘**: 50+监控面板，覆盖全系统指标
+
+#### ELK Stack (日志系统)
+
+- **核心功能**: 日志收集、存储、分析和可视化
+- **组件版本**: Elasticsearch 8.11.0, Logstash, Kibana
+- **主要特性**:
+  - Elasticsearch：分布式搜索和日志存储
+  - Logstash：日志收集、解析和转换
+  - Kibana：日志查询、分析和可视化
+  - 全文搜索：基于Lucene的全文检索
+  - 日志聚合：多服务日志统一收集和分析
+- **日志规模**: 日均100GB+，保留90天
+
+#### Jaeger (分布式追踪)
+
+- **核心功能**: 分布式系统链路追踪和性能分析
+- **版本**: Jaeger Latest
+- **主要特性**:
+  - 分布式追踪：跨服务请求链路追踪
+  - 性能分析：请求耗时分析和瓶颈识别
+  - 错误定位：异常请求快速定位和诊断
+  - 依赖关系：服务依赖关系图谱
+  - 采样策略：智能采样减少性能影响
+- **追踪覆盖**: 100%关键链路，1%全量采样
+
+### 1.3 核心数据结构
+
+#### 1.3.1 对话服务核心结构
 
 ```go
 // 对话服务主结构体
@@ -267,7 +719,7 @@ type RetrievalResult struct {
 }
 ```text
 
-#### 1.2.2 RAG引擎核心结构
+#### 1.3.2 RAG引擎核心结构
 
 ```python
 # RAG引擎主类
@@ -1535,109 +1987,135 @@ class ModelRouter:
 # 文件路径: docs/dependencies.yaml
 infrastructure:
   databases:
+
     - name: PostgreSQL
+
       version: "15"
       purpose: "主数据库，存储用户数据、会话记录"
       license: "PostgreSQL License"
       
     - name: Redis
+
       version: "7"
       purpose: "缓存数据库，会话缓存、分布式锁"
       license: "BSD 3-Clause"
       
     - name: Milvus
+
       version: "2.3.4"
       purpose: "向量数据库，语义搜索、相似度计算"
       license: "Apache 2.0"
       
     - name: Neo4j
+
       version: "5.0"
       purpose: "图数据库，知识图谱、关系推理"
       license: "GPL v3 / Commercial"
       
     - name: MinIO
+
       version: "latest"
       purpose: "对象存储，文件存储、多媒体资源"
       license: "AGPL v3 / Commercial"
 
   monitoring:
+
     - name: Prometheus
+
       version: "latest"
       purpose: "指标收集和监控"
       license: "Apache 2.0"
       
     - name: Grafana
+
       version: "latest"
       purpose: "监控面板和可视化"
       license: "AGPL v3"
       
     - name: Elasticsearch
+
       version: "8.11.0"
       purpose: "日志存储和搜索"
       license: "Elastic License"
       
     - name: Kibana
+
       version: "8.11.0"
       purpose: "日志分析和可视化"
       license: "Elastic License"
 
 backend_dependencies:
   go_modules:
+
     - name: "github.com/gin-gonic/gin"
+
       purpose: "HTTP Web框架"
       license: "MIT"
       
     - name: "github.com/go-redis/redis/v8"
+
       purpose: "Redis客户端"
       license: "BSD 2-Clause"
       
     - name: "github.com/lib/pq"
+
       purpose: "PostgreSQL驱动"
       license: "MIT"
       
     - name: "github.com/prometheus/client_golang"
+
       purpose: "Prometheus指标客户端"
       license: "Apache 2.0"
 
 frontend_dependencies:
   npm_packages:
+
     - name: "next"
+
       version: "14.x"
       purpose: "React全栈框架"
       license: "MIT"
       
     - name: "react"
+
       version: "18.x"
       purpose: "UI组件库"
       license: "MIT"
       
     - name: "tailwindcss"
+
       version: "3.x"
       purpose: "CSS框架"
       license: "MIT"
       
     - name: "@shadcn/ui"
+
       purpose: "UI组件库"
       license: "MIT"
 
 ai_dependencies:
   python_packages:
+
     - name: "fastapi"
+
       version: "0.104.x"
       purpose: "异步Web框架"
       license: "MIT"
       
     - name: "langchain"
+
       version: "0.1.x"
       purpose: "LLM应用开发框架"
       license: "MIT"
       
     - name: "sentence-transformers"
+
       version: "2.2.x"
       purpose: "句子嵌入模型"
       license: "Apache 2.0"
       
     - name: "pymilvus"
+
       version: "2.3.x"
       purpose: "Milvus Python客户端"
       license: "Apache 2.0"
@@ -1948,17 +2426,25 @@ spec:
         app: voicehelper-backend
     spec:
       containers:
+
       - name: backend
+
         image: voicehelper/backend:latest
         ports:
+
         - containerPort: 8080
+
         env:
+
         - name: DATABASE_URL
+
           valueFrom:
             secretKeyRef:
               name: voicehelper-secrets
               key: database-url
+
         - name: REDIS_URL
+
           valueFrom:
             secretKeyRef:
               name: voicehelper-secrets
@@ -1992,7 +2478,9 @@ spec:
   selector:
     app: voicehelper-backend
   ports:
+
   - protocol: TCP
+
     port: 80
     targetPort: 8080
   type: LoadBalancer
@@ -2032,7 +2520,8 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.1.1 性能优化功能
 
-**1. 流式响应处理**
+#### 1. 流式响应处理
+
 - **功能描述**: 实现实时流式对话，通过分块传输降低首字延迟
 - **技术效果**: 响应等待时间从原有基线降低约90%，支持实时交互
 - **代码位置**:
@@ -2042,42 +2531,54 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   backend/internal/handler/chat.go:25-65 # 后端SSE实现
   algo/core/retrieve.py:286-312         # AI引擎流式生成
   ```text
+
 - **核心实现**: SSE (Server-Sent Events) + 异步生成器
 
-**2. 智能缓存系统**
+#### 2. 智能缓存系统
+
 - **功能描述**: 实现多级缓存架构，包括L1内存缓存、L2 Redis缓存和L3数据库缓存
 - **技术效果**: 缓存命中率达到85%以上，响应时间相比无缓存场景降低约70%
 - **代码位置**:
+
   ```text
   algo/core/cache_strategy.py:1643-1710  # 多级缓存实现
   backend/pkg/middleware/cache.go        # 后端缓存中间件
   ```text
+
 - **技术特性**: L1内存缓存 + L2 Redis缓存 + L3数据库缓存
 
-**3. 批处理优化系统**
+#### 3. 批处理优化系统
+
 - **功能描述**: 实现AI推理请求的批量处理机制，通过请求聚合提升系统吞吐量
 - **技术效果**: 系统吞吐量相比单请求处理提升约300%，GPU利用率提升至90%以上
 - **代码位置**:
+
   ```text
   algo/core/batch_processor.py:1717-1789 # 批处理核心实现
   algo/core/model_router.py:1476-1519    # 智能路由器
   ```text
+
 - **核心算法**: 动态批次聚合 + 超时控制 + 负载均衡
 
-**4. 向量数据库优化**
+#### 4. 向量数据库优化
+
 - **功能描述**: 实现智能索引选择和搜索参数自适应优化
 - **技术效果**: 检索速度相比基础配置提升5-10倍，支持千万级向量规模
 - **代码位置**:
+
   ```text
   algo/core/vector_optimization.py:1132-1259 # 向量优化器
   algo/core/retrieve.py:775-805              # 向量检索实现
   ```text
+
 - **优化策略**: HNSW索引 + 动态参数调优 + 分片策略
 
-**5. 连接池管理**
+#### 5. 连接池管理
+
 - **功能描述**: 实现数据库连接池优化机制，包括连接复用和泄漏检测
 - **技术效果**: 数据库连接效率相比直连方式提升约50%，支持高并发访问
 - **代码位置**:
+
   ```text
   backend/pkg/database/manager.go:1037-1125 # 数据库管理器
   backend/cmd/server/main.go:516-528        # 连接池配置
@@ -2085,112 +2586,143 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.1.2 核心业务功能
 
-**1. 智能对话系统**
+#### 1. 智能对话系统
+
 - **功能描述**: 基于RAG的智能问答，支持上下文理解
 - **代码位置**:
+
   ```text
   frontend/app/chat/page.tsx              # 对话界面
   backend/internal/handler/chat.go        # 对话处理器
   backend/internal/service/chat.go        # 对话服务
   algo/core/retrieve.py                   # RAG检索引擎
   ```text
+
 - **技术特性**: 多轮对话 + 上下文管理 + 意图识别
 
-**2. 高级RAG检索系统**
+#### 2. 高级RAG检索系统
+
 - **功能描述**: 混合检索策略，提升答案准确性
 - **代码位置**:
+
   ```text
   algo/core/advanced_rag.py:744-858      # 高级RAG实现
   algo/core/retrieve.py:754-823          # 混合检索
   ```text
+
 - **核心算法**: 向量检索 + 关键词检索 + 图检索 + 重排序
 
-**3. 语音处理流水线**
+#### 3. 语音处理流水线
+
 - **功能描述**: 端到端语音交互，支持ASR和TTS
 - **代码位置**:
+
   ```text
   algo/core/voice.py:865-957             # 语音服务核心
   algo/app/main.py:voice_query           # 语音查询接口
   miniprogram/pages/index/index.js:120-180 # 小程序语音
   ```text
+
 - **技术栈**: ASR识别 + 情感分析 + TTS合成
 
-**4. 多模态融合处理**
+#### 4. 多模态融合处理
+
 - **功能描述**: 文本、图像、音频多模态理解
 - **代码位置**:
+
   ```text
   algo/core/multimodal_fusion.py:964-1028 # 多模态融合引擎
   algo/core/voice.py:825-857              # 多模态处理
   ```text
+
 - **核心技术**: 跨模态注意力 + 特征融合 + 统一表示
 
-**5. 知识库管理系统**
+#### 5. 知识库管理系统
+
 - **功能描述**: 文档入库、管理、版本控制
 - **代码位置**:
+
   ```text
   algo/core/ingest.py                     # 文档入库服务
   algo/app/main.py:ingest_documents       # 入库接口
   backend/internal/handler/dataset.go     # 数据集管理
   ```text
+
 - **处理流程**: 文档解析 → 分块 → 向量化 → 存储
 
 #### 11.1.3 用户界面功能
 
-**1. 响应式Web应用**
+#### 1. 响应式Web应用
+
 - **功能描述**: 现代化Web界面，支持多设备适配
 - **代码位置**:
+
   ```text
   frontend/app/layout.tsx                 # 全局布局
   frontend/app/page.tsx                   # 主页面
   frontend/app/chat/page.tsx              # 聊天页面
   frontend/components/ui/                 # UI组件库
   ```text
+
 - **技术栈**: Next.js 14 + React 18 + Tailwind CSS + shadcn/ui
 
-**2. 微信小程序**
+#### 2. 微信小程序
+
 - **功能描述**: 轻量级移动端应用
 - **代码位置**:
+
   ```text
   miniprogram/app.js                      # 小程序入口
   miniprogram/pages/index/                # 主页面
   miniprogram/utils/websocket.js          # WebSocket连接
   ```text
+
 - **特性**: 语音输入 + 实时对话 + 离线缓存
 
-**3. 实时通信系统**
+#### 3. 实时通信系统
+
 - **功能描述**: WebSocket双向通信，支持实时交互
 - **代码位置**:
+
   ```text
   frontend/hooks/useWebSocket.ts:369-404  # WebSocket Hook
   backend/internal/handler/handler.go:642-664 # WebSocket处理
   ```text
+
 - **技术特性**: 自动重连 + 心跳检测 + 错误恢复
 
 #### 11.1.4 系统监控与运维功能
 
-**1. 性能监控系统**
+#### 1. 性能监控系统
+
 - **功能描述**: 实现实时性能指标收集、分析和告警机制
 - **技术效果**: 问题发现时间相比人工巡检缩短约80%，故障恢复时间减少约50%
 - **代码位置**:
+
   ```text
   backend/pkg/metrics/metrics.go:1796-1863 # 指标定义
   backend/pkg/middleware/metrics.go        # 监控中间件
   deploy/monitoring/prometheus.yml         # Prometheus配置
   ```text
+
 - **监控指标**: 请求延迟、吞吐量、错误率、资源使用率
 
-**2. 分布式链路追踪**
+#### 2. 分布式链路追踪
+
 - **功能描述**: 实现请求链路的可视化追踪，支持跨服务的性能瓶颈定位
 - **技术效果**: 问题定位效率相比日志分析方式提升约90%
 - **代码位置**:
+
   ```text
   backend/pkg/middleware/tracing.go       # 链路追踪中间件
   deploy/monitoring/jaeger.yml           # Jaeger配置
   ```text
 
-**3. 智能日志系统**
+#### 3. 智能日志系统
+
 - **功能描述**: 结构化日志收集和分析
 - **代码位置**:
+
   ```text
   backend/pkg/logger/logger.go           # 日志组件
   deploy/logging/elasticsearch.yml       # ELK配置
@@ -2198,25 +2730,31 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.1.5 安全与认证功能
 
-**1. JWT认证系统**
+#### 1. JWT认证系统
+
 - **功能描述**: 无状态身份认证
 - **代码位置**:
+
   ```text
   backend/pkg/middleware/auth.go:672-692  # 认证中间件
   backend/pkg/auth/jwt.go                 # JWT工具
   ```text
 
-**2. 限流熔断机制**
+#### 2. 限流熔断机制
+
 - **功能描述**: API限流和服务熔断保护
 - **代码位置**:
+
   ```text
   backend/pkg/middleware/ratelimit.go:695-709 # 限流中间件
   backend/internal/handler/handler.go:604-608 # 熔断器
   ```text
 
-**3. 数据加密存储**
+#### 3. 数据加密存储
+
 - **功能描述**: 敏感数据加密保护
 - **代码位置**:
+
   ```text
   backend/pkg/crypto/encryption.go        # 加密工具
   backend/internal/service/user.go        # 用户数据加密
@@ -2224,10 +2762,12 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.1.6 部署与扩展功能
 
-**1. 容器化部署**
+#### 1. 容器化部署
+
 - **功能描述**: 基于Docker的容器化部署方案，支持快速部署和水平扩展
 - **技术效果**: 部署时间相比传统方式缩短约90%，实现跨环境的一致性部署
 - **代码位置**:
+
   ```text
   backend/Dockerfile:1873-1890           # 后端容器
   algo/Dockerfile:1893-1916              # AI服务容器
@@ -2235,10 +2775,12 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   docker-compose.yml                     # 本地开发环境
   ```text
 
-**2. Kubernetes编排**
+#### 2. Kubernetes编排
+
 - **功能描述**: 基于Kubernetes的容器编排方案，实现自动化运维和弹性伸缩
 - **技术效果**: 运维效率相比手动管理提升约300%，支持自动故障恢复
 - **代码位置**:
+
   ```text
   deploy/k8s/deployment.yaml:1924-1988   # K8s部署配置
   deploy/k8s/service.yaml                # 服务配置
@@ -2246,9 +2788,11 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   deploy/k8s/hpa.yaml                    # 自动扩缩容
   ```text
 
-**3. CI/CD流水线**
+#### 3. CI/CD流水线
+
 - **功能描述**: 自动化构建、测试、部署
 - **代码位置**:
+
   ```text
   .github/workflows/backend.yml          # 后端CI/CD
   .github/workflows/frontend.yml         # 前端CI/CD
@@ -2257,25 +2801,31 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.1.7 第三方集成功能
 
-**1. 豆包大模型集成**
+#### 1. 豆包大模型集成
+
 - **功能描述**: 字节跳动豆包API集成
 - **代码位置**:
+
   ```text
   algo/core/ark_client.py:1401-1475     # 豆包客户端
   algo/core/model_router.py:1477-1519   # 模型路由器
   ```text
 
-**2. 多模型支持**
+#### 2. 多模型支持
+
 - **功能描述**: 支持OpenAI、Claude等多种模型
 - **代码位置**:
+
   ```text
   algo/core/llm_clients/                 # 多模型客户端
   algo/config/model_config.py            # 模型配置
   ```text
 
-**3. 云存储集成**
+#### 3. 云存储集成
+
 - **功能描述**: 支持MinIO、阿里云OSS等对象存储
 - **代码位置**:
+
   ```text
   backend/pkg/storage/minio.go           # MinIO客户端
   backend/pkg/storage/oss.go             # 阿里云OSS客户端
@@ -2285,43 +2835,52 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.2.1 关键性能指标
 
-**响应时间指标**
+#### 响应时间指标
 ```text
 对话响应时间:
+
 - 首字延迟: < 200ms (基线对比: 2-3s)
 - 完整回答: < 2.5s (基线对比: 8-10s)
 - 流式响应: 支持实时显示 (基线对比: 批量返回)
 
 检索性能:
+
 - 向量检索: < 50ms (千万级数据规模)
 - 混合检索: < 100ms (多路召回场景)
 - 重排序: < 30ms (Top-100结果集)
+
 ```text
 
-**吞吐量指标**
+#### 吞吐量指标
 ```text
 并发处理能力:
+
 - 单机QPS: 1000+ (基线对比: 100)
 - 批处理吞吐: 相比单请求提升300%
 - GPU利用率: 90%+ (基线对比: 30%)
 
 缓存效果:
+
 - 命中率: 85%以上
 - 响应时间: 相比无缓存降低70%
 - 数据库负载: 相比直连降低60%
+
 ```text
 
-**资源利用指标**
+#### 资源利用指标
 ```text
 内存优化:
+
 - 内存使用: 相比基线降低40%
 - 连接池效率: 相比直连提升50%
 - 垃圾回收: 停顿时间优化95%
 
 存储优化:
+
 - 向量压缩: 节省50%存储空间
 - 索引优化: 检索速度提升5-10倍
 - 分片策略: 支持水平扩展
+
 ```text
 
 ### 11.3 系统模块功能详解与关键路径分析
@@ -2330,7 +2889,7 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.3.1.1 前端模块 (Frontend)
 
-**核心组件功能**
+#### 核心组件功能
 
 - **主页面 (`app/page.tsx`)**
   - 功能：系统入口页面，提供导航到聊天、数据集管理、分析页面
@@ -2350,7 +2909,8 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   - 功能：微信小程序端实现
   - 特性：WebSocket连接、音频处理、实时转写、离线缓存
 
-**技术栈特点**
+#### 技术栈特点
+
 - Next.js 14 + React 18：现代化前端框架
 - Tailwind CSS + shadcn/ui：原子化CSS + 组件库
 - WebSocket：实时双向通信
@@ -2358,7 +2918,7 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.3.1.2 后端服务模块 (Backend)
 
-**服务架构层次**
+#### 服务架构层次
 
 - **主服务器 (`cmd/server/main.go`)**
   - 功能：HTTP服务器启动、配置加载、路由设置、优雅关闭
@@ -2378,7 +2938,8 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   - `chat.go`：对话服务逻辑，参数设置和调用转发
   - 功能：业务逻辑封装、外部服务调用、错误处理
 
-**技术特性**
+#### 技术特性
+
 - Go + Gin框架：高性能HTTP服务
 - RESTful API设计：标准化接口
 - 流式响应支持：SSE实时推送
@@ -2386,7 +2947,7 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 
 #### 11.3.1.3 AI算法引擎模块 (Algo)
 
-**核心服务组件**
+#### 核心服务组件
 
 - **主应用 (`app/main.py`)**
   - 功能：FastAPI应用启动、路由配置、CORS设置
@@ -2408,7 +2969,8 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
   - 流程：ASR→文本处理→TTS→音频流式返回
   - 特性：实时处理、多语言支持、情感识别
 
-**AI能力矩阵**
+#### AI能力矩阵
+
 - RAG检索增强生成：知识库问答
 - 多模态融合处理：文本、图像、音频
 - 语音处理流水线：端到端语音交互
@@ -2423,9 +2985,9 @@ VoiceHelper系统在架构设计中遵循了以下核心原则：
 用户输入 → 前端处理 → 后端网关 → AI算法引擎 → 大模型 → 流式返回
 ```text
 
-**详细调用链路：**
+#### 详细调用链路：
 
-**1. 前端发起请求**
+#### 1. 前端发起请求
 ```typescript
 // frontend/app/chat/page.tsx
 sendMessage() → {
@@ -2455,7 +3017,7 @@ sendMessage() → {
 }
 ```text
 
-**2. 后端接收处理**
+#### 2. 后端接收处理
 ```go
 // backend/internal/handler/chat.go
 ChatStream(c *gin.Context) → {
@@ -2496,7 +3058,7 @@ ChatStream(c *gin.Context) → {
 }
 ```text
 
-**3. 对话服务处理**
+#### 3. 对话服务处理
 ```go
 // backend/internal/service/chat.go
 StreamChat(ctx context.Context, req *ChatRequest) → {
@@ -2522,7 +3084,7 @@ StreamChat(ctx context.Context, req *ChatRequest) → {
 }
 ```text
 
-**4. 算法服务客户端**
+#### 4. 算法服务客户端
 ```go
 // backend/internal/service/service.go
 Query(ctx context.Context, req *QueryRequest) → {
@@ -2561,7 +3123,7 @@ Query(ctx context.Context, req *QueryRequest) → {
 }
 ```text
 
-**5. AI算法引擎处理**
+#### 5. AI算法引擎处理
 ```python
 # algo/app/main.py
 @app.post("/query")
@@ -2580,7 +3142,7 @@ async def query_documents(request: QueryRequest) → {
 }
 ```text
 
-**6. 检索服务核心逻辑**
+#### 6. 检索服务核心逻辑
 ```python
 # algo/core/retrieve.py
 async def stream_query(self, request: QueryRequest) → {
@@ -2621,9 +3183,9 @@ async def stream_query(self, request: QueryRequest) → {
 语音输入 → ASR识别 → 文本处理 → RAG检索 → TTS合成 → 语音输出
 ```text
 
-**详细调用链路：**
+#### 详细调用链路：
 
-**1. 语音查询入口**
+#### 1. 语音查询入口
 ```python
 # algo/app/main.py
 @app.post("/voice/query")
@@ -2642,7 +3204,7 @@ async def voice_query(request: VoiceQueryRequest) → {
 }
 ```text
 
-**2. 语音服务处理**
+#### 2. 语音服务处理
 ```python
 # algo/core/voice.py
 async def process_voice_query(self, request: VoiceQueryRequest) → {
@@ -2675,9 +3237,9 @@ async def process_voice_query(self, request: VoiceQueryRequest) → {
 文档上传 → 文本提取 → 分块处理 → 向量化 → 存储入库
 ```text
 
-**详细调用链路：**
+#### 详细调用链路：
 
-**1. 入库接口**
+#### 1. 入库接口
 ```python
 # algo/app/main.py
 @app.post("/ingest", response_model=IngestResponse)
@@ -2699,7 +3261,7 @@ async def ingest_documents(request: IngestRequest, background_tasks: BackgroundT
 }
 ```text
 
-**2. 入库服务处理**
+#### 2. 入库服务处理
 ```python
 # algo/core/ingest.py
 async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
@@ -2733,7 +3295,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
 
 #### 11.3.3.1 前端核心函数
 
-**`sendMessage()` - 消息发送函数**
+#### `sendMessage()` - 消息发送函数
+
 - **功能**：处理用户输入，发送HTTP请求到后端，处理流式响应
 - **参数**：无（从组件状态获取消息内容）
 - **返回**：无（通过状态更新UI）
@@ -2744,13 +3307,15 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   4. 处理SSE流式响应
   5. 实时更新UI显示
 
-**`handleVoiceTranscript()` - 语音转写处理**
+#### `handleVoiceTranscript()` - 语音转写处理
+
 - **功能**：处理语音识别结果，实时更新转写文本显示
 - **参数**：`transcript: string` - 转写文本
 - **返回**：无
 - **作用**：在UI中实时显示语音转写结果，提供用户反馈
 
-**`connectWebSocket()` - WebSocket连接建立**
+#### `connectWebSocket()` - WebSocket连接建立
+
 - **功能**：建立WebSocket连接，处理实时消息
 - **参数**：无
 - **返回**：无
@@ -2758,7 +3323,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
 
 #### 11.3.3.2 后端核心函数
 
-**`ChatStream()` - 流式对话处理器**
+#### `ChatStream()` - 流式对话处理器
+
 - **功能**：处理聊天请求，返回SSE流式响应
 - **参数**：`c *gin.Context` - Gin上下文
 - **返回**：无（直接写入响应流）
@@ -2769,13 +3335,15 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   4. 通过通道接收响应数据
   5. 格式化为SSE事件流
 
-**`StreamChat()` - 对话服务方法**
+#### `StreamChat()` - 对话服务方法
+
 - **功能**：业务逻辑层，调用算法服务处理对话
 - **参数**：`ctx context.Context, req *ChatRequest`
 - **返回**：`<-chan *QueryResponse, error`
 - **作用**：参数验证、默认值设置、服务调用转发
 
-**`Query()` - 算法服务客户端**
+#### `Query()` - 算法服务客户端
+
 - **功能**：HTTP客户端，调用AI算法服务
 - **参数**：`ctx context.Context, req *QueryRequest`
 - **返回**：`<-chan *QueryResponse, error`
@@ -2788,7 +3356,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
 
 #### 11.3.3.3 AI算法引擎核心函数
 
-**`stream_query()` - 流式查询核心**
+#### `stream_query()` - 流式查询核心
+
 - **功能**：RAG检索的主要逻辑，实现完整的检索-生成流程
 - **参数**：`request: QueryRequest` - 查询请求
 - **返回**：`AsyncGenerator[str, None]` - 异步生成器
@@ -2800,7 +3369,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   5. 调用LLM流式生成
   6. 格式化响应数据
 
-**`_retrieve_documents()` - 文档检索函数**
+#### `_retrieve_documents()` - 文档检索函数
+
 - **功能**：从向量数据库检索语义相关的文档片段
 - **参数**：`query: str, top_k: int, filters: Dict`
 - **返回**：`List[Reference]` - 引用列表
@@ -2810,7 +3380,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   3. 应用相似度阈值过滤
   4. 转换为标准引用格式
 
-**`_build_prompt()` - 提示词构建**
+#### `_build_prompt()` - 提示词构建
+
 - **功能**：基于检索结果和对话历史构建LLM提示词
 - **参数**：`messages: List[Message], references: List[Reference]`
 - **返回**：`List[Dict[str, str]]` - 消息列表
@@ -2820,7 +3391,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   3. 添加对话历史上下文
   4. 格式化为LLM输入格式
 
-**`_stream_llm_response()` - LLM流式调用**
+#### `_stream_llm_response()` - LLM流式调用
+
 - **功能**：调用大模型API，处理流式响应
 - **参数**：`messages: List[Dict], request: QueryRequest`
 - **返回**：`AsyncGenerator[str, None]`
@@ -2831,7 +3403,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   4. 提取内容增量
   5. 格式化响应
 
-**`process_voice_query()` - 语音查询处理**
+#### `process_voice_query()` - 语音查询处理
+
 - **功能**：处理语音输入，集成ASR、RAG、TTS完整流程
 - **参数**：`request: VoiceQueryRequest`
 - **返回**：`AsyncGenerator[VoiceQueryResponse, None]`
@@ -2844,7 +3417,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
 
 #### 11.3.3.4 高级RAG函数
 
-**`retrieve()` - 高级检索方法**
+#### `retrieve()` - 高级检索方法
+
 - **功能**：实现HyDE、查询改写、多路召回等高级检索特性
 - **参数**：`query: str, top_k: int, use_hyde: bool, use_rewrite: bool, use_rerank: bool`
 - **返回**：`Tuple[List[RetrievalResult], Dict[str, Any]]`
@@ -2855,7 +3429,8 @@ async def process_ingest_task(self, task_id: str, request: IngestRequest) → {
   4. 跨编码器重排序：提升相关性
   5. 结果融合：多策略结果合并
 
-**`generate_answer()` - 答案生成**
+#### `generate_answer()` - 答案生成
+
 - **功能**：基于检索结果生成最终答案
 - **参数**：`query: str, retrieval_results: List, conversation_history: List`
 - **返回**：`Tuple[str, List[Dict]]` - 答案和引用
@@ -2930,54 +3505,66 @@ sequenceDiagram
 **发布时间**: 2025-01-29  
 **核心目标**: 语音延迟优化、多模态融合增强
 
-**✅ 已实现功能**
+#### ✅ 已实现功能
 
-**Week 1: 语音延迟优化**
+#### Week 1: 语音延迟优化
+
 - **增强语音优化器** (`algo/core/enhanced_voice_optimizer.py`)
 
   ```text
+
   - 并行处理管道：ASR+LLM+TTS并行执行
   - 预测性缓存管理器：智能预热热门查询
   - 神经网络音频压缩器：50%压缩率，无损质量
   - 并发管道处理器：多线程音频处理
   - 性能提升：语音处理延迟从300ms降至120-150ms
+
   ```
 
-**Week 2: 情感表达增强**
+#### Week 2: 情感表达增强
+
 - **增强情感TTS控制器** (`algo/core/enhanced_emotional_tts.py`)
 
   ```text
+
   - 支持6种基础情感类型：快乐、悲伤、愤怒、惊讶、恐惧、中性
   - 多模态情感融合：语音+文本+图像情感一致性
   - 流式情感TTS合成：实时情感调节
   - 自适应韵律调整：根据内容动态调整语调
   - 合成时间优化：情感TTS合成时间控制在80ms内
+
   ```
 
-**Week 3: 视觉理解增强**
+#### Week 3: 视觉理解增强
+
 - **增强视觉理解系统** (`algo/core/enhanced_vision_understanding.py`)
 
   ```text
+
   - 支持12种图像类型：人物、物体、场景、文档、图表、艺术品等
   - 细粒度物体检测：YOLO v8集成，支持80+物体类别
   - 多语言OCR支持：中英日韩等15种语言文字识别
   - 情感检测：面部表情和场景情感分析
   - 品牌识别：商标、Logo识别能力
   - 图像理解准确率：从85%提升至95%
+
   ```
 
-**Week 4: 融合架构优化**
+#### Week 4: 融合架构优化
+
 - **增强多模态融合引擎** (`algo/core/enhanced_multimodal_fusion.py`)
 
   ```text
+
   - 跨模态注意力机制：Transformer架构的跨模态注意力
   - 自适应模态权重器：动态调整各模态重要性
   - 层次化融合引擎：多层次特征融合策略
   - 不确定性估计：融合结果置信度评估
   - 融合准确率：达到92-95%，超额完成目标
+
   ```
 
-**🏆 技术指标达成情况**
+#### 🏆 技术指标达成情况
 
 | 指标类别 | 目标值 | 实现值 | 状态 |
 |---------|--------|--------|------|
@@ -2991,95 +3578,117 @@ sequenceDiagram
 **发布时间**: 2025-09-22  
 **核心目标**: MCP生态扩展、全平台覆盖、开发者生态建设
 
-**✅ 已实现功能**
+#### ✅ 已实现功能
 
-**MCP生态扩展（100%完成）**
+#### MCP生态扩展（100%完成）
+
 - **增强MCP生态系统** (`algo/core/enhanced_mcp_ecosystem.py`)
 
   ```text
+
   - 服务注册表架构：支持15个服务分类
   - 自动服务发现机制：动态服务注册和发现
   - 健康检查和性能监控：实时服务状态监控
   - 已集成500+核心服务：覆盖办公、开发、社交、电商等
+
   ```
 
-**大规模服务扩展（100%完成）**
+#### 大规模服务扩展（100%完成）
+
 - **MCP服务大规模扩展** (`algo/core/mcp_service_expansion.py`)
 
   ```text
+
   - 批量服务生成器：自动化服务代码生成
   - 服务模板系统：标准化服务开发模板
   - 自动化注册流程：一键服务注册和部署
   - 健康状态验证：服务质量自动检测
+
   ```
 
-**开发者平台建设（100%完成）**
+#### 开发者平台建设（100%完成）
+
 - **OpenAPI 3.0完整规范** (`docs/api/openapi_v3_complete.yaml`)
 
   ```text
+
   - 30个API接口完整定义
   - 支持API Key、OAuth 2.0、JWT三种认证
   - 完整的错误处理和响应格式
   - 详细的接口文档和示例
+
   ```
 
 - **JavaScript SDK** (`sdks/javascript/src/voicehelper-sdk-complete.ts`)
 
   ```text
+
   - 完整TypeScript支持和类型定义
   - 浏览器和Node.js环境兼容
   - 流式响应和WebSocket支持
   - 自动重试和错误处理机制
+
   ```
 
 - **Python SDK** (`sdks/python/voicehelper_sdk/client_complete.py`)
 
   ```text
+
   - 异步和同步双版本实现
   - Pydantic数据验证和类型提示
   - 企业级错误处理和重试机制
   - 便捷函数和高级API封装
+
   ```
 
-**全平台客户端开发（100%完成）**
+#### 全平台客户端开发（100%完成）
+
 - **iOS原生应用** (`mobile/ios/VoiceHelper/ContentView.swift`)
 
   ```text
+
   - SwiftUI现代化界面设计
   - 四个主要功能页面：对话、语音、服务、设置
   - 实时语音录制、识别和TTS播放
   - 语音波形动画和消息气泡界面
   - 系统集成：通知、权限、后台处理
+
   ```
 
 - **Android原生应用** (`mobile/android/app/src/main/java/ai/voicehelper/MainActivity.kt`)
 
   ```text
+
   - Jetpack Compose + Material Design 3
   - Kotlin协程异步处理，ViewModel架构
   - 完整语音功能和实时动画效果
   - 权限管理和响应式UI设计
+
   ```
 
 - **Electron桌面应用** (`desktop/src/main/main.ts`)
 
   ```text
+
   - Windows + macOS + Linux全平台支持
   - 系统托盘、全局快捷键、自动启动
   - 窗口管理：最小化到托盘、置顶、拖拽
   - 企业级特性：自动更新、配置管理、多主题
+
   ```
 
 - **浏览器扩展** (`browser-extension/src/content/content.ts`)
 
   ```text
+
   - Chrome/Firefox智能扩展
   - 网页内容分析和关键信息提取
   - 悬浮窗口、语音输入、实时翻译
   - 智能工具：摘要、翻译、表单填写
+
   ```
 
-**🏆 最终服务集成状态**
+#### 🏆 最终服务集成状态
 
 | 服务分类 | 已集成 | 目标 | 完成率 |
 |----------|--------|------|--------|
@@ -3099,87 +3708,107 @@ sequenceDiagram
 **开发周期**: 4周  
 **核心目标**: 企业级安全合规、高可用架构
 
-**🎯 Phase 1: 安全合规体系（2周）**
+#### 🎯 Phase 1: 安全合规体系（2周）
 
-**零信任架构实施**
+#### 零信任架构实施
+
 - **多因素认证系统** (`backend/pkg/auth/mfa.go`)
 
   ```text
+
   - 支持TOTP、SMS、邮件、生物识别四种认证方式
   - 自适应风险评估：基于行为分析的智能认证
   - SSO集成：支持SAML、OAuth 2.0、OpenID Connect
   - 会话管理：安全会话令牌和自动过期机制
+
   ```
 
 - **威胁检测系统** (`backend/pkg/security/threat_detection.go`)
 
   ```text
+
   - 实时威胁监控：异常行为检测和告警
   - AI驱动的威胁分析：机器学习异常检测
   - 自动响应机制：威胁自动阻断和隔离
   - 威胁情报集成：外部威胁情报源集成
+
   ```
 
 - **端到端加密增强** (`backend/pkg/crypto/e2e_encryption.go`)
 
   ```text
+
   - 数据传输加密：TLS 1.3 + 自定义加密层
   - 数据存储加密：AES-256-GCM + 密钥轮换
   - 密钥管理系统：HSM集成和密钥生命周期管理
   - 零知识架构：服务端无法解密用户数据
+
   ```
 
-**合规认证体系**
+#### 合规认证体系
+
 - **GDPR合规模块** (`backend/pkg/compliance/gdpr.go`)
 
   ```text
+
   - 数据主体权利：访问、更正、删除、可携带性
   - 同意管理：细粒度同意收集和撤回机制
   - 数据处理记录：完整的数据处理活动记录
   - 隐私影响评估：自动化隐私风险评估
+
   ```
 
 - **SOC2合规模块** (`backend/pkg/compliance/soc2.go`)
 
   ```text
+
   - 安全控制框架：完整的SOC2 Type II控制
   - 审计日志系统：不可篡改的审计日志
   - 访问控制管理：基于角色的细粒度权限控制
   - 变更管理流程：标准化的变更审批和记录
+
   ```
 
-**🎯 Phase 2: 高可用架构（2周）**
+#### 🎯 Phase 2: 高可用架构（2周）
 
-**多地域部署架构**
+#### 多地域部署架构
+
 - **智能负载均衡** (`deploy/k8s/global-load-balancer.yaml`)
 
   ```text
+
   - 地理位置路由：基于用户位置的智能路由
   - 健康检查机制：多层次健康状态监控
   - 故障自动切换：秒级故障检测和切换
   - 流量分配策略：基于延迟和负载的动态分配
+
   ```
 
 - **自动故障恢复** (`backend/pkg/resilience/auto_recovery.go`)
 
   ```text
+
   - 服务自愈机制：自动重启和故障隔离
   - 数据一致性保证：分布式事务和数据同步
   - 灾难恢复计划：RTO < 15分钟，RPO < 5分钟
   - 混沌工程：定期故障注入和恢复测试
+
   ```
 
-**AIOps智能运维**
+#### AIOps智能运维
+
 - **智能监控系统** (`ops/aiops/intelligent_monitoring.py`)
 
   ```text
+
   - 异常检测算法：基于机器学习的异常识别
   - 预测性维护：故障预测和预防性措施
   - 自动化运维：故障自动诊断和修复
   - 性能优化建议：AI驱动的性能调优建议
+
   ```
 
-**🏆 v2.0.0目标指标**
+#### 🏆 v2.0.0目标指标
 
 | 指标类别 | 当前值 | 目标值 | 提升幅度 |
 |---------|--------|--------|----------|
@@ -3194,36 +3823,45 @@ sequenceDiagram
 **预计发布时间**: 2026-03-01  
 **核心目标**: AI能力全面升级、智能化运营
 
-**🎯 核心特性规划**
+#### 🎯 核心特性规划
 
-**下一代RAG系统**
+#### 下一代RAG系统
+
 - **GraphRAG 2.0** (`algo/core/graph_rag_v2.py`)
 
   ```text
+
   - 动态知识图谱：实时知识更新和推理
   - 多跳推理能力：复杂逻辑推理和因果分析
   - 知识冲突解决：多源知识的一致性处理
   - 个性化知识图谱：用户专属知识体系
+
   ```
 
-**Agent智能体系统**
+#### Agent智能体系统
+
 - **多Agent协作框架** (`algo/core/multi_agent_system.py`)
 
   ```text
+
   - 专业Agent集群：不同领域的专业智能体
   - 任务分解和协作：复杂任务的智能分解
   - Agent间通信协议：标准化的Agent交互
   - 学习和进化机制：Agent能力持续提升
+
   ```
 
-**智能化运营平台**
+#### 智能化运营平台
+
 - **用户行为分析** (`analytics/user_behavior_analysis.py`)
 
   ```text
+
   - 用户画像构建：多维度用户特征分析
   - 个性化推荐：智能内容和服务推荐
   - 使用模式识别：用户习惯和偏好学习
   - 预测性用户服务：主动式用户需求满足
+
   ```
 
 #### 12.2.3 v3.0.0 生态平台版（远期规划）
@@ -3231,26 +3869,32 @@ sequenceDiagram
 **预计发布时间**: 2026-09-01  
 **核心目标**: 开放生态平台、行业解决方案
 
-**🎯 平台化战略**
+#### 🎯 平台化战略
 
-**开放API生态**
+#### 开放API生态
+
 - **第三方开发者平台** (`platform/developer_ecosystem/`)
 
   ```text
+
   - 插件开发框架：标准化插件开发工具
   - 应用商店：第三方应用分发平台
   - 收益分成机制：开发者激励体系
   - 技术支持体系：完整的开发者服务
+
   ```
 
-**行业解决方案**
+#### 行业解决方案
+
 - **垂直行业定制** (`solutions/industry_specific/`)
 
   ```text
+
   - 教育行业解决方案：智能教学助手
   - 医疗行业解决方案：医疗问诊助手
   - 金融行业解决方案：智能客服系统
   - 制造业解决方案：工业智能助手
+
   ```
 
 ### 12.3 版本迭代时间线
@@ -3286,7 +3930,7 @@ gantt
 
 #### 12.4.2 架构演进路径
 
-**当前架构 → 目标架构**
+#### 当前架构 → 目标架构
 
 ```text
 微服务架构 → 云原生架构 → 智能化平台架构
@@ -3295,19 +3939,22 @@ gantt
 - 无服务器化：Serverless函数计算
 - 边缘计算：CDN边缘节点部署
 - 智能调度：AI驱动的资源调度
+
 ```
 
 ### 12.5 商业价值实现路径
 
 #### 12.5.1 技术护城河建设
 
-**已建立优势**
+#### 已建立优势
+
 - ✅ 语音处理：150ms超低延迟，业界领先
 - ✅ 多模态融合：5种模态统一处理
 - ✅ 服务生态：500+服务集成，难以复制
 - ✅ 全平台覆盖：6个平台完整支持
 
-**未来护城河**
+#### 未来护城河
+
 - 🎯 企业级安全：零信任架构，合规认证
 - 🎯 智能化运营：AI驱动的自动化运维
 - 🎯 开放生态：第三方开发者平台
@@ -3333,7 +3980,7 @@ VoiceHelper作为一个现代化的智能语音助手系统，展示了如何将
 
 #### 13.1.1 OpenAI ChatGPT系列对比
 
-**ChatGPT-4o (2024-2025) vs VoiceHelper v1.9.0**
+#### ChatGPT-4o (2024-2025) vs VoiceHelper v1.9.0
 
 | 维度 | ChatGPT-4o | VoiceHelper v1.9.0 | 竞争优势分析 |
 |------|------------|-------------------|-------------|
@@ -3344,26 +3991,29 @@ VoiceHelper作为一个现代化的智能语音助手系统，展示了如何将
 | **记忆系统** | ✅ 跨会话记忆 | ✅ 5层记忆架构 | 记忆架构层次更丰富 |
 | **企业级能力** | ⚠️ 基础企业功能 | ✅ 零信任+多租户+合规 | 企业级功能相对完善 |
 
-**核心技术对比**
+#### 核心技术对比
 
 ```text
 ChatGPT-4o技术特性:
+
 - 响应延迟: P95 < 300ms
 - 上下文长度: 128K tokens
 - 并发支持: 100万+ QPS
 - 可用性: 99.9%
 
 VoiceHelper v1.9.0技术特性:
+
 - 响应延迟: 语音150ms, 文本400ms
 - GraphRAG召回率: 97% (行业平均约85%)
 - 服务集成: 500+ (ChatGPT约100个)
 - 平台支持: 6个平台
 - 系统可用性: 99.9% (v2.0.0目标99.99%)
+
 ```
 
 #### 13.1.2 Anthropic Claude 3.5 Sonnet对比
 
-**Claude 3.5 vs VoiceHelper v1.9.0**
+#### Claude 3.5 vs VoiceHelper v1.9.0
 
 | 维度 | Claude 3.5 Sonnet | VoiceHelper v1.9.0 | 竞争优势分析 |
 |------|-------------------|-------------------|-------------|
@@ -3376,7 +4026,7 @@ VoiceHelper v1.9.0技术特性:
 
 #### 13.1.3 Google Gemini Live对比
 
-**Gemini Live vs VoiceHelper v1.9.0**
+#### Gemini Live vs VoiceHelper v1.9.0
 
 | 维度 | Gemini Live | VoiceHelper v1.9.0 | 竞争优势分析 |
 |------|-------------|-------------------|-------------|
@@ -3391,54 +4041,63 @@ VoiceHelper v1.9.0技术特性:
 
 #### 13.2.1 核心技术优势（已实现）
 
-**1. GraphRAG系统特性**
+#### 1. GraphRAG系统特性
 
 ```text
 技术实现:
+
 - 知识图谱: Neo4j + 10种实体类型 + 15种关系
 - 多跳推理: 图遍历算法，路径解释，社区发现
 - 召回精度: 97% (行业平均约85%)
 - 融合排序: 多路召回 + 智能重排序
 
 代码实现位置:
+
 - algo/core/advanced_rag.py:744-858      # 高级RAG实现
 - algo/core/retrieve.py:754-823          # 混合检索
 - backend/pkg/database/neo4j.go          # 图数据库集成
+
 ```
 
-**2. Agent架构特性**
+#### 2. Agent架构特性
 
 ```text
 推理引擎实现:
+
 - 6种推理模式: 演绎/归纳/溯因/类比/数学/因果推理
 - 规划系统: 层次化任务分解 + 依赖管理
 - 工具生态: MCP协议 + 500种服务集成
 - 记忆系统: 5层记忆架构 (短期/长期/情节/语义/工作)
 
 代码实现位置:
+
 - algo/core/enhanced_mcp_ecosystem.py    # MCP生态系统
 - algo/core/mcp_service_expansion.py     # 服务扩展
 - backend/internal/service/chat.go       # 对话服务
+
 ```
 
-**3. 多模态融合特性**
+#### 3. 多模态融合特性
 
 ```text
 模态支持范围:
+
 - 5种模态: 文本+语音+图像+视频+结构化数据
 - 融合策略: 早期融合+晚期融合+注意力机制
 - 情感计算: 音频+文本双模态情感识别90%准确率
 - 实时处理: 流式多模态处理管道
 
 代码实现位置:
+
 - algo/core/enhanced_multimodal_fusion.py # 多模态融合引擎
 - algo/core/enhanced_voice_optimizer.py   # 语音优化器
 - algo/core/enhanced_vision_understanding.py # 视觉理解
+
 ```
 
 #### 13.2.2 生态建设现状
 
-**服务集成对比**
+#### 服务集成对比
 
 | 服务分类 | VoiceHelper | ChatGPT | Claude | Gemini | 数量对比 |
 |----------|-------------|---------|--------|--------|----------|
@@ -3450,10 +4109,11 @@ VoiceHelper v1.9.0技术特性:
 | AI/ML服务 | 40个 | ~20个 | ~15个 | 30个 | 1.3-2.5倍差异 |
 | **总计** | **500个** | **~120个** | **~90个** | **~235个** | **2-5倍差异** |
 
-**平台覆盖对比**
+#### 平台覆盖对比
 
 ```text
 VoiceHelper平台支持 (6个平台):
+
 - Web应用: Next.js + React现代化界面
 - iOS应用: SwiftUI原生应用，完整语音功能
 - Android应用: Jetpack Compose + Material Design 3
@@ -3462,6 +4122,7 @@ VoiceHelper平台支持 (6个平台):
 - 微信小程序: 轻量级移动端应用
 
 竞争对手平台支持:
+
 - ChatGPT: Web + iOS + Android (3个平台)
 - Claude: Web + API (2个平台)
 - Gemini: Web + Android深度集成 (2个平台)
@@ -3471,7 +4132,7 @@ VoiceHelper平台支持 (6个平台):
 
 #### 13.2.3 性能指标对比
 
-**关键性能基准测试**
+#### 关键性能基准测试
 
 | 指标类别 | VoiceHelper v1.9.0 | ChatGPT-4o | Claude 3.5 | Gemini Live | 相对表现 |
 |---------|-------------------|-------------|------------|-------------|----------|
@@ -3488,7 +4149,7 @@ VoiceHelper平台支持 (6个平台):
 
 #### 13.3.1 v2.0.0企业完善版竞争力提升
 
-**目标：从第1梯队向市场领导者地位发展**
+#### 目标：从第1梯队向市场领导者地位发展
 
 ```mermaid
 graph TB
@@ -3527,7 +4188,7 @@ graph TB
     C4 --> B5
 ```
 
-**具体提升指标**
+#### 具体提升指标
 
 | 指标类别 | v1.9.0当前值 | v2.0.0目标值 | 竞争对手最佳值 | 竞争优势 |
 |---------|-------------|-------------|---------------|----------|
@@ -3539,7 +4200,7 @@ graph TB
 
 #### 13.3.2 长期竞争战略（v2.1.0-v3.0.0）
 
-**技术护城河建设**
+#### 技术护城河建设
 
 ```text
 已建立技术基础 (v1.9.0):
@@ -3555,7 +4216,7 @@ graph TB
 🎯 行业解决方案: 垂直领域深度定制
 ```
 
-**市场定位演进**
+#### 市场定位演进
 
 | 发展阶段 | 市场定位 | 核心优势 | 竞争策略 |
 |---------|---------|----------|----------|
@@ -3568,9 +4229,10 @@ graph TB
 
 #### 13.4.1 竞争风险识别
 
-**技术风险**
+#### 技术风险
 
 ```text
+
 1. 大厂技术追赶风险
    - OpenAI可能推出更强的多模态能力
    - Google可能加强Gemini的生态集成
@@ -3585,11 +4247,13 @@ graph TB
    - 开源大模型性能快速提升
    - 开源生态可能形成竞争
    - 应对: 开源友好策略，差异化价值
+
 ```
 
-**市场风险**
+#### 市场风险
 
 ```text
+
 1. 用户习惯固化
    - 用户可能习惯现有产品
    - 切换成本较高
@@ -3604,13 +4268,15 @@ graph TB
    - 免费模式竞争激烈
    - 付费转化困难
    - 应对: 价值差异化，企业级服务
+
 ```
 
 #### 13.4.2 应对策略
 
-**技术应对策略**
+#### 技术应对策略
 
 ```text
+
 1. 持续创新投入
    - 研发投入占比保持20%+
    - 前沿技术跟踪和预研
@@ -3625,11 +4291,13 @@ graph TB
    - 参与AI助手行业标准制定
    - 开源核心组件，建立影响力
    - 技术社区领导地位
+
 ```
 
-**市场应对策略**
+#### 市场应对策略
 
 ```text
+
 1. 用户体验优先
    - 持续优化用户体验
    - 降低使用门槛
@@ -3644,63 +4312,74 @@ graph TB
    - 多元化收入模式
    - 企业级服务差异化
    - 生态分成模式
+
 ```
 
 ### 13.5 总结与展望
 
 #### 13.5.1 竞争地位总结
 
-**当前竞争优势（v1.9.0）**
+#### 当前竞争优势（v1.9.0）
 
 ```text
 🏆 技术领先优势:
+
 - GraphRAG系统: 97%召回率，业界领先14.1%
 - 多模态融合: 5种模态，95%融合准确率
 - 语音处理: 150ms延迟，情感识别90%准确率
 - Agent架构: 6种推理模式，500+服务生态
 
 🏆 生态建设优势:
+
 - 服务集成: 500个服务，竞争对手2-5倍优势
 - 平台覆盖: 6个平台，竞争对手2-3倍优势
 - 开发者生态: 完整SDK和工具链
 - 技术架构: 统一API设计，50%开发效率提升
 
 🏆 性能表现优势:
+
 - 语音延迟: 150ms，业界领先
 - 端到端对话: 1.5s，业界最快
 - 系统可用性: 99.9%，业界标准
 - 推理准确率: 90%，业界先进
+
 ```
 
-**v2.0.0竞争展望**
+#### v2.0.0竞争展望
 
 ```text
 🎯 市场领导地位:
+
 - 技术先进性: 从第1梯队到技术领先
 - 企业级能力: 从基础完善到企业标准
 - 整体竞争力: 从第1梯队到市场领导
 - 商业价值: 确立不可替代的竞争优势
 
 🎯 护城河深化:
+
 - 技术护城河: 零信任架构+AIOps智能运维
 - 生态护城河: 500+服务生态难以复制
 - 平台护城河: 6个平台全覆盖用户触达
 - 标准护城河: 参与行业标准制定
+
 ```
 
 #### 13.5.2 发展建议
 
-**短期策略（v2.0.0，4周）**
+#### 短期策略（v2.0.0，4周）
+
 1. **企业级能力完善**: 零信任架构、合规认证、高可用性
 2. **性能极致优化**: 延迟、准确率、可用性指标提升
 3. **安全合规认证**: GDPR、SOC2、ISO27001认证获得
 
-**中期策略（v2.1.0，6个月）**
+#### 中期策略（v2.1.0，6个月）
+
 1. **智能化升级**: GraphRAG 2.0、多Agent协作
 2. **个性化增强**: 用户行为分析、智能推荐
 3. **标准制定参与**: AI助手行业标准和规范
 
-**长期策略（v3.0.0，1年）**
+#### 长期策略（v3.0.0，1年）
+
 1. **平台化转型**: 开放生态平台、第三方应用商店
 2. **行业解决方案**: 垂直领域深度定制
 3. **全球化扩张**: 多语言、多地域能力建设
@@ -3715,7 +4394,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 
 #### 14.1.1 前端应用模块 (Frontend)
 
-**Web应用 (Next.js) - 端口3000**
+#### Web应用 (Next.js) - 端口3000
 
 | 路由路径 | 方法 | 功能描述 | 组件文件 |
 |---------|------|----------|----------|
@@ -3726,7 +4405,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/api/datasets` | GET | 获取数据集列表 | 代理到后端 |
 | `/api/ingest/upload` | POST | 文件上传 | 代理到后端 |
 
-**微信小程序 - 页面路由**
+#### 微信小程序 - 页面路由
 
 | 页面路径 | 功能描述 | 页面文件 |
 |---------|----------|----------|
@@ -3734,7 +4413,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `pages/login/login` | 登录页面 | `miniprogram/pages/login/login.js` |
 | `pages/reference/reference` | 参考资料 | `miniprogram/pages/reference/reference.js` |
 
-**桌面应用 (Electron) - IPC接口**
+#### 桌面应用 (Electron) - IPC接口
 
 | IPC事件 | 功能描述 | 处理函数 |
 |---------|----------|----------|
@@ -3745,7 +4424,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 
 #### 14.1.2 后端服务模块 (Backend Go)
 
-**API网关服务 - 端口8080**
+#### API网关服务 - 端口8080
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3753,7 +4432,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/version` | GET | 版本信息 | `main.go:90-97` |
 | `/api/v1/ping` | GET | 连接测试 | `main.go:102-107` |
 
-**对话服务API**
+#### 对话服务API
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3761,7 +4440,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/api/v1/chat/conversations` | GET/POST | 对话管理 | `handler/chat.go` |
 | `/api/v1/chat/conversations/{id}` | GET/DELETE | 对话详情 | `handler/chat.go` |
 
-**语音服务API**
+#### 语音服务API
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3769,7 +4448,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/api/v1/voice/transcribe` | POST | 语音转文字 | `handler/voice.go` |
 | `/api/v1/voice/synthesize` | POST | 文字转语音 | `handler/voice.go` |
 
-**集成服务API**
+#### 集成服务API
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3781,7 +4460,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 
 #### 14.1.3 算法服务模块 (Python FastAPI)
 
-**核心算法服务 - 端口8000**
+#### 核心算法服务 - 端口8000
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3793,7 +4472,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/voice/query` | POST | 语音查询 | `app/main.py:88-97` |
 | `/cancel` | POST | 取消请求 | `app/main.py:99-101` |
 
-**批处理服务API**
+#### 批处理服务API
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3801,7 +4480,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 | `/v1/batch/stats` | GET | 批处理统计 | `services/batch_service.py:415-421` |
 | `/v1/batch/health` | GET | 批处理健康 | `services/batch_service.py:423-425` |
 
-**语音服务 - 端口8001**
+#### 语音服务 - 端口8001
 
 | 路由路径 | 方法 | 功能描述 | 处理函数 |
 |---------|------|----------|----------|
@@ -3811,7 +4490,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 
 #### 14.1.4 数据存储服务
 
-**数据库服务端口**
+#### 数据库服务端口
 
 | 服务名称 | 端口 | 协议 | 用途 | 连接方式 |
 |---------|------|------|------|----------|
@@ -3826,6 +4505,7 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 
 ```text
 用户对话请求调用链:
+
 1. 前端发起请求 → /api/v1/chat/completions
 2. API网关接收 → 身份验证中间件
 3. 路由到对话处理器 → handler/chat.go
@@ -3834,12 +4514,14 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 6. 向量数据库查询 → Milvus:19530
 7. 大模型推理 → 豆包API
 8. 流式响应返回 → SSE/WebSocket
+
 ```
 
 #### 14.2.2 语音处理调用链
 
 ```text
 语音交互调用链:
+
 1. 前端建立WebSocket → /api/v1/voice/stream
 2. 语音数据传输 → handler/voice.go
 3. 转发到语音服务 → http://localhost:8001/voice/stream
@@ -3847,18 +4529,21 @@ VoiceHelper系统采用微服务架构，各模块通过RESTful API和WebSocket�
 5. 文本理解处理 → core/retrieve.py
 6. 语音合成处理 → TTS引擎
 7. 音频流返回 → WebSocket
+
 ```
 
 #### 14.2.3 服务集成调用链
 
 ```text
 第三方服务调用链:
+
 1. 服务注册请求 → /api/v1/integrations/services
 2. 服务配置验证 → handler/integration.go
 3. 服务调用请求 → /api/v1/integrations/services/{id}/call
 4. MCP协议转换 → pkg/integration
 5. 第三方API调用 → 外部服务
 6. 响应数据处理 → 结果返回
+
 ```
 
 ### 14.3 系统交互时序图
