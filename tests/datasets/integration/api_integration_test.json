@@ -148,8 +148,6 @@
     },
     {
       "id": "integration_002",
-      "name": "Milvus向量数据库集成",
-      "service": "milvus",
       "test_scenarios": [
         {
           "scenario": "向量插入",
@@ -456,19 +454,16 @@
       "base_url": "http://localhost:8080",
       "database": "chatbot_dev",
       "redis": "localhost:6379",
-      "milvus": "localhost:19530"
     },
     "staging": {
       "base_url": "https://staging-api.chatbot.com",
       "database": "chatbot_staging",
       "redis": "staging-redis:6379",
-      "milvus": "staging-milvus:19530"
     },
     "production": {
       "base_url": "https://api.chatbot.com",
       "database": "chatbot_prod",
       "redis": "prod-redis:6379",
-      "milvus": "prod-milvus:19530"
     }
   },
   "test_data_management": {

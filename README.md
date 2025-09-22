@@ -252,7 +252,6 @@ graph TB
 
     subgraph "数据层"
         PG[(PostgreSQL<br/>业务数据)]
-        Milvus[(Milvus<br/>向量)]
         Neo4j[(Neo4j<br/>知识图谱)]
         Redis[(Redis<br/>缓存)]
     end
@@ -271,7 +270,6 @@ graph TB
     Voice --> ASR
     Voice --> TTS
     RAG --> Learn
-    RAG --> Milvus
     RAG --> Neo4j
     Chat --> PG
     Chat --> Redis
@@ -372,7 +370,6 @@ Web端:
   - 自动备份 + 故障转移
 
 向量数据库:
-  - Milvus 2.3.4 + HNSW索引
 
   - 分布式部署 + 副本
   - 增量索引 + 热更新
@@ -1084,7 +1081,6 @@ main (保护分支)
 
 - [LangChain](https://github.com/langchain-ai/langchain) - LLM应用框架
 
-- [Milvus](https://milvus.io/) - 向量数据库
 - [Neo4j](https://neo4j.com/) - 图数据库
 
 - [FastAPI](https://fastapi.tiangolo.com/) - Python Web框架

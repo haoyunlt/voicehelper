@@ -13,7 +13,6 @@ metadata:
 data:
   GIN_MODE: "release"
   ENV: "production"
-  MILVUS_HOST: "milvus-service"
   MILVUS_PORT: "19530"
   REDIS_HOST: "redis-service"
   REDIS_PORT: "6379"
@@ -430,7 +429,6 @@ spec:
     - protocol: TCP
       port: 443 # HTTPS
     - protocol: TCP
-      port: 19530 # Milvus
     - protocol: TCP
       port: 5432  # PostgreSQL
     - protocol: TCP

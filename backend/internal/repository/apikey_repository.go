@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"chatbot/pkg/ratelimit"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -64,12 +66,21 @@ type APIKeyRepository interface {
 
 // PostgresAPIKeyRepository PostgreSQL实现
 type PostgresAPIKeyRepository struct {
-	db *sql.DB
+	db          *sql.DB
+	rateLimiter *ratelimit.RateLimiter
 }
 
 // NewPostgresAPIKeyRepository 创建PostgreSQL API密钥仓库
 func NewPostgresAPIKeyRepository(db *sql.DB) APIKeyRepository {
 	return &PostgresAPIKeyRepository{db: db}
+}
+
+// NewPostgresAPIKeyRepositoryWithRateLimit 创建带速率限制的PostgreSQL API密钥仓库
+func NewPostgresAPIKeyRepositoryWithRateLimit(db *sql.DB, rateLimiter *ratelimit.RateLimiter) APIKeyRepository {
+	return &PostgresAPIKeyRepository{
+		db:          db,
+		rateLimiter: rateLimiter,
+	}
 }
 
 // Create 创建API密钥
@@ -378,19 +389,40 @@ func (r *PostgresAPIKeyRepository) UpdateLastUsed(ctx context.Context, id string
 
 // CheckRateLimit 检查速率限制
 func (r *PostgresAPIKeyRepository) CheckRateLimit(ctx context.Context, id string) (bool, error) {
-	// 这里简化实现，实际应该使用Redis等缓存系统
-	// 记录请求次数并检查是否超过限制
-
 	// 获取API Key信息
 	key, err := r.Get(ctx, id)
 	if err != nil {
 		return false, err
 	}
 
-	// TODO: 实现基于Redis的速率限制
-	// 这里暂时返回true（允许）
-	_ = key.RateLimit
+	// 如果没有设置速率限制，则允许
+	if key.RateLimit <= 0 {
+		return true, nil
+	}
 
+	// 使用Redis速率限制器检查
+	if r.rateLimiter != nil {
+		config := ratelimit.RateLimitConfig{
+			Limit:  key.RateLimit,
+			Window: time.Minute, // 每分钟限制
+		}
+
+		result, err := r.rateLimiter.CheckFixed(ctx, fmt.Sprintf("apikey:%s", id), config)
+		if err != nil {
+			// 如果Redis出错，记录日志但允许请求通过
+			logrus.WithError(err).Warn("Rate limiter check failed, allowing request")
+			return true, nil
+		}
+
+		// 更新最后使用时间
+		if result.Allowed {
+			r.UpdateLastUsed(ctx, id)
+		}
+
+		return result.Allowed, nil
+	}
+
+	// 如果没有配置速率限制器，则允许
 	return true, nil
 }
 

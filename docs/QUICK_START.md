@@ -161,7 +161,6 @@ curl -s "http://localhost:8080/api/v1/analytics/performance" | jq '.'
 ```bash
 # 只启动数据库等基础服务
 cd deploy
-docker-compose up -d postgres redis milvus-standalone etcd minio
 ```
 
 **2. 启动后端服务**:
@@ -321,11 +320,8 @@ docker-compose up -d postgres
 
 **3. 向量数据库问题**
 ```bash
-# 检查 Milvus 状态
 curl http://localhost:19530/health
 
-# 重启 Milvus 相关服务
-docker-compose restart milvus-standalone etcd minio
 ```
 
 **4. 前端页面无法访问**

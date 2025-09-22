@@ -82,7 +82,6 @@ curl http://localhost:3000
 | #### 监控面板 | http://localhost:3001 | Grafana仪表板 |
 | #### 数据库 | localhost:5432 | PostgreSQL |
 | #### 缓存 | localhost:6379 | Redis |
-| #### 向量库 | localhost:19530 | Milvus |
 
 ### 环境变量配置
 
@@ -137,7 +136,6 @@ kubectl apply -f deploy/k8s/secrets.yaml
 
 kubectl apply -f deploy/k8s/postgres.yaml
 kubectl apply -f deploy/k8s/redis.yaml
-kubectl apply -f deploy/k8s/milvus.yaml
 kubectl apply -f deploy/k8s/backend.yaml
 kubectl apply -f deploy/k8s/algo.yaml
 kubectl apply -f deploy/k8s/frontend.yaml

@@ -49,7 +49,6 @@ VoiceHelper 是一个企业级智能聊天机器人平台，集成了先进的�
          │                       ▼                       ▼
          │              ┌─────────────────┐    ┌─────────────────┐
          │              │   数据库        │    │   向量数据库    │
-         │              │   PostgreSQL    │    │   Milvus        │
          └──────────────┤   Redis         │    │   知识库        │
                         └─────────────────┘    └─────────────────┘
 ```text
@@ -233,7 +232,6 @@ docker-compose logs -f
 | 算法 | 8000 | AI服务 |
 | PostgreSQL | 5432 | 主数据库 |
 | Redis | 6379 | 缓存 |
-| Milvus | 19530 | 向量数据库 |
 | MinIO | 9000/9001 | 对象存储 |
 
 ### Kubernetes 部署
@@ -292,7 +290,6 @@ export NODE_ENV=production
 export GIN_MODE=release
 export DATABASE_URL=postgresql://user:pass@host:5432/voicehelper
 export REDIS_URL=redis://host:6379
-export MILVUS_HOST=milvus-host
 ```text
 
 #### 2. 安全配置
@@ -642,11 +639,9 @@ services:
 
   algo-service:
     environment:
-      - MILVUS_HOST=milvus-standalone
 
       - MILVUS_PORT=19530
     depends_on:
-      - milvus-standalone
 
     deploy:
       resources:
@@ -705,15 +700,11 @@ docker-compose exec postgres psql -U postgres -d voicehelper
 
 #### 3. 向量数据库问题
 
-#### 问题: Milvus 连接失败
 ```bash
-# 检查 Milvus 状态
 
 curl http://localhost:19530/health
 
-# 重启 Milvus
 
-docker-compose restart milvus-standalone etcd minio
 
 # 检查存储空间
 

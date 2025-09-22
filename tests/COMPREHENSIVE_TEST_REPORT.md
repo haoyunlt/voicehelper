@@ -25,7 +25,6 @@
 - ✅ **后端服务** (localhost:8080): 运行正常
 - ✅ **算法服务** (localhost:8000): 运行正常  
 - ✅ **前端服务** (localhost:3000): 运行正常
-- ✅ **数据库服务**: PostgreSQL, Redis, Milvus 全部正常
 
 #### 依赖检查
 - ✅ Python 3.13.7: 已安装

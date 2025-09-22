@@ -24,7 +24,6 @@ VERBOSE=false
 declare -A SERVICE_PORTS=(
     ["postgres"]=5432
     ["redis"]=6379
-    ["milvus"]=19530
     ["neo4j"]=7474
     ["prometheus"]=9090
     ["grafana"]=3001
@@ -37,15 +36,12 @@ declare -A SERVICE_PORTS=(
 declare -A SERVICE_CONTAINERS=(
     ["postgres"]="chatbot-postgres"
     ["redis"]="chatbot-redis"
-    ["milvus"]="milvus-standalone"
     ["neo4j"]="chatbot-neo4j"
     ["prometheus"]="chatbot-prometheus"
     ["grafana"]="chatbot-grafana"
     ["elasticsearch"]="chatbot-elasticsearch"
     ["kibana"]="chatbot-kibana"
     ["rabbitmq"]="chatbot-rabbitmq"
-    ["minio"]="milvus-minio"
-    ["etcd"]="milvus-etcd"
 )
 
 # 日志函数
@@ -99,7 +95,6 @@ show_help() {
   --help          显示帮助信息
 
 服务列表:
-  基础设施: postgres, redis, milvus, neo4j, prometheus, grafana, 
            elasticsearch, kibana, rabbitmq
   应用服务: gateway, algo, frontend, admin
 
@@ -265,7 +260,6 @@ detect_required_services() {
     log_section "环境检测"
     
     # 基础设施服务检测
-    for service in postgres redis milvus neo4j; do
         if ! check_service_health "$service"; then
             log_warning "$service 未部署或未运行，将自动部署"
             required_services+=("$service")
@@ -297,7 +291,6 @@ setup_environment() {
     
     # 创建目录结构
     mkdir -p ../local/{config,logs,data}
-    mkdir -p ../local/config/{redis,milvus,prometheus,grafana/{provisioning/{datasources,dashboards},dashboards}}
     mkdir -p ../local/config/logstash/{pipeline,config}
     mkdir -p ../local/init-scripts/postgres
     
@@ -382,9 +375,6 @@ deploy_service() {
     
     log_info "部署 $service..."
     
-    # 特殊处理Milvus（需要etcd和minio）
-    if [ "$service" = "milvus" ]; then
-        log_debug "Milvus 需要先启动 etcd 和 minio"
         docker-compose -f ../docker-compose.local.yml up -d etcd minio
         sleep 5
     fi
@@ -424,7 +414,6 @@ wait_for_service() {
 deploy_infrastructure() {
     log_section "部署基础设施"
     
-    local services=(postgres redis milvus neo4j)
     
     if [ "$DEPLOY_MODE" = "smart" ]; then
         # 智能模式：只部署需要的服务
@@ -494,7 +483,6 @@ deploy_applications() {
     log_section "部署应用服务"
     
     # 确保基础设施就绪
-    local required_services=(postgres redis milvus)
     for service in "${required_services[@]}"; do
         if ! check_service_health "$service"; then
             log_warning "$service 未就绪，先部署基础服务"
@@ -547,7 +535,6 @@ show_status() {
     printf "%-15s %-15s %-10s\n" "服务" "容器" "状态"
     echo "----------------------------------------"
     
-    for service in postgres redis milvus neo4j prometheus grafana elasticsearch kibana rabbitmq; do
         local container=${SERVICE_CONTAINERS[$service]}
         local port=${SERVICE_PORTS[$service]}
         local status="❌ 未部署"
@@ -626,7 +613,6 @@ show_access_info() {
         echo "  Redis:       ${GREEN}localhost:6379${NC} (password: redis123)"
     fi
     if nc -z localhost 19530 2>/dev/null; then
-        echo "  Milvus:      ${GREEN}localhost:19530${NC}"
     fi
     if nc -z localhost 7474 2>/dev/null; then
         echo "  Neo4j:       ${GREEN}http://localhost:7474${NC} (neo4j/neo4j123)"

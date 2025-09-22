@@ -254,7 +254,6 @@ fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 langchain>=0.0.350
 langchain-community>=0.0.10
-pymilvus>=2.3.0
 redis>=5.0.0
 numpy>=1.24.0
 pandas>=2.0.0

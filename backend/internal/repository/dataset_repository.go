@@ -394,6 +394,70 @@ func (r *PostgresDatasetRepository) UpdateDocumentStatus(ctx context.Context, do
 	return nil
 }
 
+// GetDocument 获取文档详情
+func (r *PostgresDatasetRepository) GetDocument(ctx context.Context, docID string) (*Document, error) {
+	query := `
+		SELECT 
+			id, dataset_id, name, source, type, size, status,
+			chunk_count, token_count, metadata, created_at, updated_at
+		FROM documents
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	doc := &Document{}
+	err := r.db.QueryRowContext(ctx, query, docID).Scan(
+		&doc.ID, &doc.DatasetID, &doc.Name, &doc.Source,
+		&doc.Type, &doc.Size, &doc.Status, &doc.ChunkCount,
+		&doc.TokenCount, &doc.Metadata, &doc.CreatedAt, &doc.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("document not found")
+		}
+		return nil, fmt.Errorf("failed to get document: %w", err)
+	}
+
+	return doc, nil
+}
+
+// UpdateDocument 更新文档信息
+func (r *PostgresDatasetRepository) UpdateDocument(ctx context.Context, doc *Document) error {
+	query := `
+		UPDATE documents SET
+			name = $2,
+			source = $3,
+			type = $4,
+			size = $5,
+			status = $6,
+			chunk_count = $7,
+			token_count = $8,
+			metadata = $9,
+			updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	result, err := r.db.ExecContext(ctx, query,
+		doc.ID, doc.Name, doc.Source, doc.Type, doc.Size,
+		doc.Status, doc.ChunkCount, doc.TokenCount, doc.Metadata,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update document: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("document not found")
+	}
+
+	return nil
+}
+
 // DeleteDocument 软删除文档
 func (r *PostgresDatasetRepository) DeleteDocument(ctx context.Context, docID string) error {
 	query := `
@@ -402,9 +466,18 @@ func (r *PostgresDatasetRepository) DeleteDocument(ctx context.Context, docID st
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 
-	_, err := r.db.ExecContext(ctx, query, docID)
+	result, err := r.db.ExecContext(ctx, query, docID)
 	if err != nil {
 		return fmt.Errorf("failed to delete document: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("document not found")
 	}
 
 	return nil

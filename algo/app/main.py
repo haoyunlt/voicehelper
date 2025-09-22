@@ -18,9 +18,9 @@ from common.errors import ErrorCode, VoiceHelperError, get_error_info
 load_dotenv()
 
 # 获取配置
-SERVICE_NAME = os.getenv("SERVICE_NAME", "voicehelper-algo")
+SERVICE_NAME = os.getenv("SERVICE_NAME", os.getenv("ALGO_SERVICE_NAME", "voicehelper-algo"))
 HOST = os.getenv("HOST", "0.0.0.0")
-PORT = int(os.getenv("PORT", 8000))
+PORT = int(os.getenv("PORT", os.getenv("ALGO_PORT", 8000)))
 ENV = os.getenv("ENV", "development")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 

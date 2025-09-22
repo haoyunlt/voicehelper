@@ -1,6 +1,7 @@
 import uuid
 import asyncio
 import json
+import pickle
 from datetime import datetime
 from typing import Dict, Any, List
 from pathlib import Path
@@ -10,8 +11,6 @@ from langchain.document_loaders import (
     PyPDFLoader, TextLoader, UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader, WebBaseLoader
 )
-from langchain_milvus import Milvus
-from pymilvus import connections, utility, Collection, FieldSchema, CollectionSchema, DataType
 
 from core.config import config
 from core.embeddings import get_embeddings
@@ -26,73 +25,73 @@ class IngestService:
             separators=["\n\n", "\n", "。", "！", "？", "；", " ", ""]
         )
         self.tasks: Dict[str, TaskStatus] = {}
-        self._init_milvus()
+        # 使用本地存储替代 Milvus
+        self.vector_store = {}  # 存储向量数据
+        self.documents_store = {}  # 存储文档数据
+        self.storage_path = Path("/app/data")
+        self.storage_path.mkdir(exist_ok=True)
+        self._load_local_storage()
     
-    def _init_milvus(self):
-        """初始化 Milvus 连接"""
+    def _load_local_storage(self):
+        """加载本地存储的向量数据"""
         try:
-            connections.connect(
-                alias="default",
-                host=config.MILVUS_HOST,
-                port=config.MILVUS_PORT,
-                user=config.MILVUS_USER,
-                password=config.MILVUS_PASSWORD
-            )
+            vector_file = self.storage_path / "vectors.pkl"
+            docs_file = self.storage_path / "documents.pkl"
             
-            # 创建集合（如果不存在）
-            self._create_collection_if_not_exists()
+            if vector_file.exists():
+                with open(vector_file, 'rb') as f:
+                    self.vector_store = pickle.load(f)
+                print(f"Loaded {len(self.vector_store)} vectors from local storage")
+            
+            if docs_file.exists():
+                with open(docs_file, 'rb') as f:
+                    self.documents_store = pickle.load(f)
+                print(f"Loaded {len(self.documents_store)} documents from local storage")
+                    
+        except Exception as e:
+            print(f"Failed to load local storage: {e}")
+            self.vector_store = {}
+            self.documents_store = {}
+    
+    def _save_local_storage(self):
+        """保存向量数据到本地存储"""
+        try:
+            vector_file = self.storage_path / "vectors.pkl"
+            docs_file = self.storage_path / "documents.pkl"
+            
+            with open(vector_file, 'wb') as f:
+                pickle.dump(self.vector_store, f)
+            
+            with open(docs_file, 'wb') as f:
+                pickle.dump(self.documents_store, f)
+                
+            print(f"Saved {len(self.vector_store)} vectors and {len(self.documents_store)} documents to local storage")
             
         except Exception as e:
-            print(f"Failed to connect to Milvus: {e}")
-            raise
-    
-    def _create_collection_if_not_exists(self):
-        """创建集合"""
-        collection_name = config.DEFAULT_COLLECTION_NAME
-        
-        if utility.has_collection(collection_name):
-            print(f"Collection {collection_name} already exists")
-            return
-        
-        # 定义字段
-        fields = [
-            FieldSchema(name="id", dtype=DataType.VARCHAR, max_length=100, is_primary=True),
-            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
-            FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=config.EMBEDDING_DIMENSION),
-            FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=500),
-            FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=100),
-            FieldSchema(name="doc_id", dtype=DataType.VARCHAR, max_length=100),
-            FieldSchema(name="dataset_id", dtype=DataType.VARCHAR, max_length=100),
-            FieldSchema(name="created_at", dtype=DataType.VARCHAR, max_length=50),
-        ]
-        
-        # 创建集合
-        schema = CollectionSchema(fields, f"Chatbot knowledge base collection")
-        collection = Collection(collection_name, schema)
-        
-        # 创建索引
-        index_params = {
-            "metric_type": "COSINE",
-            "index_type": "HNSW",
-            "params": {"M": 16, "efConstruction": 200}
-        }
-        collection.create_index("vector", index_params)
-        
-        print(f"Created collection {collection_name}")
+            print(f"Failed to save local storage: {e}")
     
     def generate_task_id(self) -> str:
         """生成任务ID"""
         return str(uuid.uuid4())
     
-    def get_task_status(self, task_id: str) -> TaskStatus:
+    def get_task_status(self, task_id: str) -> Dict[str, Any]:
         """获取任务状态"""
         if task_id not in self.tasks:
-            return TaskStatus(
-                task_id=task_id,
-                status="not_found",
-                message="Task not found"
-            )
-        return self.tasks[task_id]
+            return {
+                "task_id": task_id,
+                "status": "not_found",
+                "message": "Task not found",
+                "progress": 0
+            }
+        task = self.tasks[task_id]
+        return {
+            "task_id": task.task_id,
+            "status": task.status,
+            "progress": task.progress,
+            "message": task.message,
+            "created_at": task.created_at,
+            "updated_at": task.updated_at
+        }
     
     async def process_ingest_task(self, task_id: str, request: IngestRequest):
         """处理入库任务"""
@@ -188,7 +187,7 @@ class IngestService:
         return loader.load()
     
     async def _store_chunks(self, chunks: List, dataset_id: str):
-        """存储文档块到 Milvus"""
+        """存储文档块到本地存储"""
         if not chunks:
             return
         
@@ -196,29 +195,39 @@ class IngestService:
         texts = [chunk.page_content for chunk in chunks]
         embeddings = self.embeddings.embed_documents(texts)
         
-        # 构建插入数据
-        entities = []
+        # 构建存储数据
+        stored_count = 0
         for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
             doc_id = chunk.metadata.get('source', f'doc_{i}')
             chunk_id = f"{doc_id}_chunk_{i}"
             
-            entities.append({
+            # 存储向量数据
+            self.vector_store[chunk_id] = {
+                "vector": embedding,
+                "text": chunk.page_content,
+                "metadata": {
+                    "source": chunk.metadata.get('source', ''),
+                    "chunk_id": chunk_id,
+                    "doc_id": doc_id,
+                    "dataset_id": dataset_id,
+                    "created_at": datetime.now().isoformat(),
+                }
+            }
+            
+            # 存储文档数据
+            self.documents_store[chunk_id] = {
                 "id": chunk_id,
                 "text": chunk.page_content,
-                "vector": embedding,
                 "source": chunk.metadata.get('source', ''),
                 "chunk_id": chunk_id,
                 "doc_id": doc_id,
                 "dataset_id": dataset_id,
                 "created_at": datetime.now().isoformat(),
-            })
+            }
+            
+            stored_count += 1
         
-        # 插入到 Milvus
-        collection = Collection(config.DEFAULT_COLLECTION_NAME)
-        collection.insert(entities)
-        collection.flush()
+        # 保存到本地文件
+        self._save_local_storage()
         
-        # 加载集合（用于搜索）
-        collection.load()
-        
-        print(f"Stored {len(entities)} chunks to Milvus")
+        print(f"Stored {stored_count} chunks to local storage")

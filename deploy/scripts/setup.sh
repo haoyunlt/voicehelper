@@ -35,7 +35,6 @@ docker-compose build
 
 # 启动基础设施服务
 echo "🏗️ 启动基础设施服务..."
-docker-compose up -d milvus redis postgres etcd minio
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."

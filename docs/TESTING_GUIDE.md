@@ -314,8 +314,6 @@ services:
     ports:
       - "6380:6379"
   
-  test-milvus:
-    image: milvusdb/milvus:latest
     ports:
       - "19531:19530"
 ```

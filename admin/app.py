@@ -17,8 +17,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # 初始化Flask应用
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('ADMIN_SECRET_KEY', 'dev-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/chatbot_admin')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://voicehelper:voicehelper123@postgres:5432/voicehelper')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 获取服务配置
+SERVICE_NAME = os.getenv('SERVICE_NAME', os.getenv('ADMIN_SERVICE_NAME', 'voicehelper-admin'))
+PORT = int(os.getenv('PORT', os.getenv('ADMIN_PORT', 5001)))
+HOST = os.getenv('HOST', '0.0.0.0')
 
 # 初始化扩展
 db = SQLAlchemy(app)
@@ -526,4 +531,4 @@ if __name__ == '__main__':
             db.session.add(admin)
             db.session.commit()
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host=HOST, port=PORT, debug=True)

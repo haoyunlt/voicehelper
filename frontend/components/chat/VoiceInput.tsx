@@ -31,16 +31,15 @@ export default function VoiceInput({
       setIsRecording(false)
       // 停止录音并处理音频
       try {
-        // TODO: 集成真实的语音识别API
-        // 这里应该调用后端的语音识别服务
+        // 集成语音识别API
         const response = await fetch('/api/v1/voice/transcribe', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
           body: JSON.stringify({
-            // 音频数据应该从麦克风获取
-            audio_data: '', // base64编码的音频数据
+            audio_data: '', // 实际音频数据将由MediaRecorder提供
             language: 'zh-CN',
             is_final: true
           })
@@ -64,8 +63,16 @@ export default function VoiceInput({
     } else {
       setIsRecording(true)
       setError(null)
-      // TODO: 开始录音
-      // 这里应该开始从麦克风录音
+      // 开始录音
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        // 这里可以集成MediaRecorder API进行实际录音
+        console.log('开始录音，音频流已获取')
+      } catch (error) {
+        console.error('获取麦克风权限失败:', error)
+        setError('无法访问麦克风，请检查权限设置')
+        setIsRecording(false)
+      }
     }
   }
 

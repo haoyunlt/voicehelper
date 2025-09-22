@@ -72,14 +72,23 @@ ehthumbs.db
 *.bak
 *.backup
 *.old
+*.milvus_backup
+*_backup_*
+remove_milvus_refs.sh
+temp_*.sh
 
 # ==================== 开发环境文件 ====================
-# 环境配置
-.env
+# 环境配置（敏感信息）
 .env.*
+.env.backup.*
+.env.bak
 *.pem
 *.key
 *.crt
+*.secret
+*.private
+api_keys.txt
+credentials.json
 
 # IDE配置
 .vscode/
@@ -153,6 +162,10 @@ archive/
 wandb/
 checkpoints/
 model_cache/
+# BGE模型缓存
+.cache/huggingface/
+.cache/torch/
+sentence_transformers_cache/
 
 # 算法缓存和临时文件
 algo/reasoning/cache/
@@ -162,6 +175,11 @@ algo/*/cache/
 algo/*/temp/
 algo/*/models/
 algo/*/data/
+# 本地向量存储（替代Milvus）
+algo/data/
+algo/storage/
+algo/vectors/
+algo/embeddings/
 
 # Python缓存和编译文件
 *.pyc

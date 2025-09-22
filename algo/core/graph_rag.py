@@ -16,7 +16,7 @@ from loguru import logger
 
 from core.embeddings import EmbeddingService
 from core.llm import LLMService
-from pymilvus import Collection
+# from pymilvus import Collection  # 已移除 Milvus 支持
 
 
 @dataclass
@@ -408,12 +408,12 @@ class GraphRAG:
         self,
         llm_service: LLMService,
         embedding_service: EmbeddingService,
-        milvus_collection: Optional[Collection] = None,
+        # milvus_collection: Optional[Collection] = None,  # 已移除 Milvus 支持
         neo4j_uri: Optional[str] = None
     ):
         self.llm = llm_service
         self.embedding_service = embedding_service
-        self.milvus_collection = milvus_collection
+        # self.milvus_collection = milvus_collection  # 已移除 Milvus 支持
         
         # 初始化组件
         self.entity_extractor = EntityExtractor(llm_service)
@@ -503,10 +503,10 @@ class GraphRAG:
         query_entities = await self.entity_extractor.extract_entities(query)
         metadata["query_entities"] = [e.name for e in query_entities]
         
-        # 2. 向量检索（基线）
-        if self.milvus_collection:
-            vector_results = await self._vector_search(query, top_k * 2)
-            all_results.extend(vector_results)
+        # 2. 向量检索（基线）- 已移除 Milvus 支持
+        # 使用本地向量存储进行检索
+        vector_results = await self._local_vector_search(query, top_k * 2)
+        all_results.extend(vector_results)
             metadata["techniques_used"].append("vector_search")
         
         # 3. 图遍历检索
@@ -538,42 +538,16 @@ class GraphRAG:
         
         return final_results, metadata
     
-    async def _vector_search(
+    async def _local_vector_search(
         self,
         query: str,
         top_k: int
     ) -> List[Dict[str, Any]]:
-        """向量检索"""
-        if not self.milvus_collection:
-            return []
-        
-        # 生成查询向量
-        query_vector = await self.embedding_service.embed_text(query)
-        
-        # Milvus检索
-        search_params = {
-            "metric_type": "IP",
-            "params": {"nprobe": 10}
-        }
-        
-        results = self.milvus_collection.search(
-            data=[query_vector.tolist()],
-            anns_field="embedding",
-            param=search_params,
-            limit=top_k,
-            output_fields=["content", "metadata"]
-        )
-        
-        search_results = []
-        for hit in results[0]:
-            search_results.append({
-                "content": hit.entity.get("content"),
-                "score": hit.score,
-                "source": "vector_search",
-                "metadata": hit.entity.get("metadata", {})
-            })
-        
-        return search_results
+        """本地向量检索（替代 Milvus）"""
+        # 这里应该调用本地向量存储服务
+        # 暂时返回空结果，实际使用时需要集成本地向量存储
+        logger.warning("本地向量检索功能需要实现")
+        return []
     
     async def _graph_traversal_search(
         self,

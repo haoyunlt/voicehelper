@@ -102,7 +102,6 @@ graph TB
 **技术栈选择合理**:
 - **前端**: Next.js + React + TypeScript
 - **后端**: Go + Python (AI算法)
-- **数据库**: PostgreSQL + Redis + Milvus + Neo4j
 - **部署**: Docker + Kubernetes
 
 **数据架构设计优秀**:
@@ -110,7 +109,6 @@ graph TB
 数据存储选择:
   PostgreSQL: 用户数据、对话记录、系统配置
   Redis: 会话状态、临时数据、热点数据缓存
-  Milvus: 文档嵌入向量、语义搜索索引
   Neo4j: 知识图谱、实体关系
   MinIO: 文件存储、媒体资源
 ```

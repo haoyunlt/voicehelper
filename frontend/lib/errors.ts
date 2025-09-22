@@ -157,7 +157,7 @@ export interface ErrorInfo {
   service: string;
 }
 
-const errorInfoMap: Record<ErrorCode, ErrorInfo> = {
+const errorInfoMap: Partial<Record<ErrorCode, ErrorInfo>> = {
   [ErrorCode.SUCCESS]: {
     code: ErrorCode.SUCCESS,
     message: "Success",

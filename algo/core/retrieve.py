@@ -1,11 +1,13 @@
 import json
 import asyncio
+import pickle
+import numpy as np
 from typing import AsyncGenerator, List, Dict, Any
 from datetime import datetime
+from pathlib import Path
 
 import requests
-from langchain_milvus import Milvus
-from pymilvus import Collection
+from loguru import logger
 
 from core.config import config
 from core.embeddings import get_embeddings
@@ -14,48 +16,81 @@ from core.models import QueryRequest, QueryResponse, Reference, Message
 class RetrieveService:
     def __init__(self):
         self.embeddings = get_embeddings()
-        self.milvus = self._connect_to_milvus()
+        # 使用本地向量存储替代 Milvus
+        self.vector_store = {}
+        self.documents_store = {}
+        self.storage_path = Path("/app/data")
+        self.storage_path.mkdir(exist_ok=True)
+        self._load_local_storage()
     
-    def _connect_to_milvus(self):
-        """连接到Milvus，带重试机制"""
-        import time
-        max_retries = 5
-        retry_delay = 2
-        
-        for attempt in range(max_retries):
-            try:
-                print(f"Attempting to connect to Milvus (attempt {attempt + 1}/{max_retries})")
-                milvus = Milvus(
-                    embedding_function=self.embeddings,
-                    collection_name=config.DEFAULT_COLLECTION_NAME,
-                    connection_args={
-                        "host": config.MILVUS_HOST,
-                        "port": config.MILVUS_PORT,
-                        "user": config.MILVUS_USER,
-                        "password": config.MILVUS_PASSWORD,
-                    }
-                )
-                print("Successfully connected to Milvus")
-                return milvus
-            except Exception as e:
-                print(f"Failed to connect to Milvus (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    print(f"Retrying in {retry_delay} seconds...")
-                    time.sleep(retry_delay)
-                else:
-                    print("Max retries reached, using mock Milvus")
-                    return self._create_mock_milvus()
-    
-    def _create_mock_milvus(self):
-        """创建模拟的Milvus实例"""
-        class MockMilvus:
-            def similarity_search(self, query, k=5):
-                return []
+    def _load_local_storage(self):
+        """加载本地存储的向量数据"""
+        try:
+            vector_file = self.storage_path / "vectors.pkl"
+            docs_file = self.storage_path / "documents.pkl"
             
-            def add_texts(self, texts, metadatas=None):
-                return []
+            if vector_file.exists():
+                with open(vector_file, 'rb') as f:
+                    self.vector_store = pickle.load(f)
+                print(f"Loaded {len(self.vector_store)} vectors from local storage")
+            
+            if docs_file.exists():
+                with open(docs_file, 'rb') as f:
+                    self.documents_store = pickle.load(f)
+                print(f"Loaded {len(self.documents_store)} documents from local storage")
+                    
+        except Exception as e:
+            print(f"Failed to load local storage: {e}")
+            self.vector_store = {}
+            self.documents_store = {}
+    
+    def _cosine_similarity(self, vec1, vec2):
+        """计算余弦相似度"""
+        vec1 = np.array(vec1)
+        vec2 = np.array(vec2)
         
-        return MockMilvus()
+        dot_product = np.dot(vec1, vec2)
+        norm1 = np.linalg.norm(vec1)
+        norm2 = np.linalg.norm(vec2)
+        
+        if norm1 == 0 or norm2 == 0:
+            return 0
+        
+        return dot_product / (norm1 * norm2)
+    
+    def similarity_search_with_score(self, query: str, k: int = 5):
+        """使用本地向量存储进行相似度搜索"""
+        if not self.vector_store:
+            print("No vectors in local storage")
+            return []
+        
+        # 获取查询向量
+        query_vector = self.embeddings.embed_query(query)
+        
+        # 计算相似度
+        similarities = []
+        for chunk_id, data in self.vector_store.items():
+            similarity = self._cosine_similarity(query_vector, data["vector"])
+            similarities.append((chunk_id, similarity, data))
+        
+        # 按相似度排序并返回前k个
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        
+        results = []
+        for chunk_id, score, data in similarities[:k]:
+            # 创建类似 langchain Document 的对象
+            class MockDocument:
+                def __init__(self, page_content, metadata):
+                    self.page_content = page_content
+                    self.metadata = metadata
+            
+            doc = MockDocument(
+                page_content=data["text"],
+                metadata=data["metadata"]
+            )
+            results.append((doc, score))
+        
+        return results
     
     async def stream_query(self, request: QueryRequest) -> AsyncGenerator[str, None]:
         """流式查询处理"""
@@ -119,10 +154,9 @@ class RetrieveService:
                     expr = " and ".join(conditions)
             
             # 执行相似性搜索
-            results = self.milvus.similarity_search_with_score(
+            results = self.similarity_search_with_score(
                 query=query,
-                k=top_k,
-                expr=expr
+                k=top_k
             )
             
             # 转换为引用格式
@@ -196,56 +230,39 @@ class RetrieveService:
     ) -> AsyncGenerator[str, None]:
         """调用大模型流式生成"""
         try:
-            headers = {
-                "Authorization": f"Bearer {config.ARK_API_KEY}",
-                "Content-Type": "application/json"
-            }
+            # 使用多模型服务
+            from core.multi_model_config import MultiModelConfig
+            from core.multi_model_service import MultiModelService
             
-            payload = {
-                "model": config.ARK_MODEL,
-                "messages": messages,
-                "temperature": request.temperature,
-                "max_tokens": request.max_tokens,
-                "stream": True
-            }
+            multi_config = MultiModelConfig()
+            multi_service = MultiModelService(multi_config)
             
-            # 发送请求
-            response = requests.post(
-                f"{config.ARK_BASE_URL}/chat/completions",
-                headers=headers,
-                json=payload,
-                stream=True,
-                timeout=60
-            )
+            # 获取首选模型
+            preferred_model = getattr(request, 'model', None) or config.PRIMARY_MODEL
             
-            if response.status_code != 200:
-                yield self._format_response("error", f"LLM API error: {response.status_code}")
-                return
+            # 调用多模型服务进行流式生成
+            async for chunk_type, chunk_content in multi_service.stream_model(
+                messages=messages,
+                preferred_model=preferred_model,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens
+            ):
+                if chunk_type == "error":
+                    yield self._format_response("error", f"LLM API error: {chunk_content}")
+                    return
+                elif chunk_type == "content":
+                    yield self._format_response("content", chunk_content)
+                elif chunk_type == "done":
+                    break
             
-            # 处理流式响应
-            for line in response.iter_lines():
-                if line:
-                    line = line.decode('utf-8')
-                    if line.startswith('data: '):
-                        data = line[6:]  # 去掉 'data: ' 前缀
-                        
-                        if data.strip() == '[DONE]':
-                            break
-                        
-                        try:
-                            chunk = json.loads(data)
-                            if 'choices' in chunk and len(chunk['choices']) > 0:
-                                delta = chunk['choices'][0].get('delta', {})
-                                if 'content' in delta:
-                                    content = delta['content']
-                                    if content:
-                                        yield self._format_response("delta", content)
-                        except json.JSONDecodeError:
-                            continue
+            return
             
         except Exception as e:
-            print(f"Error calling LLM API: {e}")
-            yield self._format_response("error", str(e))
+            logger.error(f"LLM调用异常: {str(e)}")
+            yield self._format_response("error", f"LLM调用异常: {str(e)}")
+        
+        # 发送结束标记
+        yield self._format_response("end", None)
     
     def _format_response(
         self, 

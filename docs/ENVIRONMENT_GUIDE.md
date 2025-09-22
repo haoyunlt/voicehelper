@@ -35,7 +35,6 @@ DATABASE_URL=postgres://chatbot:chatbot123@localhost:5432/chatbot?sslmode=disabl
 
 REDIS_URL=redis://localhost:6379
 
-# Milvus 向量数据库
 
 MILVUS_HOST=localhost
 MILVUS_PORT=19530
@@ -192,7 +191,6 @@ services:
   algo-service:
     build: ./algo
     environment:
-      - MILVUS_HOST=milvus
 
       - MILVUS_PORT=19530
       - ARK_API_KEY=${ARK_API_KEY}
@@ -201,7 +199,6 @@ services:
       - ARK_MODEL=${ARK_MODEL}
 
     depends_on:
-      - milvus
 
   frontend:
     build: ./frontend
@@ -252,7 +249,6 @@ data:
   NODE_ENV: "production"
   ARK_BASE_URL: "https://ark.cn-beijing.volces.com/api/v3"
   ARK_MODEL: "ep-20241201140014-vbzjz"
-  MILVUS_HOST: "milvus-service"
   MILVUS_PORT: "19530"
 ```text
 
@@ -298,7 +294,6 @@ LOG_LEVEL=info
 
 PORT=8000
 ENV=production
-MILVUS_HOST=milvus
 MILVUS_PORT=19530
 ARK_API_KEY=your_ark_api_key_here
 ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3

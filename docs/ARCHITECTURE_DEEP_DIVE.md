@@ -63,7 +63,6 @@ graph TB
     subgraph "数据存储层"
         PG[PostgreSQL<br/>关系型数据库]
         REDIS[Redis<br/>缓存数据库]
-        MILVUS[Milvus<br/>向量数据库]
         NEO4J[Neo4j<br/>图数据库]
         MINIO[MinIO<br/>对象存储]
     end
@@ -120,7 +119,6 @@ graph TB
 | #### 前端层 | Next.js, React, TypeScript, Tailwind CSS | Web应用, 移动端, 桌面端 |
 | #### 网关层 | Go, Gin, gRPC, HTTP/2 | API Gateway, 负载均衡 |
 | #### 服务层 | Go, Python, FastAPI | 微服务, AI引擎 |
-| #### 数据层 | PostgreSQL, Redis, Milvus, Neo4j, MinIO | 关系型, 缓存, 向量, 图, 对象存储 |
 | #### 监控层 | Prometheus, Grafana, ELK, Jaeger | 指标, 日志, 追踪 |
 
 ## 2. 核心服务层设计
@@ -315,7 +313,6 @@ CREATE TABLE messages (
 
 #### 用途: 会话缓存、临时数据、任务队列
 
-### 4.3 Milvus (向量数据库)
 
 #### 用途: 文档向量存储、语义搜索
 

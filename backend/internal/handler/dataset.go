@@ -4,7 +4,9 @@ import (
 	"chatbot/internal/repository"
 	"chatbot/internal/service"
 	"chatbot/pkg/storage"
+	"chatbot/pkg/utils"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,9 +20,10 @@ import (
 
 // DatasetHandler 数据集处理器（使用真实数据库）
 type DatasetHandler struct {
-	datasetRepo repository.DatasetRepository
-	storage     storage.ObjectStorage
-	algoService service.AlgoService
+	datasetRepo  repository.DatasetRepository
+	storage      storage.ObjectStorage
+	algoService  service.AlgoService
+	errorHandler *utils.ErrorHandler
 }
 
 // NewDatasetHandler 创建数据集处理器
@@ -30,9 +33,10 @@ func NewDatasetHandler(
 	algoService service.AlgoService,
 ) *DatasetHandler {
 	return &DatasetHandler{
-		datasetRepo: datasetRepo,
-		storage:     storage,
-		algoService: algoService,
+		datasetRepo:  datasetRepo,
+		storage:      storage,
+		algoService:  algoService,
+		errorHandler: utils.NewErrorHandler(logrus.StandardLogger()),
 	}
 }
 
@@ -227,7 +231,13 @@ func (h *DatasetHandler) DeleteDataset(c *gin.Context) {
 		return
 	}
 
-	// TODO: 异步删除相关的向量数据和文件
+	// 异步删除相关的向量数据和文件
+	go func() {
+		ctx := context.Background()
+		if err := h.cleanupDatasetResources(ctx, datasetID); err != nil {
+			logrus.WithError(err).Error("Failed to cleanup dataset resources")
+		}
+	}()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Dataset deleted successfully",
@@ -263,6 +273,7 @@ func (h *DatasetHandler) UploadFiles(c *gin.Context) {
 
 	var uploadedFiles []gin.H
 	var filePaths []string
+	var docIDs []string
 
 	// 处理每个文件
 	for _, file := range files {
@@ -323,11 +334,12 @@ func (h *DatasetHandler) UploadFiles(c *gin.Context) {
 		})
 
 		filePaths = append(filePaths, uploadResult.URL)
+		docIDs = append(docIDs, doc.ID)
 	}
 
 	// 异步调用算法服务处理文件
 	if len(filePaths) > 0 {
-		go h.processFiles(datasetID, filePaths)
+		go h.processFiles(datasetID, filePaths, docIDs)
 	}
 
 	// 更新数据集统计
@@ -347,7 +359,7 @@ func (h *DatasetHandler) UploadFiles(c *gin.Context) {
 }
 
 // processFiles 异步处理文件
-func (h *DatasetHandler) processFiles(datasetID string, filePaths []string) {
+func (h *DatasetHandler) processFiles(datasetID string, filePaths []string, docIDs []string) {
 	// 调用算法服务入库
 	req := &service.IngestRequest{
 		DatasetID:    datasetID,
@@ -360,12 +372,24 @@ func (h *DatasetHandler) processFiles(datasetID string, filePaths []string) {
 	response, err := h.algoService.Ingest(ctx, req)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to ingest files")
-		// TODO: 更新文档状态为失败
+
+		// 更新文档状态为失败
+		for _, docID := range docIDs {
+			if updateErr := h.datasetRepo.UpdateDocumentStatus(ctx, docID, "failed"); updateErr != nil {
+				logrus.WithError(updateErr).Errorf("Failed to update document status: %s", docID)
+			}
+		}
 		return
 	}
 
 	logrus.Infof("Files ingested successfully: %v", response)
-	// TODO: 更新文档状态为完成
+
+	// 更新文档状态为完成
+	for _, docID := range docIDs {
+		if err := h.datasetRepo.UpdateDocumentStatus(ctx, docID, "completed"); err != nil {
+			logrus.WithError(err).Errorf("Failed to update document status: %s", docID)
+		}
+	}
 }
 
 // Search 搜索预览
@@ -408,14 +432,48 @@ func (h *DatasetHandler) Search(c *gin.Context) {
 func (h *DatasetHandler) GetDocument(c *gin.Context) {
 	docID := c.Param("doc_id")
 
-	// TODO: 实现文档详情查询
-	// 这里需要添加文档repository的GetDocument方法
+	// 验证文档ID
+	if utils.IsEmpty(docID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Document ID is required"})
+		return
+	}
+
+	// 获取文档详情
+	doc, err := h.datasetRepo.GetDocument(c.Request.Context(), docID)
+	if err != nil {
+		err = h.errorHandler.HandleError(err, "Failed to get document", logrus.Fields{"doc_id": docID})
+		if err.Error() == "resource not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
+		return
+	}
+
+	// 解析metadata
+	var metadata map[string]interface{}
+	if doc.Metadata != "" {
+		if err := json.Unmarshal([]byte(doc.Metadata), &metadata); err != nil {
+			logrus.WithError(err).Warn("Failed to parse document metadata")
+			metadata = make(map[string]interface{})
+		}
+	} else {
+		metadata = make(map[string]interface{})
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":     docID,
-		"name":   "document.pdf",
-		"status": "completed",
-		"chunks": []gin.H{},
+		"id":          doc.ID,
+		"dataset_id":  doc.DatasetID,
+		"name":        doc.Name,
+		"source":      doc.Source,
+		"type":        doc.Type,
+		"size":        doc.Size,
+		"status":      doc.Status,
+		"chunk_count": doc.ChunkCount,
+		"token_count": doc.TokenCount,
+		"metadata":    metadata,
+		"created_at":  doc.CreatedAt,
+		"updated_at":  doc.UpdatedAt,
 	})
 }
 
@@ -431,7 +489,13 @@ func (h *DatasetHandler) DeleteDocument(c *gin.Context) {
 		return
 	}
 
-	// TODO: 异步删除相关的向量数据和文件
+	// 异步删除相关的向量数据和文件
+	go func() {
+		ctx := context.Background()
+		if err := h.cleanupDocumentResources(ctx, docID); err != nil {
+			logrus.WithError(err).Error("Failed to cleanup document resources")
+		}
+	}()
 
 	// 更新数据集统计
 	go func() {
@@ -483,9 +547,19 @@ func (h *DatasetHandler) GetPresignedUploadURL(c *gin.Context) {
 func (h *DatasetHandler) DownloadDocument(c *gin.Context) {
 	docID := c.Param("doc_id")
 
-	// TODO: 从数据库获取文档信息
-	// 这里假设已经获取到了object_key
-	objectKey := fmt.Sprintf("documents/%s", docID)
+	// 从数据库获取文档信息
+	doc, err := h.datasetRepo.GetDocument(c.Request.Context(), docID)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to get document info")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
+	}
+
+	// 从metadata中获取object_key
+	objectKey, ok := doc.Metadata["object_key"].(string)
+	if !ok {
+		objectKey = fmt.Sprintf("documents/%s", docID)
+	}
 
 	// 从存储下载
 	reader, err := h.storage.Download(c.Request.Context(), objectKey)
@@ -502,4 +576,43 @@ func (h *DatasetHandler) DownloadDocument(c *gin.Context) {
 
 	// 流式传输文件
 	io.Copy(c.Writer, reader)
+}
+
+// cleanupDatasetResources 清理数据集相关资源
+func (h *DatasetHandler) cleanupDatasetResources(ctx context.Context, datasetID string) error {
+	// 删除向量数据
+	if err := h.algoService.DeleteDataset(ctx, datasetID); err != nil {
+		logrus.WithError(err).Warn("Failed to delete vector data")
+	}
+
+	// 删除存储文件
+	prefix := fmt.Sprintf("datasets/%s/", datasetID)
+	if err := h.storage.DeleteByPrefix(ctx, prefix); err != nil {
+		logrus.WithError(err).Warn("Failed to delete storage files")
+	}
+
+	return nil
+}
+
+// cleanupDocumentResources 清理文档相关资源
+func (h *DatasetHandler) cleanupDocumentResources(ctx context.Context, docID string) error {
+	// 获取文档信息
+	doc, err := h.datasetRepo.GetDocument(ctx, docID)
+	if err != nil {
+		return err
+	}
+
+	// 删除向量数据
+	if err := h.algoService.DeleteDocument(ctx, docID); err != nil {
+		logrus.WithError(err).Warn("Failed to delete document vector data")
+	}
+
+	// 删除存储文件
+	if objectKey, ok := doc.Metadata["object_key"].(string); ok {
+		if err := h.storage.Delete(ctx, objectKey); err != nil {
+			logrus.WithError(err).Warn("Failed to delete document file")
+		}
+	}
+
+	return nil
 }

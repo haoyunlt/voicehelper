@@ -109,12 +109,11 @@ class VoiceHelperLogger {
   private getPerformanceInfo(): LogEntry['performance'] {
     if (typeof performance === 'undefined') return undefined;
 
-    const timing = performance.timing;
     const memory = (performance as any).memory;
 
     return {
-      loadTime: timing ? timing.loadEventEnd - timing.navigationStart : undefined,
-      renderTime: timing ? timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart : undefined,
+      loadTime: undefined,
+      renderTime: undefined,
       memoryUsage: memory ? memory.usedJSHeapSize : undefined,
     };
   }

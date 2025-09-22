@@ -14,7 +14,7 @@ from loguru import logger
 
 from core.embeddings import EmbeddingService
 from core.llm import LLMService
-from pymilvus import Collection
+# from pymilvus import Collection  # 已移除 Milvus 支持
 
 
 @dataclass
@@ -229,11 +229,11 @@ class MultiPathRetriever:
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        milvus_collection: Collection,
+        # milvus_collection: Collection,  # 已移除 Milvus 支持
         sparse_index=None  # BM25或其他稀疏检索索引
     ):
         self.embedding_service = embedding_service
-        self.collection = milvus_collection
+        # self.collection = milvus_collection  # 已移除 Milvus 支持
         self.sparse_index = sparse_index
     
     async def retrieve_dense(
@@ -245,32 +245,9 @@ class MultiPathRetriever:
         # 获取查询向量
         query_vector = await self.embedding_service.embed_text(query)
         
-        # Milvus检索
-        search_params = {
-            "metric_type": "IP",  # 内积
-            "params": {"nprobe": 10}
-        }
-        
-        results = self.collection.search(
-            data=[query_vector.tolist()],
-            anns_field="embedding",
-            param=search_params,
-            limit=top_k,
-            output_fields=["chunk_id", "content", "source", "metadata"]
-        )
-        
-        retrieval_results = []
-        for hit in results[0]:
-            retrieval_results.append(RetrievalResult(
-                chunk_id=hit.entity.get("chunk_id"),
-                content=hit.entity.get("content"),
-                score=hit.score,
-                source=hit.entity.get("source"),
-                metadata=hit.entity.get("metadata", {}),
-                retrieval_method="dense"
-            ))
-        
-        return retrieval_results
+        # 本地向量检索（替代 Milvus）
+        logger.warning("密集向量检索功能需要实现本地向量存储")
+        return []
     
     async def retrieve_sparse(
         self,
@@ -361,20 +338,20 @@ class AdvancedRAG:
         self,
         llm_service: LLMService,
         embedding_service: EmbeddingService,
-        milvus_collection: Collection
+        # milvus_collection: Collection  # 已移除 Milvus 支持
     ):
         self.llm = llm_service
         self.embedding_service = embedding_service
-        self.collection = milvus_collection
+        # self.collection = milvus_collection  # 已移除 Milvus 支持
         
         # 初始化组件
         self.hyde_generator = HyDEGenerator(llm_service)
         self.query_rewriter = QueryRewriter(llm_service)
         self.cross_encoder = CrossEncoder()
-        self.multi_retriever = MultiPathRetriever(
-            embedding_service,
-            milvus_collection
-        )
+        # self.multi_retriever = MultiPathRetriever(
+        #     embedding_service,
+        #     milvus_collection  # 已移除 Milvus 支持
+        # )
         
         logger.info("高级RAG系统初始化完成")
     

@@ -46,10 +46,7 @@ scrape_configs:
     static_configs:
       - targets: ['postgres:5432']
 
-  # Milvus监控
-  - job_name: 'milvus'
     static_configs:
-      - targets: ['milvus:9091']
     metrics_path: '/metrics'
 
   # Neo4j监控

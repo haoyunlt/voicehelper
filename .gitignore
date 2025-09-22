@@ -20,14 +20,21 @@ Thumbs.db
 .classpath
 .settings/
 
-# 环境变量和配置
+# 环境变量和配置（敏感信息）
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.backup.*
+.env.bak
 config.local.json
 secrets.yaml
+*.secret
+*.private
+api_keys.txt
+credentials.json
 
 # 日志文件
 *.log
@@ -194,10 +201,14 @@ jspm_packages/
 *.sqlite
 *.sqlite3
 
-# 备份文件
+# 备份文件和临时文件
 *.bak
 *.backup
 *.old
+*.milvus_backup
+*_backup_*
+remove_milvus_refs.sh
+temp_*.sh
 
 # 压缩文件
 *.zip
@@ -211,6 +222,13 @@ model_cache/
 *.pkl
 *.joblib
 *.model
+*.h5
+*.onnx
+*.pt
+*.pth
+embeddings_cache/
+vector_cache/
+bge_cache/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -316,6 +334,15 @@ embeddings/
 vectors/
 checkpoints/
 wandb/
+# 本地向量存储（替代Milvus）
+algo/data/
+algo/storage/
+algo/vectors/
+algo/embeddings/
+# BGE模型缓存
+.cache/huggingface/
+.cache/torch/
+sentence_transformers_cache/
 
 # 特定于项目的忽略
 audio_files/

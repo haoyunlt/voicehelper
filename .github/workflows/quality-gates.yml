@@ -1,0 +1,349 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  GO_VERSION: '1.21'
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Go代码质量检查
+  go-quality:
+    name: Go Quality Checks
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'backend/') || github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Install dependencies
+      working-directory: ./backend
+      run: go mod download
+      
+    - name: Go vet
+      working-directory: ./backend
+      run: go vet ./...
+      
+    - name: Go fmt check
+      working-directory: ./backend
+      run: |
+        if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then
+          echo "以下文件需要格式化:"
+          gofmt -l .
+          exit 1
+        fi
+        
+    - name: Go mod tidy check
+      working-directory: ./backend
+      run: |
+        go mod tidy
+        if ! git diff --quiet go.mod go.sum; then
+          echo "go.mod 或 go.sum 需要更新"
+          git diff go.mod go.sum
+          exit 1
+        fi
+        
+    - name: Install golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+        
+    - name: Run golangci-lint
+      working-directory: ./backend
+      run: $(go env GOPATH)/bin/golangci-lint run --timeout=5m
+      
+    - name: Install gosec
+      run: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+      
+    - name: Run gosec
+      working-directory: ./backend
+      run: gosec ./...
+      
+    - name: Run tests with coverage
+      working-directory: ./backend
+      run: |
+        go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        go tool cover -func=coverage.out
+        
+    - name: Check test coverage
+      working-directory: ./backend
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+        echo "测试覆盖率: ${COVERAGE}%"
+        if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+          echo "测试覆盖率低于70%，当前为${COVERAGE}%"
+          exit 1
+        fi
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.out
+        flags: backend
+        name: backend-coverage
+
+  # Python代码质量检查
+  python-quality:
+    name: Python Quality Checks
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'algo/') || github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      working-directory: ./algo
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+        pip install flake8 pylint bandit mypy pytest-cov safety
+        
+    - name: Run flake8
+      working-directory: ./algo
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+    - name: Run pylint
+      working-directory: ./algo
+      run: |
+        pylint --fail-under=8.0 --rcfile=../.pylintrc . || true
+        
+    - name: Run bandit security check
+      working-directory: ./algo
+      run: bandit -r . -f json -o bandit-report.json || true
+      
+    - name: Run mypy type check
+      working-directory: ./algo
+      run: mypy . --ignore-missing-imports || true
+      
+    - name: Run tests with coverage
+      working-directory: ./algo
+      run: |
+        pytest --cov=. --cov-report=xml --cov-report=term-missing
+        
+    - name: Check test coverage
+      working-directory: ./algo
+      run: |
+        COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().get('line-rate'))")
+        COVERAGE_PERCENT=$(python -c "print(f'{float('$COVERAGE') * 100:.1f}')")
+        echo "测试覆盖率: ${COVERAGE_PERCENT}%"
+        if (( $(echo "$COVERAGE < 0.6" | bc -l) )); then
+          echo "测试覆盖率低于60%，当前为${COVERAGE_PERCENT}%"
+          exit 1
+        fi
+        
+    - name: Check dependency security
+      working-directory: ./algo
+      run: safety check --json || true
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./algo/coverage.xml
+        flags: algo
+        name: algo-coverage
+
+  # Frontend代码质量检查
+  frontend-quality:
+    name: Frontend Quality Checks
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'frontend/') || github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Run ESLint
+      working-directory: ./frontend
+      run: npm run lint
+      
+    - name: Run TypeScript check
+      working-directory: ./frontend
+      run: npm run type-check
+      
+    - name: Run Prettier check
+      working-directory: ./frontend
+      run: npm run format:check
+      
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm run test:coverage
+      
+    - name: Check test coverage
+      working-directory: ./frontend
+      run: |
+        if [ -f "coverage/lcov-report/index.html" ]; then
+          echo "前端测试覆盖率报告已生成"
+        fi
+        
+    - name: Security audit
+      working-directory: ./frontend
+      run: npm audit --audit-level=high
+      
+    - name: Build check
+      working-directory: ./frontend
+      run: npm run build
+
+  # 依赖安全检查
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 代码质量门禁
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [go-quality, python-quality, frontend-quality, security-scan]
+    if: always()
+    
+    steps:
+    - name: Check quality gate status
+      run: |
+        echo "检查质量门禁状态..."
+        
+        # 检查各个job的状态
+        GO_STATUS="${{ needs.go-quality.result }}"
+        PYTHON_STATUS="${{ needs.python-quality.result }}"
+        FRONTEND_STATUS="${{ needs.frontend-quality.result }}"
+        SECURITY_STATUS="${{ needs.security-scan.result }}"
+        
+        echo "Go质量检查: $GO_STATUS"
+        echo "Python质量检查: $PYTHON_STATUS"
+        echo "Frontend质量检查: $FRONTEND_STATUS"
+        echo "安全扫描: $SECURITY_STATUS"
+        
+        # 如果任何必需的检查失败，则失败
+        FAILED=false
+        
+        if [[ "$GO_STATUS" == "failure" ]]; then
+          echo "❌ Go代码质量检查失败"
+          FAILED=true
+        fi
+        
+        if [[ "$PYTHON_STATUS" == "failure" ]]; then
+          echo "❌ Python代码质量检查失败"
+          FAILED=true
+        fi
+        
+        if [[ "$FRONTEND_STATUS" == "failure" ]]; then
+          echo "❌ Frontend代码质量检查失败"
+          FAILED=true
+        fi
+        
+        if [[ "$SECURITY_STATUS" == "failure" ]]; then
+          echo "⚠️ 安全扫描发现问题（警告）"
+        fi
+        
+        if [[ "$FAILED" == "true" ]]; then
+          echo "💥 质量门禁失败！请修复上述问题后重新提交。"
+          exit 1
+        else
+          echo "✅ 质量门禁通过！"
+        fi
+
+  # 性能基准测试
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        
+    - name: Run Go benchmarks
+      working-directory: ./backend
+      run: |
+        go test -bench=. -benchmem ./... > benchmark-results.txt || true
+        
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: backend/benchmark-results.txt
+
+  # 通知
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+    if: always() && (github.event_name == 'push' || github.event_name == 'pull_request')
+    
+    steps:
+    - name: Notify on success
+      if: needs.quality-gate.result == 'success'
+      run: |
+        echo "✅ 质量检查全部通过！"
+        # 这里可以添加Slack/Teams通知
+        
+    - name: Notify on failure
+      if: needs.quality-gate.result == 'failure'
+      run: |
+        echo "❌ 质量检查失败，请查看详细日志"
+        # 这里可以添加Slack/Teams通知

@@ -135,6 +135,183 @@ class BaseServiceConnector(ABC):
         if self.session:
             await self.session.close()
 
+class HTTPServiceConnector(BaseServiceConnector):
+    """HTTP服务连接器实现"""
+    
+    def __init__(self, metadata: ServiceMetadata, config: Dict[str, Any]):
+        super().__init__(metadata, config)
+        self.base_url = config.get("base_url", "")
+        self.headers = config.get("headers", {})
+        self.timeout = config.get("timeout", 30)
+    
+    async def initialize(self) -> bool:
+        """初始化HTTP连接器"""
+        try:
+            import aiohttp
+            self.session = aiohttp.ClientSession(
+                headers=self.headers,
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            )
+            
+            # 测试连接
+            health_ok = await self.health_check()
+            if health_ok:
+                logger.info(f"HTTP connector initialized for {self.metadata.name}")
+                return True
+            else:
+                logger.warning(f"Health check failed for {self.metadata.name}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to initialize HTTP connector: {e}")
+            return False
+    
+    async def execute_operation(self, operation: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """执行HTTP操作"""
+        if not self.session:
+            raise RuntimeError("Connector not initialized")
+        
+        try:
+            url = f"{self.base_url}/{operation}"
+            
+            # 根据操作类型选择HTTP方法
+            if operation.startswith("get_") or operation.startswith("list_"):
+                method = "GET"
+                response = await self.session.get(url, params=params)
+            else:
+                method = "POST"
+                response = await self.session.post(url, json=params)
+            
+            response.raise_for_status()
+            result = await response.json()
+            
+            return {
+                "success": True,
+                "data": result,
+                "status_code": response.status,
+                "method": method,
+                "url": url
+            }
+            
+        except Exception as e:
+            logger.error(f"HTTP operation failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "operation": operation,
+                "params": params
+            }
+    
+    async def health_check(self) -> bool:
+        """HTTP健康检查"""
+        try:
+            if not self.session:
+                return False
+            
+            health_url = f"{self.base_url}/health"
+            async with self.session.get(health_url) as response:
+                self.health_status = response.status == 200
+                self.last_health_check = time.time()
+                return self.health_status
+                
+        except Exception as e:
+            logger.debug(f"Health check failed for {self.metadata.name}: {e}")
+            self.health_status = False
+            return False
+
+class WebSocketServiceConnector(BaseServiceConnector):
+    """WebSocket服务连接器实现"""
+    
+    def __init__(self, metadata: ServiceMetadata, config: Dict[str, Any]):
+        super().__init__(metadata, config)
+        self.ws_url = config.get("ws_url", "")
+        self.websocket = None
+        self.message_queue = asyncio.Queue()
+    
+    async def initialize(self) -> bool:
+        """初始化WebSocket连接器"""
+        try:
+            import websockets
+            
+            self.websocket = await websockets.connect(self.ws_url)
+            
+            # 启动消息监听任务
+            asyncio.create_task(self._message_listener())
+            
+            logger.info(f"WebSocket connector initialized for {self.metadata.name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize WebSocket connector: {e}")
+            return False
+    
+    async def execute_operation(self, operation: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """执行WebSocket操作"""
+        if not self.websocket:
+            raise RuntimeError("WebSocket not connected")
+        
+        try:
+            message = {
+                "operation": operation,
+                "params": params,
+                "timestamp": time.time()
+            }
+            
+            await self.websocket.send(json.dumps(message))
+            
+            # 等待响应
+            response = await asyncio.wait_for(
+                self.message_queue.get(), 
+                timeout=self.config.get("response_timeout", 10)
+            )
+            
+            return {
+                "success": True,
+                "data": response,
+                "operation": operation
+            }
+            
+        except Exception as e:
+            logger.error(f"WebSocket operation failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "operation": operation,
+                "params": params
+            }
+    
+    async def health_check(self) -> bool:
+        """WebSocket健康检查"""
+        try:
+            if not self.websocket:
+                return False
+            
+            # 发送ping消息
+            await self.websocket.ping()
+            self.health_status = True
+            self.last_health_check = time.time()
+            return True
+            
+        except Exception as e:
+            logger.debug(f"WebSocket health check failed: {e}")
+            self.health_status = False
+            return False
+    
+    async def _message_listener(self):
+        """监听WebSocket消息"""
+        try:
+            async for message in self.websocket:
+                data = json.loads(message)
+                await self.message_queue.put(data)
+        except Exception as e:
+            logger.error(f"WebSocket message listener error: {e}")
+    
+    async def cleanup(self):
+        """清理WebSocket资源"""
+        if self.websocket:
+            await self.websocket.close()
+            self.websocket = None
+
 class EnhancedMCPRegistry:
     """增强MCP注册表 - v1.9.0"""
     

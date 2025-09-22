@@ -66,7 +66,6 @@ services:
 - 热点数据缓存
 - 分布式锁
 
-🔍 向量数据 (Milvus):
 - 文档嵌入向量
 - 语义搜索索引
 - 相似度计算
@@ -379,7 +378,6 @@ ufw allow 443/tcp
 # 内部服务端口 (仅本地访问)
 ufw allow from 127.0.0.1 to any port 5432  # PostgreSQL
 ufw allow from 127.0.0.1 to any port 6379  # Redis
-ufw allow from 127.0.0.1 to any port 19530 # Milvus
 
 # 启用防火墙
 ufw --force enable
@@ -1277,18 +1275,11 @@ backup_redis() {
     fi
 }
 
-# Milvus 备份
-backup_milvus() {
     local timestamp=$(date +%Y%m%d_%H%M%S)
-    local backup_dir="$BACKUP_DIR/milvus_$timestamp"
     
-    echo "备份 Milvus 到 $backup_dir"
-    docker cp $(docker-compose ps -q milvus-standalone):/var/lib/milvus $backup_dir
     
     if [ -d "$backup_dir" ]; then
-        echo "Milvus 备份成功: $(du -sh $backup_dir | cut -f1)"
     else
-        echo "Milvus 备份失败"
         return 1
     fi
 }
@@ -1306,7 +1297,6 @@ cleanup_old_backups() {
     echo "清理 $RETENTION_DAYS 天前的备份..."
     find $BACKUP_DIR -name "*.gz" -mtime +$RETENTION_DAYS -delete
     find $BACKUP_DIR -name "*.rdb" -mtime +$RETENTION_DAYS -delete
-    find $BACKUP_DIR -type d -name "milvus_*" -mtime +$RETENTION_DAYS -exec rm -rf {} +
 }
 
 # 执行备份
@@ -1315,7 +1305,6 @@ main() {
     
     backup_database || exit 1
     backup_redis || exit 1
-    backup_milvus || exit 1
     
     upload_to_cloud
     cleanup_old_backups

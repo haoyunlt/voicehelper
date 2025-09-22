@@ -37,7 +37,6 @@
 |---------|---------|------|------|-------------|----------|
 | **PostgreSQL** | 5432 | TCP | 主数据库 | `postgres` | `POSTGRES_PORT` |
 | **Redis** | 6379 | TCP | 缓存和会话 | `redis` | `REDIS_PORT` |
-| **Milvus** | 19530 | gRPC | 向量数据库 | `milvus-standalone` | `MILVUS_PORT` |
 | **Neo4j** | 7474 | HTTP | 图数据库Web界面 | `neo4j` | `NEO4J_HTTP_PORT` |
 | **Neo4j Bolt** | 7687 | Bolt | 图数据库连接 | `neo4j` | `NEO4J_BOLT_PORT` |
 
@@ -47,7 +46,6 @@
 |---------|---------|------|------|----------|
 | **pgAdmin** | 5050 | HTTP | PostgreSQL管理 | `http://localhost:5050` |
 | **Redis Commander** | 8081 | HTTP | Redis管理 | `http://localhost:8081` |
-| **Milvus Attu** | 3001 | HTTP | Milvus管理 | `http://localhost:3001` |
 | **Neo4j Browser** | 7474 | HTTP | Neo4j管理 | `http://localhost:7474` |
 
 ---
@@ -131,7 +129,6 @@ services:
     ports:
       - "6379:6379"
   
-  milvus:
     ports:
       - "19530:19530"
   
@@ -227,7 +224,6 @@ type Config struct {
     Database struct {
         PostgresPort int `env:"POSTGRES_PORT" envDefault:"5432"`
         RedisPort    int `env:"REDIS_PORT" envDefault:"6379"`
-        MilvusPort   int `env:"MILVUS_PORT" envDefault:"19530"`
         Neo4jPort    int `env:"NEO4J_BOLT_PORT" envDefault:"7687"`
     }
 }
@@ -247,7 +243,6 @@ class Settings(BaseSettings):
     # 数据库端口
     postgres_port: int = int(os.getenv("POSTGRES_PORT", 5432))
     redis_port: int = int(os.getenv("REDIS_PORT", 6379))
-    milvus_port: int = int(os.getenv("MILVUS_PORT", 19530))
     
     # 监控端口
     prometheus_port: int = int(os.getenv("PROMETHEUS_PORT", 9090))
@@ -343,7 +338,6 @@ declare -A SERVICES=(
     ["5001"]="管理后台"
     ["5432"]="PostgreSQL"
     ["6379"]="Redis"
-    ["19530"]="Milvus"
     ["7474"]="Neo4j HTTP"
     ["7687"]="Neo4j Bolt"
     ["9090"]="Prometheus"
@@ -494,7 +488,6 @@ server {
 🗄️ 数据存储端口:
 ├── 5432      - PostgreSQL (主数据库)
 ├── 6379      - Redis (缓存)
-├── 19530     - Milvus (向量数据库)
 ├── 7474      - Neo4j HTTP (图数据库)
 └── 7687      - Neo4j Bolt (图数据库连接)
 

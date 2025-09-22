@@ -22,9 +22,9 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV NEXT_PUBLIC_API_URL=http://localhost:8080
-ENV NEXT_PUBLIC_WS_URL=ws://localhost:8080
+# 环境变量通过 .env 文件或 docker-compose 环境变量传入
+# 包括但不限于：
+# NODE_ENV, NEXT_PUBLIC_API_URL, NEXT_PUBLIC_WS_URL 等
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -44,7 +44,6 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+# PORT 和 HOSTNAME 通过 .env 文件传入
 
 CMD ["node", "server.js"]

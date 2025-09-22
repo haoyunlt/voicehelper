@@ -31,7 +31,6 @@ quick_start() {
             log_info "启动最小化开发环境..."
             ./deploy.sh --service postgres
             ./deploy.sh --service redis
-            ./deploy.sh --service milvus
             log_success "开发环境就绪！"
             echo "现在可以本地启动应用服务进行开发"
             ;;
@@ -75,7 +74,6 @@ health_report() {
     services=(
         "PostgreSQL:5432"
         "Redis:6379"
-        "Milvus:19530"
         "Neo4j:7474"
         "Gateway:8080"
         "Algorithm:8000"
@@ -198,7 +196,6 @@ performance_tune() {
     echo "     - maxmemory 512mb"
     echo "     - maxmemory-policy allkeys-lru"
     echo
-    echo "  3. Milvus优化:"
     echo "     - 增加内存分配"
     echo "     - 调整索引参数"
     echo

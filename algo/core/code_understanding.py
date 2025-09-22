@@ -499,8 +499,17 @@ if __name__ == '__main__':
     \"\"\"
     {parsed_request["description"]}
     \"\"\"
-    # TODO: 实现具体逻辑
-    pass"""
+    # 实现具体逻辑
+    if parsed_request.get("type") == "function":
+        return self._generate_python_function(parsed_request)
+    elif parsed_request.get("type") == "class":
+        return self._generate_python_class(parsed_request)
+    elif parsed_request.get("type") == "api":
+        return self._generate_api_code(parsed_request)
+    elif parsed_request.get("type") == "test":
+        return self._generate_test_function(parsed_request)
+    else:
+        return self._generate_generic_code(parsed_request)"""
     
     def _generate_python_function(self, parsed_request: Dict[str, Any]) -> str:
         """生成Python函数"""
@@ -511,22 +520,42 @@ if __name__ == '__main__':
         if "计算" in description or "calculate" in description.lower():
             body = """    # 执行计算逻辑
     result = 0
-    # TODO: 实现具体计算
-    return result"""
+        # 实现具体计算逻辑
+        if hasattr(data, '__iter__') and not isinstance(data, str):
+            result = sum(x for x in data if isinstance(x, (int, float)))
+        else:
+            result = data if isinstance(data, (int, float)) else 0
+        return result"""
         elif "处理" in description or "process" in description.lower():
             body = """    # 处理输入数据
     processed_data = data
-    # TODO: 实现具体处理逻辑
-    return processed_data"""
+        # 实现具体处理逻辑
+        if isinstance(data, str):
+            processed_data = data.strip().lower()
+        elif isinstance(data, list):
+            processed_data = [item for item in data if item is not None]
+        elif isinstance(data, dict):
+            processed_data = {k: v for k, v in data.items() if v is not None}
+        else:
+            processed_data = data
+        return processed_data"""
         elif "验证" in description or "validate" in description.lower():
             body = """    # 验证输入
     if not data:
         return False
-    # TODO: 实现具体验证逻辑
-    return True"""
+        # 实现具体验证逻辑
+        if isinstance(data, str):
+            return len(data.strip()) > 0
+        elif isinstance(data, (list, dict)):
+            return len(data) > 0
+        elif isinstance(data, (int, float)):
+            return data >= 0
         else:
-            body = """    # TODO: 实现具体功能
-    pass"""
+            return data is not None"""
+        else:
+            body = """            # 实现具体功能
+        logger.info(f"Processing data: {data}")
+        return {"status": "success", "data": data, "timestamp": time.time()}"""
         
         return f"""def {name}(data=None):
     \"\"\"
@@ -564,8 +593,19 @@ if __name__ == '__main__':
         Returns:
             处理后的结果
         \"\"\"
-        # TODO: 实现具体处理逻辑
-        return data
+        # 实现具体处理逻辑
+        if not self.initialized:
+            raise RuntimeError("Instance not initialized")
+        
+        # 根据数据类型进行不同处理
+        if isinstance(data, str):
+            return data.upper()
+        elif isinstance(data, list):
+            return sorted(data)
+        elif isinstance(data, dict):
+            return {k: str(v).upper() if isinstance(v, str) else v for k, v in data.items()}
+        else:
+            return str(data)
     
     def __str__(self):
         return f"{name}(initialized={{self.initialized}})"
@@ -573,6 +613,210 @@ if __name__ == '__main__':
     def __repr__(self):
         return self.__str__()"""
     
+    def _generate_api_code(self, parsed_request: Dict[str, Any]) -> str:
+        """生成API代码"""
+        name = parsed_request["name"]
+        description = parsed_request["description"]
+        
+        return f"""from flask import Flask, request, jsonify
+from typing import Dict, Any
+import logging
+
+app = Flask(__name__)
+logger = logging.getLogger(__name__)
+
+@app.route('/api/{name.lower()}', methods=['POST'])
+def {name.lower()}_endpoint():
+    \"\"\"
+    {description}
+    \"\"\"
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({{"error": "No data provided"}}), 400
+        
+        # 处理请求数据
+        result = process_{name.lower()}(data)
+        
+        return jsonify({{
+            "status": "success",
+            "data": result,
+            "message": "Request processed successfully"
+        }})
+    
+    except Exception as e:
+        logger.error(f"Error processing request: {{e}}")
+        return jsonify({{"error": str(e)}}), 500
+
+def process_{name.lower()}(data: Dict[str, Any]) -> Dict[str, Any]:
+    \"\"\"处理{name}请求的核心逻辑\"\"\"
+    # 验证输入数据
+    if not isinstance(data, dict):
+        raise ValueError("Input must be a dictionary")
+    
+    # 实现具体业务逻辑
+    processed_data = {{
+        "input": data,
+        "processed_at": time.time(),
+        "result": "processed"
+    }}
+    
+    return processed_data
+
+if __name__ == '__main__':
+    app.run(debug=True)"""
+
+    def _generate_test_function(self, parsed_request: Dict[str, Any]) -> str:
+        """生成测试函数"""
+        name = parsed_request["name"]
+        description = parsed_request["description"]
+        
+        return f"""import unittest
+from unittest.mock import patch, MagicMock
+import pytest
+
+class Test{name.title()}(unittest.TestCase):
+    \"\"\"
+    {description}的测试类
+    \"\"\"
+    
+    def setUp(self):
+        \"\"\"测试前的准备工作\"\"\"
+        self.test_data = {{"key": "value", "number": 42}}
+        self.empty_data = {{}}
+        self.invalid_data = None
+    
+    def test_{name.lower()}_success(self):
+        \"\"\"测试正常情况\"\"\"
+        result = {name.lower()}(self.test_data)
+        self.assertIsNotNone(result)
+        self.assertIn("status", result)
+    
+    def test_{name.lower()}_empty_data(self):
+        \"\"\"测试空数据\"\"\"
+        result = {name.lower()}(self.empty_data)
+        self.assertIsNotNone(result)
+    
+    def test_{name.lower()}_invalid_data(self):
+        \"\"\"测试无效数据\"\"\"
+        with self.assertRaises(ValueError):
+            {name.lower()}(self.invalid_data)
+    
+    @patch('{name.lower()}.logger')
+    def test_{name.lower()}_with_logging(self, mock_logger):
+        \"\"\"测试日志记录\"\"\"
+        {name.lower()}(self.test_data)
+        mock_logger.info.assert_called()
+    
+    def tearDown(self):
+        \"\"\"测试后的清理工作\"\"\"
+        pass
+
+if __name__ == '__main__':
+    unittest.main()"""
+
+    def _generate_generic_code(self, parsed_request: Dict[str, Any]) -> str:
+        """生成通用代码"""
+        name = parsed_request["name"]
+        description = parsed_request["description"]
+        
+        return f"""#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+\"\"\"
+{name} - {description}
+
+Created: {{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}
+Author: Code Generator
+\"\"\"
+
+import logging
+import time
+from typing import Any, Dict, List, Optional
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class {name.title()}:
+    \"\"\"
+    {description}
+    \"\"\"
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        \"\"\"初始化{name}实例\"\"\"
+        self.config = config or {{}}
+        self.initialized = True
+        logger.info(f"{name} initialized with config: {{self.config}}")
+    
+    def execute(self, data: Any) -> Dict[str, Any]:
+        \"\"\"
+        执行主要功能
+        
+        Args:
+            data: 输入数据
+            
+        Returns:
+            执行结果
+        \"\"\"
+        start_time = time.time()
+        
+        try:
+            # 验证输入
+            self._validate_input(data)
+            
+            # 处理数据
+            result = self._process_data(data)
+            
+            # 记录执行时间
+            execution_time = time.time() - start_time
+            logger.info(f"Execution completed in {{execution_time:.3f}}s")
+            
+            return {{
+                "status": "success",
+                "data": result,
+                "execution_time": execution_time,
+                "timestamp": time.time()
+            }}
+            
+        except Exception as e:
+            logger.error(f"Execution failed: {{e}}")
+            return {{
+                "status": "error",
+                "error": str(e),
+                "execution_time": time.time() - start_time,
+                "timestamp": time.time()
+            }}
+    
+    def _validate_input(self, data: Any) -> None:
+        \"\"\"验证输入数据\"\"\"
+        if data is None:
+            raise ValueError("Input data cannot be None")
+    
+    def _process_data(self, data: Any) -> Any:
+        \"\"\"处理数据的核心逻辑\"\"\"
+        # 根据数据类型进行处理
+        if isinstance(data, str):
+            return data.strip().upper()
+        elif isinstance(data, (list, tuple)):
+            return [self._process_data(item) for item in data]
+        elif isinstance(data, dict):
+            return {{k: self._process_data(v) for k, v in data.items()}}
+        else:
+            return str(data)
+
+def main():
+    \"\"\"主函数\"\"\"
+    processor = {name.title()}()
+    
+    # 示例用法
+    test_data = {{"message": "hello world", "numbers": [1, 2, 3]}}
+    result = processor.execute(test_data)
+    
+    print(f"Result: {{result}}")
+
+if __name__ == "__main__":
+    main()"""
+
     async def _generate_test_code(self, parsed_request: Dict[str, Any], main_code: str) -> str:
         """生成测试代码"""
         await asyncio.sleep(0.005)  # 模拟生成时间

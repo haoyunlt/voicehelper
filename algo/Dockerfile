@@ -17,19 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 复制源代码
 COPY . .
 
-# 设置环境变量
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8000
-ENV ENV=production
-ENV MILVUS_HOST=milvus-standalone
-ENV MILVUS_PORT=19530
-ENV ARK_API_KEY=1a2088242b224a7fac8949c4b1dcc5a7
-ENV ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-ENV ARK_MODEL=ep-20241201140014-vbzjz
-ENV EMBEDDING_MODEL=bge-m3
-ENV EMBEDDING_DIMENSION=1024
-ENV LOG_LEVEL=info
+# 环境变量通过 .env 文件或 docker-compose 环境变量传入
+# 包括但不限于：
+# PYTHONPATH, PYTHONUNBUFFERED, PORT, LOG_LEVEL
+# GLM_API_KEY, GLM_BASE_URL, ARK_API_KEY, ARK_MODEL 等
 
 # 暴露端口
 EXPOSE 8000

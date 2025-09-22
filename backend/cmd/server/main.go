@@ -11,9 +11,10 @@ import (
 	"syscall"
 	"time"
 
+	"chatbot/common/errors"
+	"chatbot/common/logger"
+
 	"github.com/gin-gonic/gin"
-	"github.com/voicehelper/common/errors"
-	"github.com/voicehelper/common/logger"
 )
 
 // 构建信息（由构建脚本注入）
@@ -35,11 +36,11 @@ type Config struct {
 // loadConfig 加载配置
 func loadConfig() *Config {
 	return &Config{
-		Port:        getEnv("PORT", "8080"),
+		Port:        getEnv("PORT", getEnv("GATEWAY_PORT", "8080")),
 		Environment: getEnv("ENV", "development"),
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
 		Host:        getEnv("HOST", "0.0.0.0"),
-		ServiceName: getEnv("SERVICE_NAME", "voicehelper-backend"),
+		ServiceName: getEnv("SERVICE_NAME", getEnv("GATEWAY_SERVICE_NAME", "voicehelper-gateway")),
 	}
 }
 

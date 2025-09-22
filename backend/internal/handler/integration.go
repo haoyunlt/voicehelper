@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"chatbot/pkg/discovery"
 	"chatbot/pkg/integration"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -11,15 +13,17 @@ import (
 
 // IntegrationHandler handles third-party integration requests
 type IntegrationHandler struct {
-	manager *integration.IntegrationManager
-	logger  *logrus.Logger
+	manager         *integration.IntegrationManager
+	serviceRegistry *discovery.ServiceRegistry
+	logger          *logrus.Logger
 }
 
 // NewIntegrationHandler creates a new integration handler
 func NewIntegrationHandler(manager *integration.IntegrationManager) *IntegrationHandler {
 	return &IntegrationHandler{
-		manager: manager,
-		logger:  logrus.New(),
+		manager:         manager,
+		serviceRegistry: discovery.NewServiceRegistry(nil),
+		logger:          logrus.New(),
 	}
 }
 
@@ -56,6 +60,19 @@ func (h *IntegrationHandler) RegisterRoutes(r *gin.RouterGroup) {
 		// Configuration
 		integrations.GET("/config/export", h.ExportConfiguration)
 		integrations.POST("/config/import", h.ImportConfiguration)
+
+		// Service Discovery
+		integrations.POST("/discover", h.DiscoverService)
+		integrations.POST("/discover-and-register", h.DiscoverAndRegisterService)
+		integrations.GET("/discovery/cache", h.GetDiscoveryCache)
+		integrations.DELETE("/discovery/cache", h.ClearDiscoveryCache)
+
+		// Service Registry
+		integrations.GET("/registry/services", h.ListRegisteredServices)
+		integrations.GET("/registry/services/healthy", h.ListHealthyServices)
+		integrations.GET("/registry/services/:id/health", h.CheckServiceHealth)
+		integrations.GET("/registry/services/:id/stats", h.GetServiceStats)
+		integrations.POST("/registry/services/:id/record", h.RecordServiceRequest)
 	}
 }
 
@@ -372,6 +389,7 @@ func (h *IntegrationHandler) ImportConfiguration(c *gin.Context) {
 // ServiceDiscoveryRequest represents a request to discover services
 type ServiceDiscoveryRequest struct {
 	URL        string            `json:"url"`
+	Headers    map[string]string `json:"headers,omitempty"`
 	AuthType   string            `json:"auth_type,omitempty"`
 	AuthConfig map[string]string `json:"auth_config,omitempty"`
 	Timeout    int               `json:"timeout,omitempty"`
@@ -385,11 +403,43 @@ func (h *IntegrationHandler) DiscoverService(c *gin.Context) {
 		return
 	}
 
-	// This would implement service discovery logic
-	// For now, return a placeholder response
+	// Validate URL
+	if request.URL == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL is required"})
+		return
+	}
+
+	// Create discovery request
+	discoveryRequest := &discovery.DiscoveryRequest{
+		URL:              request.URL,
+		Headers:          request.Headers,
+		Timeout:          time.Duration(request.Timeout) * time.Second,
+		FollowRedirects:  true,
+		DiscoveryMethods: []string{"openapi", "swagger", "health", "info", "root"},
+	}
+
+	// Set default timeout if not provided
+	if discoveryRequest.Timeout == 0 {
+		discoveryRequest.Timeout = 30 * time.Second
+	}
+
+	// Perform service discovery
+	serviceDiscovery := discovery.NewServiceDiscovery()
+	result, err := serviceDiscovery.DiscoverService(c.Request.Context(), discoveryRequest)
+	if err != nil {
+		h.logger.WithError(err).Error("Service discovery failed")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to discover service capabilities",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Return discovery results
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Service discovery not yet implemented",
+		"success": true,
 		"url":     request.URL,
+		"result":  result,
 	})
 }
 
@@ -512,5 +562,145 @@ func (h *IntegrationHandler) GetPopularServices(c *gin.Context) {
 		"services": popularServices,
 		"total":    len(popularServices),
 		"limit":    limit,
+	})
+}
+
+// DiscoverAndRegisterService discovers and registers a service
+func (h *IntegrationHandler) DiscoverAndRegisterService(c *gin.Context) {
+	var request struct {
+		URL       string `json:"url" binding:"required"`
+		ServiceID string `json:"service_id,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Discover and register the service
+	service, err := h.serviceRegistry.DiscoverAndRegisterService(c.Request.Context(), request.URL, request.ServiceID)
+	if err != nil {
+		h.logger.WithError(err).Error("Failed to discover and register service")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to discover and register service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"service": service,
+	})
+}
+
+// GetDiscoveryCache returns cached discovery results
+func (h *IntegrationHandler) GetDiscoveryCache(c *gin.Context) {
+	serviceDiscovery := discovery.NewServiceDiscovery()
+	cachedServices := serviceDiscovery.ListCachedServices()
+
+	results := make(map[string]interface{})
+	for _, serviceURL := range cachedServices {
+		if result, exists := serviceDiscovery.GetCachedResult(serviceURL); exists {
+			results[serviceURL] = result
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"cached_services": results,
+		"total":           len(results),
+	})
+}
+
+// ClearDiscoveryCache clears the discovery cache
+func (h *IntegrationHandler) ClearDiscoveryCache(c *gin.Context) {
+	serviceDiscovery := discovery.NewServiceDiscovery()
+	serviceDiscovery.ClearCache()
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Discovery cache cleared",
+	})
+}
+
+// ListRegisteredServices returns all services in the registry
+func (h *IntegrationHandler) ListRegisteredServices(c *gin.Context) {
+	category := c.Query("category")
+
+	var services []*discovery.RegisteredService
+	if category != "" {
+		services = h.serviceRegistry.ListServicesByCategory(category)
+	} else {
+		services = h.serviceRegistry.ListServices()
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"services": services,
+		"total":    len(services),
+	})
+}
+
+// ListHealthyServices returns only healthy services
+func (h *IntegrationHandler) ListHealthyServices(c *gin.Context) {
+	services := h.serviceRegistry.ListHealthyServices()
+
+	c.JSON(http.StatusOK, gin.H{
+		"services": services,
+		"total":    len(services),
+	})
+}
+
+// CheckServiceHealth performs a health check on a specific service
+func (h *IntegrationHandler) CheckServiceHealth(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	health, err := h.serviceRegistry.CheckServiceHealth(c.Request.Context(), serviceID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"service_id": serviceID,
+		"health":     health,
+		"checked_at": time.Now(),
+	})
+}
+
+// GetServiceStats returns statistics for a service
+func (h *IntegrationHandler) GetServiceStats(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	stats, err := h.serviceRegistry.GetServiceStats(serviceID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"service_id": serviceID,
+		"stats":      stats,
+	})
+}
+
+// RecordServiceRequest records a request to a service for statistics
+func (h *IntegrationHandler) RecordServiceRequest(c *gin.Context) {
+	serviceID := c.Param("id")
+
+	var request struct {
+		Latency time.Duration `json:"latency"`
+		Success bool          `json:"success"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.serviceRegistry.RecordServiceRequest(serviceID, request.Latency, request.Success)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Request recorded",
 	})
 }

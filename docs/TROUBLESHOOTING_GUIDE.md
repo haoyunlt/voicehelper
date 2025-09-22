@@ -28,7 +28,6 @@ echo "================================"
 
 # 检查服务状态
 echo "📊 检查服务状态..."
-services=("frontend" "backend" "algo-service" "postgres" "redis" "milvus-standalone")
 
 for service in "${services[@]}"; do
     if docker-compose ps | grep -q "$service.*Up"; then
@@ -40,7 +39,6 @@ done
 
 # 检查端口连通性
 echo -e "\n🔌 检查端口连通性..."
-ports=("3000:前端" "8080:后端" "8000:算法服务" "5432:PostgreSQL" "6379:Redis" "19530:Milvus")
 
 for port_info in "${ports[@]}"; do
     port=$(echo $port_info | cut -d: -f1)
@@ -272,7 +270,6 @@ exit 1
 3. **分步启动**:
 ```bash
 # 先启动基础服务
-docker-compose up -d postgres redis milvus-standalone
 
 # 等待服务就绪
 sleep 30
@@ -1030,8 +1027,6 @@ docker-compose exec -T postgres pg_dump -U postgres voicehelper | gzip > $BACKUP
 docker-compose exec redis redis-cli BGSAVE
 docker cp $(docker-compose ps -q redis):/data/dump.rdb $BACKUP_DIR/redis_$DATE.rdb
 
-# 备份 Milvus
-docker cp $(docker-compose ps -q milvus-standalone):/var/lib/milvus $BACKUP_DIR/milvus_$DATE
 
 # 上传到云存储
 aws s3 sync $BACKUP_DIR s3://your-backup-bucket/voicehelper/
@@ -1161,7 +1156,6 @@ done
 |----------|------|----------|
 | `DB_CONNECTION_FAILED` | 数据库连接失败 | 检查数据库服务和连接配置 |
 | `REDIS_CONNECTION_FAILED` | Redis 连接失败 | 检查 Redis 服务状态 |
-| `MILVUS_CONNECTION_FAILED` | Milvus 连接失败 | 检查向量数据库服务 |
 | `OPENAI_API_ERROR` | OpenAI API 错误 | 检查 API Key 和配额 |
 | `ASR_SERVICE_ERROR` | 语音识别服务错误 | 检查音频格式和服务状态 |
 | `TTS_SERVICE_ERROR` | 语音合成服务错误 | 检查文本内容和语音模型 |

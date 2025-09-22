@@ -2,6 +2,10 @@ module chatbot
 
 go 1.21
 
+replace chatbot/common/errors => ./common/errors
+
+replace chatbot/common/logger => ./common/logger
+
 require (
 	// Testing dependencies
 	github.com/DATA-DOG/go-sqlmock v1.5.0
