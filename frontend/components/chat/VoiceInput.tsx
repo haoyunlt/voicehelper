@@ -26,17 +26,46 @@ export default function VoiceInput({
   const [error, setError] = useState<string | null>(null)
   const [volume, setVolume] = useState(1)
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
       setIsRecording(false)
-      // 模拟语音转写结果
-      setTimeout(() => {
-        const mockText = "这是模拟的语音转写结果"
-        onTranscript?.(mockText, true)
-      }, 1000)
+      // 停止录音并处理音频
+      try {
+        // TODO: 集成真实的语音识别API
+        // 这里应该调用后端的语音识别服务
+        const response = await fetch('/api/v1/voice/transcribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            // 音频数据应该从麦克风获取
+            audio_data: '', // base64编码的音频数据
+            language: 'zh-CN',
+            is_final: true
+          })
+        })
+        
+        if (response.ok) {
+          const result = await response.json()
+          if (result.text) {
+            onTranscript?.(result.text, true)
+          }
+        } else {
+          throw new Error('语音识别失败')
+        }
+      } catch (error) {
+        console.error('语音识别错误:', error)
+        setError('语音识别失败，请重试')
+        // 降级到模拟结果
+        const fallbackText = "语音识别服务暂不可用，这是降级响应"
+        onTranscript?.(fallbackText, true)
+      }
     } else {
       setIsRecording(true)
       setError(null)
+      // TODO: 开始录音
+      // 这里应该开始从麦克风录音
     }
   }
 

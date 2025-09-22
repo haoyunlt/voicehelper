@@ -3,165 +3,221 @@ import base64
 import json
 import io
 import wave
+import time
+import os
 from typing import AsyncGenerator, Optional, Dict, Any
 from datetime import datetime
 
-# import numpy as np
-# import soundfile as sf  
-# import speech_recognition as sr
-# import edge_tts
-
-# 临时移除音频处理依赖，使用模拟实现
 from fastapi import HTTPException
 
 from core.config import config
 from core.models import VoiceQueryRequest, VoiceQueryResponse, Reference
 from core.metrics import voice_metrics_collector
+from core.enhanced_voice_services import (
+    EnhancedVoiceService, VoiceConfig, VoiceProvider
+)
 
 class ASRService:
-    """语音识别服务"""
+    """语音识别服务（兼容性包装）"""
     
     def __init__(self):
-        # self.recognizer = sr.Recognizer()
-        # 配置识别器参数
-        # self.recognizer.energy_threshold = 300
-        pass
-        # self.recognizer.dynamic_energy_threshold = True
-        # self.recognizer.pause_threshold = 0.8
-        # self.recognizer.phrase_threshold = 0.3
+        # 创建语音配置
+        self.voice_config = self._create_voice_config()
+        # 初始化增强语音服务（仅ASR部分）
+        from core.enhanced_voice_services import EnhancedASRService
+        self.enhanced_asr = EnhancedASRService(self.voice_config)
+        
+    def _create_voice_config(self) -> VoiceConfig:
+        """创建语音配置"""
+        # 从环境变量获取配置
+        provider_configs = {}
+        
+        # OpenAI配置
+        if os.getenv('OPENAI_API_KEY'):
+            provider_configs[VoiceProvider.OPENAI] = {
+                'api_key': os.getenv('OPENAI_API_KEY'),
+                'base_url': os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+            }
+        
+        # Azure配置
+        if os.getenv('AZURE_SPEECH_KEY'):
+            provider_configs[VoiceProvider.AZURE] = {
+                'api_key': os.getenv('AZURE_SPEECH_KEY'),
+                'region': os.getenv('AZURE_SPEECH_REGION', 'eastus')
+            }
+        
+        # 确定主要提供商
+        primary_provider = VoiceProvider.EDGE_TTS  # 默认使用免费的Edge TTS
+        if os.getenv('OPENAI_API_KEY'):
+            primary_provider = VoiceProvider.OPENAI
+        elif os.getenv('AZURE_SPEECH_KEY'):
+            primary_provider = VoiceProvider.AZURE
+        
+        return VoiceConfig(
+            primary_asr_provider=primary_provider,
+            fallback_asr_providers=[VoiceProvider.LOCAL],
+            provider_configs=provider_configs,
+            enable_vad=True,
+            enable_cache=True
+        )
         
     async def transcribe_audio(self, audio_data: bytes, is_final: bool = False, session_id: str = "") -> Optional[str]:
         """转写音频数据"""
         start_time = time.time()
         
         try:
-            # 模拟音频处理（移除numpy和speech_recognition依赖）
-            await asyncio.sleep(0.1)  # 模拟处理时间
+            # 使用增强的ASR服务
+            result = await self.enhanced_asr.transcribe(
+                audio_data, 
+                is_final=is_final, 
+                session_id=session_id
+            )
             
-            # 模拟语音识别结果
-            if len(audio_data) > 0:
-                if is_final:
-                    text = "这是一个模拟的最终语音识别结果"
-                else:
-                    text = "这是一个模拟的部分语音识别结果"
-                
-                # 记录 ASR 指标
-                if session_id:
-                    latency = time.time() - start_time
-                    voice_metrics_collector.record_asr_metrics(session_id, latency, accuracy=0.95)
-                
-                return text
-            else:
-                return None
+            # 记录指标
+            if session_id and result:
+                latency = time.time() - start_time
+                voice_metrics_collector.record_asr_metrics(session_id, latency, accuracy=0.95)
+            
+            return result
                 
         except Exception as e:
             print(f"ASR transcription error: {e}")
             return None
 
 class TTSService:
-    """文本转语音服务"""
+    """文本转语音服务（兼容性包装）"""
     
     def __init__(self):
         self.voice = "zh-CN-XiaoxiaoNeural"  # 使用 Edge TTS 中文语音
+        # 创建语音配置
+        self.voice_config = self._create_voice_config()
+        # 初始化增强语音服务（仅TTS部分）
+        from core.enhanced_voice_services import EnhancedTTSService
+        self.enhanced_tts = EnhancedTTSService(self.voice_config)
+        
+    def _create_voice_config(self) -> VoiceConfig:
+        """创建语音配置"""
+        # 从环境变量获取配置
+        provider_configs = {}
+        
+        # OpenAI配置
+        if os.getenv('OPENAI_API_KEY'):
+            provider_configs[VoiceProvider.OPENAI] = {
+                'api_key': os.getenv('OPENAI_API_KEY'),
+                'base_url': os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+            }
+        
+        # Azure配置
+        if os.getenv('AZURE_SPEECH_KEY'):
+            provider_configs[VoiceProvider.AZURE] = {
+                'api_key': os.getenv('AZURE_SPEECH_KEY'),
+                'region': os.getenv('AZURE_SPEECH_REGION', 'eastus')
+            }
+        
+        # 确定主要提供商（TTS优先使用免费的Edge TTS）
+        primary_provider = VoiceProvider.EDGE_TTS
+        fallback_providers = []
+        
+        if os.getenv('AZURE_SPEECH_KEY'):
+            fallback_providers.append(VoiceProvider.AZURE)
+        if os.getenv('OPENAI_API_KEY'):
+            fallback_providers.append(VoiceProvider.OPENAI)
+        
+        return VoiceConfig(
+            primary_tts_provider=primary_provider,
+            fallback_tts_providers=fallback_providers,
+            tts_voice=self.voice,
+            provider_configs=provider_configs,
+            enable_cache=True
+        )
         
     async def synthesize_streaming(self, text: str) -> AsyncGenerator[bytes, None]:
-        """流式合成语音 - 模拟实现"""
+        """流式合成语音"""
         try:
-            # 模拟语音合成
-            await asyncio.sleep(0.1)  # 模拟处理时间
-            
-            # 模拟音频数据块
-            mock_audio_chunks = [b"mock_audio_chunk_1", b"mock_audio_chunk_2", b"mock_audio_chunk_3"]
-            for chunk in mock_audio_chunks:
-                await asyncio.sleep(0.05)  # 模拟流式输出延迟
-                yield chunk
+            # 使用增强的TTS服务
+            async for chunk in self.enhanced_tts.synthesize_streaming(text, voice=self.voice):
+                if chunk:
+                    yield chunk
                     
         except Exception as e:
             print(f"TTS synthesis error: {e}")
             return
     
     async def synthesize_sentence(self, sentence: str) -> bytes:
-        """合成单个句子 - 模拟实现"""
+        """合成单个句子"""
         try:
-            # 模拟语音合成
-            await asyncio.sleep(0.2)  # 模拟处理时间
-            
-            # 模拟返回音频数据
-            mock_audio_data = b"mock_audio_data_for_sentence: " + sentence.encode('utf-8')
-            return mock_audio_data
+            # 使用增强的TTS服务
+            result = await self.enhanced_tts.synthesize(sentence, voice=self.voice)
+            return result
             
         except Exception as e:
             print(f"TTS sentence synthesis error: {e}")
             return b""
 
 class VoiceService:
-    """语音处理服务"""
+    """语音处理服务（兼容性包装）"""
     
     def __init__(self, retrieve_service):
+        # 创建语音配置
+        self.voice_config = self._create_voice_config()
+        
+        # 使用增强的语音服务
+        self.enhanced_voice_service = EnhancedVoiceService(
+            self.voice_config, 
+            retrieve_service
+        )
+        
+        # 保持兼容性
         self.asr_service = ASRService()
         self.tts_service = TTSService()
         self.retrieve_service = retrieve_service
         self.active_sessions: Dict[str, Dict[str, Any]] = {}
         
+    def _create_voice_config(self) -> VoiceConfig:
+        """创建语音配置"""
+        # 从环境变量获取配置
+        provider_configs = {}
+        
+        # OpenAI配置
+        if os.getenv('OPENAI_API_KEY'):
+            provider_configs[VoiceProvider.OPENAI] = {
+                'api_key': os.getenv('OPENAI_API_KEY'),
+                'base_url': os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+            }
+        
+        # Azure配置
+        if os.getenv('AZURE_SPEECH_KEY'):
+            provider_configs[VoiceProvider.AZURE] = {
+                'api_key': os.getenv('AZURE_SPEECH_KEY'),
+                'region': os.getenv('AZURE_SPEECH_REGION', 'eastus')
+            }
+        
+        # 确定主要提供商
+        primary_asr = VoiceProvider.EDGE_TTS
+        primary_tts = VoiceProvider.EDGE_TTS
+        
+        if os.getenv('OPENAI_API_KEY'):
+            primary_asr = VoiceProvider.OPENAI
+        elif os.getenv('AZURE_SPEECH_KEY'):
+            primary_asr = VoiceProvider.AZURE
+        
+        return VoiceConfig(
+            primary_asr_provider=primary_asr,
+            primary_tts_provider=primary_tts,
+            fallback_asr_providers=[VoiceProvider.LOCAL],
+            fallback_tts_providers=[VoiceProvider.AZURE, VoiceProvider.OPENAI],
+            provider_configs=provider_configs,
+            enable_vad=True,
+            enable_cache=True
+        )
+        
     async def process_voice_query(self, request: VoiceQueryRequest) -> AsyncGenerator[VoiceQueryResponse, None]:
-        """处理语音查询"""
+        """处理语音查询（使用增强服务）"""
         try:
-            session_id = request.conversation_id
-            
-            # 初始化会话
-            if session_id not in self.active_sessions:
-                self.active_sessions[session_id] = {
-                    "audio_buffer": b"",
-                    "transcript_buffer": "",
-                    "last_activity": datetime.now()
-                }
-            
-            session = self.active_sessions[session_id]
-            
-            # 解码音频数据
-            audio_chunk = base64.b64decode(request.audio_chunk)
-            session["audio_buffer"] += audio_chunk
-            session["last_activity"] = datetime.now()
-            
-            # ASR 处理
-            if len(session["audio_buffer"]) > 8000:  # 约0.5秒的音频
-                # 部分识别
-                partial_text = await self.asr_service.transcribe_audio(
-                    session["audio_buffer"], is_final=False, session_id=session_id
-                )
+            # 使用增强的语音服务处理请求
+            async for response in self.enhanced_voice_service.process_voice_query(request):
+                yield response
                 
-                if partial_text:
-                    yield VoiceQueryResponse(
-                        type="asr_partial",
-                        seq=request.seq,
-                        text=partial_text
-                    )
-                    
-                # 检查是否为完整句子（简化判断）
-                if partial_text and (partial_text.endswith('。') or 
-                                   partial_text.endswith('？') or 
-                                   partial_text.endswith('！')):
-                    
-                    # 最终识别
-                    final_text = await self.asr_service.transcribe_audio(
-                        session["audio_buffer"], is_final=True, session_id=session_id
-                    )
-                    
-                    if final_text:
-                        yield VoiceQueryResponse(
-                            type="asr_final",
-                            seq=request.seq,
-                            text=final_text
-                        )
-                        
-                        # 处理 RAG 查询
-                        async for response in self._process_rag_query(final_text, session_id):
-                            yield response
-                    
-                    # 清空缓冲区
-                    session["audio_buffer"] = b""
-                    session["transcript_buffer"] = ""
-                    
         except Exception as e:
             yield VoiceQueryResponse(
                 type="error",
@@ -309,6 +365,10 @@ class VoiceService:
     
     def cleanup_inactive_sessions(self):
         """清理非活跃会话"""
+        # 使用增强服务的清理方法
+        self.enhanced_voice_service.cleanup_inactive_sessions()
+        
+        # 保持兼容性，也清理本地会话
         current_time = datetime.now()
         inactive_sessions = []
         
@@ -318,3 +378,7 @@ class VoiceService:
         
         for session_id in inactive_sessions:
             del self.active_sessions[session_id]
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """获取语音服务统计信息"""
+        return self.enhanced_voice_service.get_stats()
