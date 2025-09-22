@@ -1,5 +1,5 @@
-// 聊天页面 - 最新版本（整合了WebSocket和SSE流式处理）
-const app = getApp();
+// 语音增强聊天页面 - 完整版实现
+const app = getApp()
 
 Page({
   data: {
@@ -16,7 +16,22 @@ Page({
     currentRequestId: null,
     audioQueue: [], // 音频播放队列
     isProcessing: false,
-    currentTranscript: '' // 实时转写文本
+    currentTranscript: '', // 实时转写文本
+    connectionQuality: 'good', // good, fair, poor
+    latencyStats: {
+      asr: 0,
+      llm: 0,
+      tts: 0,
+      e2e: 0
+    },
+    voiceConfig: {
+      lang: 'zh_CN',
+      sampleRate: 16000,
+      frameSize: 640, // 40ms at 16kHz
+      vadEnabled: true,
+      minSpeechMs: 200,
+      maxSilenceMs: 500
+    }
   },
 
   // WebSocket相关
@@ -24,655 +39,643 @@ Page({
   audioFrameBuffer: [],
   playbackBuffer: [],
   reconnectTimer: null,
+  sequenceNumber: 0,
+  latencyTracker: new Map(),
+  
+  // 音频相关
+  recorderManager: null,
+  audioContext: null,
+  innerAudioContext: null,
   
   onLoad(options) {
     // 检查登录状态
     if (!app.globalData.token) {
       wx.redirectTo({
         url: '/pages/login/login'
-      });
-      return;
+      })
+      return
     }
     
     // 初始化会话
-    this.initConversation(options.conversationId);
+    this.initConversation(options.conversationId)
+    
+    // 初始化音频
+    this.initAudio()
     
     // 连接WebSocket
-    this.connectWebSocket();
-    
-    // 设置音频回调
-    this.setupAudioCallbacks();
+    this.connectWebSocket()
     
     // 加载历史消息
-    this.loadHistory();
+    this.loadHistory()
   },
 
   onUnload() {
-    // 清理定时器
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-    }
-    
-    // 断开WebSocket
-    if (this.ws) {
-      this.ws.close();
-    }
-    
-    // 停止录音
-    if (this.data.isRecording) {
-      app.stopRecording();
-    }
-    
-    // 停止播放
-    if (this.data.isPlaying) {
-      app.stopAudio();
+    // 清理资源
+    this.cleanup()
+  },
+
+  onHide() {
+    // 停止录音和播放
+    this.stopRecording()
+    this.stopPlayback()
+  },
+
+  onShow() {
+    // 重新连接WebSocket（如果需要）
+    if (!this.data.wsConnected) {
+      this.connectWebSocket()
     }
   },
 
   // 初始化会话
   initConversation(conversationId) {
     if (conversationId) {
-      app.globalData.currentConversation = {
-        id: conversationId,
-        messages: []
-      };
+      app.globalData.currentConversation = { id: conversationId }
     } else {
-      app.createConversation();
+      app.createConversation()
+    }
+  },
+
+  // 初始化音频
+  initAudio() {
+    try {
+      // 初始化录音管理器
+      this.recorderManager = wx.getRecorderManager()
+      
+      // 录音事件监听
+      this.recorderManager.onStart(() => {
+        console.log('录音开始')
+        this.setData({ isRecording: true })
+      })
+      
+      this.recorderManager.onStop((res) => {
+        console.log('录音结束', res)
+        this.setData({ isRecording: false })
+        
+        // 处理录音结果
+        if (res.tempFilePath) {
+          this.processRecordedAudio(res.tempFilePath)
+        }
+      })
+      
+      this.recorderManager.onError((err) => {
+        console.error('录音错误', err)
+        this.setData({ isRecording: false })
+        wx.showToast({
+          title: '录音失败',
+          icon: 'error'
+        })
+      })
+      
+      // 实时音频帧监听
+      this.recorderManager.onFrameRecorded((res) => {
+        if (this.data.wsConnected && res.frameBuffer) {
+          this.sendAudioFrame(res.frameBuffer)
+        }
+      })
+      
+      // 初始化音频播放
+      this.innerAudioContext = wx.createInnerAudioContext()
+      this.innerAudioContext.onError((err) => {
+        console.error('音频播放错误', err)
+      })
+      
+      this.innerAudioContext.onEnded(() => {
+        this.playNextAudio()
+      })
+      
+    } catch (error) {
+      console.error('音频初始化失败', error)
     }
   },
 
   // 连接WebSocket
   connectWebSocket() {
-    const url = `${app.globalData.wsUrl}/voice/stream?token=${app.globalData.token}`;
+    if (this.ws && this.ws.readyState === 1) {
+      return
+    }
+
+    const url = `${app.globalData.wsUrl}/voice/stream?token=${app.globalData.token}`
     
     this.ws = wx.connectSocket({
       url: url,
       header: {
-        'X-Tenant-ID': app.globalData.tenantId
+        'X-Tenant-ID': app.globalData.tenantId || 'default'
       },
       success: () => {
-        console.log('WebSocket连接请求已发送');
+        console.log('WebSocket连接请求已发送')
       },
       fail: (err) => {
-        console.error('WebSocket连接失败', err);
+        console.error('WebSocket连接失败', err)
         wx.showToast({
           title: '连接失败',
           icon: 'error'
-        });
-        this.scheduleReconnect();
+        })
+        this.scheduleReconnect()
       }
-    });
+    })
     
     // WebSocket事件处理
     this.ws.onOpen(() => {
-      console.log('WebSocket已连接');
-      this.setData({ wsConnected: true });
+      console.log('WebSocket已连接')
+      this.setData({ wsConnected: true })
       
       // 清除重连定时器
       if (this.reconnectTimer) {
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
+        clearTimeout(this.reconnectTimer)
+        this.reconnectTimer = null
       }
       
       // 发送初始化消息
-      this.ws.send({
-        data: JSON.stringify({
-          type: 'start',
-          codec: 'pcm16',
-          sample_rate: 16000,
-          conversation_id: app.globalData.currentConversation.id,
-          lang: 'zh-CN',
-          vad: {
-            enable: true,
-            min_speech_ms: 200,
-            min_silence_ms: 250
-          }
-        })
-      });
-    });
+      this.sendMessage({
+        type: 'start',
+        codec: 'pcm16',
+        sample_rate: this.data.voiceConfig.sampleRate,
+        conversation_id: app.globalData.currentConversation.id,
+        lang: this.data.voiceConfig.lang,
+        vad: {
+          enable: this.data.voiceConfig.vadEnabled,
+          min_speech_ms: this.data.voiceConfig.minSpeechMs,
+          min_silence_ms: this.data.voiceConfig.maxSilenceMs
+        }
+      })
+    })
     
     this.ws.onMessage((res) => {
-      this.handleWebSocketMessage(res.data);
-    });
+      this.handleWebSocketMessage(res.data)
+    })
     
     this.ws.onError((err) => {
-      console.error('WebSocket错误', err);
-      this.setData({ wsConnected: false });
-      this.scheduleReconnect();
-    });
+      console.error('WebSocket错误', err)
+      this.setData({ 
+        wsConnected: false,
+        connectionQuality: 'poor'
+      })
+      this.scheduleReconnect()
+    })
     
     this.ws.onClose(() => {
-      console.log('WebSocket已关闭');
-      this.setData({ wsConnected: false });
-      this.scheduleReconnect();
-    });
-  },
-
-  // 计划重连
-  scheduleReconnect() {
-    if (this.reconnectTimer) return;
-    
-    this.reconnectTimer = setTimeout(() => {
-      this.reconnectTimer = null;
-      if (app.globalData.isConnected) {
-        console.log('尝试重新连接WebSocket...');
-        this.connectWebSocket();
-      }
-    }, 3000);
+      console.log('WebSocket已关闭')
+      this.setData({ wsConnected: false })
+      this.scheduleReconnect()
+    })
   },
 
   // 处理WebSocket消息
   handleWebSocketMessage(data) {
     try {
-      const message = JSON.parse(data);
+      let message
+      
+      // 尝试解析JSON消息
+      if (typeof data === 'string') {
+        message = JSON.parse(data)
+      } else if (data instanceof ArrayBuffer) {
+        // 二进制音频数据
+        this.handleAudioData(data)
+        return
+      } else {
+        console.warn('未知消息格式', typeof data)
+        return
+      }
+      
+      const now = Date.now()
       
       switch (message.type) {
+        case 'connected':
+          console.log('语音会话已连接:', message.session_id)
+          break
+          
         case 'asr_partial':
-          this.handleASRPartial(message);
-          break;
+          // 实时转写
+          this.setData({
+            currentTranscript: message.text || ''
+          })
+          break
+          
         case 'asr_final':
-          this.handleASRFinal(message);
-          break;
+          // 最终转写结果
+          this.addMessage({
+            id: Date.now(),
+            type: 'user',
+            content: message.text || '',
+            timestamp: new Date(),
+            modality: 'voice',
+            confidence: message.confidence
+          })
+          
+          this.setData({ currentTranscript: '' })
+          
+          // 计算ASR延迟
+          if (message.trace_id && this.latencyTracker.has(message.trace_id)) {
+            const startTime = this.latencyTracker.get(message.trace_id)
+            this.updateLatencyStats('asr', now - startTime)
+          }
+          break
+          
         case 'llm_delta':
-          this.handleLLMDelta(message);
-          break;
+          // LLM流式响应
+          this.handleLLMDelta(message.delta || '')
+          break
+          
+        case 'llm_done':
+          // LLM响应完成
+          this.handleLLMDone()
+          break
+          
         case 'tts_chunk':
-          this.handleTTSChunk(message);
-          break;
-        case 'refs':
-          this.handleReferences(message);
-          break;
+          // TTS音频块
+          if (message.audio) {
+            this.queueAudioForPlayback(message.audio, message.format)
+          }
+          break
+          
+        case 'references':
+          // 参考资料
+          this.setData({
+            references: message.references || []
+          })
+          break
+          
         case 'agent_plan':
-          this.handleAgentPlan(message);
-          break;
-        case 'done':
-          this.handleDone(message);
-          break;
+          // Agent规划
+          this.setData({
+            showAgentStatus: true,
+            agentStatus: `规划: ${message.plan?.reasoning || '制定执行计划'}`
+          })
+          break
+          
+        case 'agent_step':
+          // Agent步骤
+          this.setData({
+            agentStatus: `执行: ${message.description || '处理中'}`
+          })
+          break
+          
+        case 'agent_complete':
+          // Agent完成
+          this.setData({
+            showAgentStatus: false,
+            agentStatus: ''
+          })
+          break
+          
+        case 'throttle':
+          // 限流警告
+          console.warn('连接被限流:', message.reason)
+          this.setData({ connectionQuality: 'poor' })
+          break
+          
+        case 'heartbeat':
+          // 心跳响应
+          this.updateConnectionQuality(message.latency_ms || 0)
+          break
+          
         case 'error':
-          this.handleError(message);
-          break;
-        case 'interrupted':
-          this.handleInterrupted(message);
-          break;
+          console.error('语音服务错误:', message)
+          wx.showToast({
+            title: message.message || '服务错误',
+            icon: 'error'
+          })
+          break
+          
+        default:
+          console.log('未知消息类型:', message.type)
       }
-    } catch (err) {
-      console.error('处理WebSocket消息失败', err);
+      
+    } catch (error) {
+      console.error('处理WebSocket消息失败:', error)
     }
   },
 
-  // 处理ASR部分结果
-  handleASRPartial(message) {
-    // 更新实时字幕
-    this.setData({
-      currentTranscript: message.text
-    });
-  },
-
-  // 处理ASR最终结果
-  handleASRFinal(message) {
-    // 添加用户消息
-    this.addMessage({
-      role: 'user',
-      content: message.text,
-      modality: 'voice',
-      timestamp: new Date().toISOString()
-    });
-    
-    this.setData({
-      currentTranscript: ''
-    });
-  },
-
-  // 处理LLM增量输出
-  handleLLMDelta(message) {
-    const messages = this.data.messages;
-    const lastMessage = messages[messages.length - 1];
-    
-    if (lastMessage && lastMessage.role === 'assistant') {
-      // 更新最后一条助手消息
-      lastMessage.content += message.text;
-      this.setData({
-        messages: messages,
-        scrollToView: `msg-${messages.length - 1}`
-      });
-    } else {
-      // 创建新的助手消息
-      this.addMessage({
-        role: 'assistant',
-        content: message.text,
-        modality: 'voice',
-        timestamp: new Date().toISOString()
-      });
+  // 发送WebSocket消息
+  sendMessage(message) {
+    if (this.ws && this.data.wsConnected) {
+      this.ws.send({
+        data: JSON.stringify(message)
+      })
     }
   },
 
-  // 处理TTS音频块
-  handleTTSChunk(message) {
-    // 将base64音频解码并加入播放队列
-    const audioData = wx.base64ToArrayBuffer(message.chunk);
-    this.audioQueue.push(audioData);
+  // 发送音频帧
+  sendAudioFrame(frameBuffer) {
+    if (!this.ws || !this.data.wsConnected) {
+      return
+    }
     
-    // 开始播放
+    try {
+      // 构建二进制帧头部（20字节）
+      const header = new ArrayBuffer(20)
+      const headerView = new DataView(header)
+      
+      headerView.setUint32(0, this.sequenceNumber++, true) // sequence
+      headerView.setUint32(4, this.data.voiceConfig.sampleRate, true) // sample_rate
+      headerView.setUint8(8, 1, true) // channels
+      headerView.setUint16(9, frameBuffer.byteLength, true) // frame_size
+      headerView.setBigUint64(12, BigInt(Date.now()), true) // timestamp
+      
+      // 合并头部和音频数据
+      const frame = new ArrayBuffer(header.byteLength + frameBuffer.byteLength)
+      new Uint8Array(frame).set(new Uint8Array(header), 0)
+      new Uint8Array(frame).set(new Uint8Array(frameBuffer), header.byteLength)
+      
+      // 发送二进制数据
+      this.ws.send({
+        data: frame
+      })
+      
+      // 记录发送时间用于延迟计算
+      this.latencyTracker.set(`frame_${this.sequenceNumber}`, Date.now())
+      
+    } catch (error) {
+      console.error('发送音频帧失败:', error)
+    }
+  },
+
+  // 处理接收到的音频数据
+  handleAudioData(audioBuffer) {
+    // 将音频数据加入播放队列
+    this.data.audioQueue.push({
+      buffer: audioBuffer,
+      timestamp: Date.now()
+    })
+    
+    // 如果没有在播放，开始播放
     if (!this.data.isPlaying) {
-      this.playNextAudio();
+      this.playNextAudio()
     }
-  },
-
-  // 处理引用
-  handleReferences(message) {
-    this.setData({
-      references: message.items || message.references || []
-    });
-  },
-
-  // 处理Agent计划
-  handleAgentPlan(message) {
-    this.setData({
-      showAgentStatus: true,
-      agentStatus: `计划: ${message.items.join(' → ')}`
-    });
-  },
-
-  // 处理完成
-  handleDone(message) {
-    this.setData({
-      isProcessing: false,
-      showAgentStatus: false,
-      currentRequestId: null
-    });
-    
-    // 显示统计信息
-    if (message.usage) {
-      console.log('使用统计', message.usage);
-    }
-  },
-
-  // 处理错误
-  handleError(message) {
-    const errorMsg = message.error?.message || message.message || '处理失败';
-    wx.showToast({
-      title: errorMsg,
-      icon: 'error'
-    });
-    
-    this.setData({
-      isProcessing: false,
-      showAgentStatus: false
-    });
-  },
-
-  // 处理中断
-  handleInterrupted(message) {
-    console.log('已中断', message.request_id);
-    
-    // 清空音频队列
-    this.audioQueue = [];
-    
-    // 停止播放
-    if (this.data.isPlaying) {
-      app.stopAudio();
-      this.setData({ isPlaying: false });
-    }
-  },
-
-  // 设置音频回调
-  setupAudioCallbacks() {
-    // 录音帧回调
-    app.audioFrameCallback = (frameBuffer) => {
-      if (this.data.isRecording && this.ws && this.data.wsConnected) {
-        // 发送音频帧到服务器
-        const base64 = wx.arrayBufferToBase64(frameBuffer);
-        this.ws.send({
-          data: JSON.stringify({
-            type: 'audio',
-            seq: this.audioFrameBuffer.length,
-            chunk: base64
-          })
-        });
-        
-        this.audioFrameBuffer.push(frameBuffer);
-      }
-    };
-    
-    // 录音停止回调
-    app.audioStopCallback = (res) => {
-      console.log('录音完成', res);
-      
-      // 发送停止信号
-      if (this.ws && this.data.wsConnected) {
-        this.ws.send({
-          data: JSON.stringify({
-            type: 'stop'
-          })
-        });
-      }
-      
-      this.setData({
-        isRecording: false,
-        isProcessing: true
-      });
-      
-      // 清空缓冲区
-      this.audioFrameBuffer = [];
-    };
   },
 
   // 播放下一个音频
   playNextAudio() {
-    if (this.audioQueue.length === 0) {
-      this.setData({ isPlaying: false });
-      return;
+    if (this.data.audioQueue.length === 0) {
+      this.setData({ isPlaying: false })
+      return
     }
     
-    const audioData = this.audioQueue.shift();
+    this.setData({ isPlaying: true })
     
-    // 使用WebAudioContext播放PCM数据
-    const audioContext = app.globalData.audioContext;
-    const sampleRate = 16000;
-    const audioBuffer = audioContext.createBuffer(1, audioData.byteLength / 2, sampleRate);
-    
-    // 转换PCM16到Float32
-    const channelData = audioBuffer.getChannelData(0);
-    const int16Array = new Int16Array(audioData);
-    for (let i = 0; i < int16Array.length; i++) {
-      channelData[i] = int16Array[i] / 32768.0;
-    }
-    
-    // 创建音频源并播放
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
-    
-    source.onended = () => {
-      // 播放下一个音频块
-      this.playNextAudio();
-    };
-    
-    source.start();
-    this.setData({ isPlaying: true });
-  },
-
-  // 加载历史消息
-  loadHistory() {
-    const conversationId = app.globalData.currentConversation?.id;
-    if (!conversationId) return;
-    
-    wx.request({
-      url: `${app.globalData.apiUrl}/conversations/${conversationId}/messages`,
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${app.globalData.token}`,
-        'X-Tenant-ID': app.globalData.tenantId
-      },
-      success: (res) => {
-        if (res.statusCode === 200) {
-          const messages = res.data.messages || [];
-          this.setData({
-            messages: messages,
-            scrollToView: messages.length > 0 ? `msg-${messages.length - 1}` : ''
-          });
-        }
-      }
-    });
-  },
-
-  // 添加消息
-  addMessage(message) {
-    const messages = this.data.messages;
-    messages.push({
-      ...message,
-      id: `msg-${messages.length}`
-    });
-    
-    this.setData({
-      messages: messages,
-      scrollToView: `msg-${messages.length - 1}`
-    });
-    
-    // 保存到全局
-    if (app.globalData.currentConversation) {
-      app.globalData.currentConversation.messages = messages;
-    }
-  },
-
-  // 文本输入
-  onInputChange(e) {
-    this.setData({
-      inputValue: e.detail.value
-    });
-  },
-
-  // 发送文本消息
-  sendTextMessage() {
-    const content = this.data.inputValue.trim();
-    if (!content) return;
-    
-    // 添加用户消息
-    this.addMessage({
-      role: 'user',
-      content: content,
-      modality: 'text',
-      timestamp: new Date().toISOString()
-    });
-    
-    // 清空输入
-    this.setData({
-      inputValue: '',
-      isProcessing: true
-    });
-    
-    // 发送请求
-    this.sendChatRequest(content, 'text');
-  },
-
-  // 发送聊天请求（SSE流式）
-  sendChatRequest(content, modality) {
-    const requestId = `req_${Date.now()}`;
-    this.setData({ currentRequestId: requestId });
-    
-    // 创建SSE连接
-    const requestTask = wx.request({
-      url: `${app.globalData.apiUrl}/chat/stream`,
-      method: 'POST',
-      header: {
-        'Authorization': `Bearer ${app.globalData.token}`,
-        'X-Tenant-ID': app.globalData.tenantId,
-        'X-Request-ID': requestId,
-        'Accept': 'text/event-stream'
-      },
-      data: {
-        conversation_id: app.globalData.currentConversation.id,
-        messages: [
-          {
-            role: 'user',
-            content: content
-          }
-        ],
-        modality: modality,
-        top_k: 5,
-        temperature: 0.3
-      },
-      enableChunked: true,
-      success: (res) => {
-        console.log('请求成功', res);
-      },
-      fail: (err) => {
-        console.error('请求失败', err);
-        wx.showToast({
-          title: '发送失败',
-          icon: 'error'
-        });
-        this.setData({ isProcessing: false });
-      }
-    });
-    
-    // 处理流式响应
-    requestTask.onChunkReceived((res) => {
-      const decoder = new TextDecoder('utf-8');
-      const chunk = decoder.decode(res.data);
+    try {
+      const audioItem = this.data.audioQueue.shift()
       
-      // 解析SSE数据
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            this.handleSSEData(data);
-          } catch (e) {
-            console.error('解析SSE数据失败', e);
-          }
-        }
-      }
-    });
-  },
-
-  // 处理SSE数据
-  handleSSEData(data) {
-    switch (data.type) {
-      case 'delta':
-        this.handleLLMDelta({ text: data.content });
-        break;
-      case 'refs':
-        this.handleReferences(data);
-        break;
-      case 'done':
-        this.handleDone(data);
-        break;
-      case 'error':
-        this.handleError(data);
-        break;
+      // 将ArrayBuffer转换为临时文件
+      const fs = wx.getFileSystemManager()
+      const tempPath = `${wx.env.USER_DATA_PATH}/temp_audio_${Date.now()}.wav`
+      
+      fs.writeFileSync(tempPath, audioItem.buffer)
+      
+      // 播放音频
+      this.innerAudioContext.src = tempPath
+      this.innerAudioContext.play()
+      
+    } catch (error) {
+      console.error('播放音频失败:', error)
+      this.playNextAudio() // 尝试播放下一个
     }
-  },
-
-  // 切换到语音输入
-  toggleVoiceInput() {
-    this.setData({
-      showVoiceInput: !this.data.showVoiceInput
-    });
   },
 
   // 开始录音
   startRecording() {
-    // 检查WebSocket连接
     if (!this.data.wsConnected) {
       wx.showToast({
-        title: '连接未就绪',
+        title: '请等待连接',
         icon: 'none'
-      });
-      return;
+      })
+      return
     }
     
-    wx.vibrateShort(); // 震动反馈
-    
-    this.setData({
-      isRecording: true
-    });
-    
-    // 清空之前的音频缓冲
-    this.audioFrameBuffer = [];
-    
-    // 开始录音
-    app.startRecording();
+    try {
+      this.recorderManager.start({
+        duration: 60000, // 最长60秒
+        sampleRate: this.data.voiceConfig.sampleRate,
+        numberOfChannels: 1,
+        encodeBitRate: 48000,
+        format: 'PCM',
+        frameSize: this.data.voiceConfig.frameSize
+      })
+      
+      // 发送开始录音消息
+      this.sendMessage({
+        type: 'start_recording',
+        timestamp: Date.now()
+      })
+      
+    } catch (error) {
+      console.error('开始录音失败:', error)
+      wx.showToast({
+        title: '录音失败',
+        icon: 'error'
+      })
+    }
   },
 
   // 停止录音
   stopRecording() {
-    wx.vibrateShort();
+    if (this.data.isRecording) {
+      this.recorderManager.stop()
+      
+      // 发送停止录音消息
+      this.sendMessage({
+        type: 'stop_recording',
+        timestamp: Date.now()
+      })
+    }
+  },
+
+  // 切换录音状态
+  toggleRecording() {
+    if (this.data.isRecording) {
+      this.stopRecording()
+    } else {
+      this.startRecording()
+    }
+  },
+
+  // 停止播放
+  stopPlayback() {
+    if (this.innerAudioContext) {
+      this.innerAudioContext.stop()
+    }
+    
+    // 清空播放队列
+    this.setData({ 
+      audioQueue: [],
+      isPlaying: false 
+    })
+  },
+
+  // 处理LLM流式响应
+  handleLLMDelta(delta) {
+    const messages = this.data.messages
+    let lastMessage = messages[messages.length - 1]
+    
+    // 如果最后一条消息不是助手消息，创建新的
+    if (!lastMessage || lastMessage.type !== 'assistant' || lastMessage.isComplete) {
+      lastMessage = {
+        id: Date.now(),
+        type: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        modality: 'voice',
+        isStreaming: true
+      }
+      messages.push(lastMessage)
+    }
+    
+    // 追加内容
+    lastMessage.content += delta
+    lastMessage.timestamp = new Date()
     
     this.setData({
-      isRecording: false
-    });
+      messages: messages,
+      scrollToView: `msg-${lastMessage.id}`
+    })
+  },
+
+  // 处理LLM响应完成
+  handleLLMDone() {
+    const messages = this.data.messages
+    const lastMessage = messages[messages.length - 1]
     
-    app.stopRecording();
-  },
-
-  // 长按开始录音
-  onTouchStart() {
-    this.startRecording();
-  },
-
-  // 松开停止录音
-  onTouchEnd() {
-    if (this.data.isRecording) {
-      this.stopRecording();
-    }
-  },
-
-  // 取消当前请求（用于打断）
-  cancelCurrentRequest() {
-    if (this.data.currentRequestId) {
-      // 通过WebSocket发送取消请求
-      if (this.ws && this.data.wsConnected) {
-        this.ws.send({
-          data: JSON.stringify({
-            type: 'cancel',
-            request_id: this.data.currentRequestId
-          })
-        });
-      }
-      
-      // 通过HTTP发送取消请求
-      wx.request({
-        url: `${app.globalData.apiUrl}/chat/cancel`,
-        method: 'POST',
-        header: {
-          'Authorization': `Bearer ${app.globalData.token}`,
-          'X-Tenant-ID': app.globalData.tenantId
-        },
-        data: {
-          request_id: this.data.currentRequestId
-        }
-      });
-      
-      // 清空音频队列
-      this.audioQueue = [];
-      
-      // 停止播放
-      if (this.data.isPlaying) {
-        app.stopAudio();
-        this.setData({ isPlaying: false });
-      }
+    if (lastMessage && lastMessage.type === 'assistant') {
+      lastMessage.isStreaming = false
+      lastMessage.isComplete = true
       
       this.setData({
-        isProcessing: false,
-        currentRequestId: null
-      });
+        messages: messages,
+        isProcessing: false
+      })
     }
+  },
+
+  // 添加消息
+  addMessage(message) {
+    const messages = this.data.messages
+    messages.push(message)
+    
+    this.setData({
+      messages: messages,
+      scrollToView: `msg-${message.id}`
+    })
+  },
+
+  // 更新延迟统计
+  updateLatencyStats(type, latency) {
+    const stats = { ...this.data.latencyStats }
+    stats[type] = latency
+    
+    this.setData({ latencyStats: stats })
+  },
+
+  // 更新连接质量
+  updateConnectionQuality(latency) {
+    let quality = 'good'
+    
+    if (latency > 300) {
+      quality = 'poor'
+    } else if (latency > 100) {
+      quality = 'fair'
+    }
+    
+    this.setData({ connectionQuality: quality })
+  },
+
+  // 计划重连
+  scheduleReconnect() {
+    if (this.reconnectTimer) return
+    
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null
+      this.connectWebSocket()
+    }, 3000)
+  },
+
+  // 加载历史消息
+  loadHistory() {
+    // TODO: 从本地存储或服务器加载历史消息
+    console.log('加载历史消息')
+  },
+
+  // 清理资源
+  cleanup() {
+    // 清理定时器
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    
+    // 关闭WebSocket
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+    }
+    
+    // 停止录音和播放
+    this.stopRecording()
+    this.stopPlayback()
+    
+    // 清理音频资源
+    if (this.innerAudioContext) {
+      this.innerAudioContext.destroy()
+      this.innerAudioContext = null
+    }
+  },
+
+  // 文本输入处理
+  onInputChange(e) {
+    this.setData({
+      inputValue: e.detail.value
+    })
+  },
+
+  // 发送文本消息
+  sendTextMessage() {
+    const content = this.data.inputValue.trim()
+    if (!content) return
+    
+    // 添加用户消息
+    this.addMessage({
+      id: Date.now(),
+      type: 'user',
+      content: content,
+      timestamp: new Date(),
+      modality: 'text'
+    })
+    
+    // 清空输入
+    this.setData({ inputValue: '' })
+    
+    // 发送到服务器
+    this.sendMessage({
+      type: 'text_message',
+      content: content,
+      conversation_id: app.globalData.currentConversation.id,
+      timestamp: Date.now()
+    })
+  },
+
+  // 复制消息
+  copyMessage(e) {
+    const content = e.currentTarget.dataset.content
+    wx.setClipboardData({
+      data: content,
+      success: () => {
+        wx.showToast({
+          title: '已复制',
+          icon: 'success'
+        })
+      }
+    })
   },
 
   // 查看引用详情
   viewReference(e) {
-    const index = e.currentTarget.dataset.index;
-    const reference = this.data.references[index];
+    const reference = e.currentTarget.dataset.reference
     
-    wx.navigateTo({
-      url: `/pages/reference/reference?id=${reference.chunk_id}&source=${reference.source}`
-    });
-  },
-
-  // 清空会话
-  clearConversation() {
     wx.showModal({
-      title: '确认清空',
-      content: '是否清空当前会话？',
-      success: (res) => {
-        if (res.confirm) {
-          app.createConversation();
-          this.setData({
-            messages: [],
-            references: [],
-            currentTranscript: ''
-          });
-        }
-      }
-    });
-  },
-
-  // 分享会话
-  onShareAppMessage() {
-    return {
-      title: '智能助手对话',
-      path: `/pages/chat/chat?conversationId=${app.globalData.currentConversation?.id}`
-    };
+      title: reference.title || '参考资料',
+      content: reference.content || reference.source,
+      showCancel: false,
+      confirmText: '确定'
+    })
   }
-});
+})

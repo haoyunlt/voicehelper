@@ -1,0 +1,725 @@
+# VoiceHelper Kubernetes部署配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper
+  labels:
+    name: voicehelper
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/version: "1.0.0"
+
+---
+# ConfigMap - 应用配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: voicehelper-config
+  namespace: voicehelper
+data:
+  # Go网关配置
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "info"
+  PORT: "8080"
+  
+  # 服务发现
+  ALGO_SERVICE_URL: "http://voicehelper-algo:8000"
+  VOICE_SERVICE_URL: "http://voicehelper-voice:8001"
+  
+  # SSE配置
+  SSE_MAX_STREAMS: "1000"
+  SSE_EVENT_QUEUE_SIZE: "100"
+  SSE_KEEP_ALIVE_INTERVAL: "30"
+  SSE_STREAM_TIMEOUT: "10"
+  
+  # WebSocket配置
+  WS_MAX_CONNECTIONS: "1000"
+  WS_SEND_QUEUE_SIZE: "100"
+  WS_HEARTBEAT_INTERVAL: "30"
+  WS_HEARTBEAT_TIMEOUT: "60"
+  WS_THROTTLE_LIMIT: "50"
+  
+  # Python算法服务配置
+  PYTHONPATH: "/app"
+  WORKERS: "4"
+  
+  # 数据库配置
+  POSTGRES_HOST: "voicehelper-postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "voicehelper"
+  REDIS_HOST: "voicehelper-redis"
+  REDIS_PORT: "6379"
+
+---
+# Secret - 敏感配置
+apiVersion: v1
+kind: Secret
+metadata:
+  name: voicehelper-secrets
+  namespace: voicehelper
+type: Opaque
+data:
+  # Base64编码的密钥
+  JWT_SECRET: "eW91ci1qd3Qtc2VjcmV0LWtleQ=="
+  POSTGRES_USER: "dm9pY2VoZWxwZXI="
+  POSTGRES_PASSWORD: "dm9pY2VoZWxwZXIxMjM="
+  REDIS_PASSWORD: "cmVkaXMxMjM="
+  OPENAI_API_KEY: "c2stcHJvai14eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4"
+  ARK_API_KEY: "YXJrLXh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4"
+
+---
+# PersistentVolumeClaim - 数据持久化
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: faiss-data-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: shared-storage
+
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-postgres
+  namespace: voicehelper
+  labels:
+    app: voicehelper-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: voicehelper-postgres
+  template:
+    metadata:
+      labels:
+        app: voicehelper-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: voicehelper-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: voicehelper-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_INITDB_ARGS
+          value: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: init-scripts
+        configMap:
+          name: postgres-init-scripts
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-postgres
+  namespace: voicehelper
+  labels:
+    app: voicehelper-postgres
+spec:
+  selector:
+    app: voicehelper-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-redis
+  namespace: voicehelper
+  labels:
+    app: voicehelper-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: voicehelper-redis
+  template:
+    metadata:
+      labels:
+        app: voicehelper-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: voicehelper-secrets
+              key: REDIS_PASSWORD
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - --raw
+            - incr
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - --raw
+            - incr
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-redis
+  namespace: voicehelper
+  labels:
+    app: voicehelper-redis
+spec:
+  selector:
+    app: voicehelper-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+# Go网关 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-gateway
+  namespace: voicehelper
+  labels:
+    app: voicehelper-gateway
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: voicehelper-gateway
+  template:
+    metadata:
+      labels:
+        app: voicehelper-gateway
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: gateway
+        image: voicehelper/gateway:v1.0.0
+        ports:
+        - containerPort: 8080
+          name: http
+        envFrom:
+        - configMapRef:
+            name: voicehelper-config
+        - secretRef:
+            name: voicehelper-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+
+---
+# Go网关 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-gateway
+  namespace: voicehelper
+  labels:
+    app: voicehelper-gateway
+spec:
+  selector:
+    app: voicehelper-gateway
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+
+---
+# Python算法服务 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-algo
+  namespace: voicehelper
+  labels:
+    app: voicehelper-algo
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: voicehelper-algo
+  template:
+    metadata:
+      labels:
+        app: voicehelper-algo
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: algo
+        image: voicehelper/algo:v1.0.0
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: voicehelper-config
+        - secretRef:
+            name: voicehelper-secrets
+        volumeMounts:
+        - name: faiss-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: faiss-data
+        persistentVolumeClaim:
+          claimName: faiss-data-pvc
+
+---
+# Python算法服务 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-algo
+  namespace: voicehelper
+  labels:
+    app: voicehelper-algo
+spec:
+  selector:
+    app: voicehelper-algo
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  type: ClusterIP
+
+---
+# 语音服务 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-voice
+  namespace: voicehelper
+  labels:
+    app: voicehelper-voice
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: voicehelper-voice
+  template:
+    metadata:
+      labels:
+        app: voicehelper-voice
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: voice
+        image: voicehelper/voice:v1.0.0
+        ports:
+        - containerPort: 8001
+          name: http
+        envFrom:
+        - configMapRef:
+            name: voicehelper-config
+        - secretRef:
+            name: voicehelper-secrets
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+
+---
+# 语音服务 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-voice
+  namespace: voicehelper
+  labels:
+    app: voicehelper-voice
+spec:
+  selector:
+    app: voicehelper-voice
+  ports:
+  - port: 8001
+    targetPort: 8001
+    name: http
+  type: ClusterIP
+
+---
+# 前端服务 Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voicehelper-frontend
+  namespace: voicehelper
+  labels:
+    app: voicehelper-frontend
+    version: v1.0.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: voicehelper-frontend
+  template:
+    metadata:
+      labels:
+        app: voicehelper-frontend
+        version: v1.0.0
+    spec:
+      containers:
+      - name: frontend
+        image: voicehelper/frontend:v1.0.0
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "https://api.voicehelper.ai"
+        - name: NEXT_PUBLIC_WS_URL
+          value: "wss://api.voicehelper.ai"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# 前端服务 Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: voicehelper-frontend
+  namespace: voicehelper
+  labels:
+    app: voicehelper-frontend
+spec:
+  selector:
+    app: voicehelper-frontend
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http
+  type: ClusterIP
+
+---
+# Ingress - 外部访问
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: voicehelper-ingress
+  namespace: voicehelper
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # WebSocket支持
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+spec:
+  tls:
+  - hosts:
+    - voicehelper.ai
+    - api.voicehelper.ai
+    secretName: voicehelper-tls
+  rules:
+  - host: voicehelper.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: voicehelper-frontend
+            port:
+              number: 3000
+  - host: api.voicehelper.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: voicehelper-gateway
+            port:
+              number: 8080
+
+---
+# HorizontalPodAutoscaler - 自动扩缩容
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: voicehelper-gateway-hpa
+  namespace: voicehelper
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: voicehelper-gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: voicehelper-algo-hpa
+  namespace: voicehelper
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: voicehelper-algo
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+
+---
+# PodDisruptionBudget - 中断预算
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voicehelper-gateway-pdb
+  namespace: voicehelper
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: voicehelper-gateway
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voicehelper-algo-pdb
+  namespace: voicehelper
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: voicehelper-algo

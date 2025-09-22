@@ -1,0 +1,339 @@
+name: VoiceHelper CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, v2 ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 代码质量检查
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, algo, frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Go (Backend)
+      if: matrix.component == 'backend'
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Setup Python (Algo)
+      if: matrix.component == 'algo'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Setup Node.js (Frontend)
+      if: matrix.component == 'frontend'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    # Go Backend 测试
+    - name: Go Lint and Test
+      if: matrix.component == 'backend'
+      working-directory: backend
+      run: |
+        go mod download
+        go vet ./...
+        go test -v -race -coverprofile=coverage.out ./...
+        go tool cover -html=coverage.out -o coverage.html
+        
+    # Python Algo 测试
+    - name: Python Lint and Test
+      if: matrix.component == 'algo'
+      working-directory: algo
+      run: |
+        pip install -r requirements.txt -r requirements-test.txt
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        pytest tests/ -v --cov=. --cov-report=html --cov-report=xml
+        
+    # Frontend 测试
+    - name: Frontend Lint and Test
+      if: matrix.component == 'frontend'
+      working-directory: frontend
+      run: |
+        npm ci
+        npm run lint
+        npm run type-check
+        npm run test:unit
+        npm run build
+    
+    # 上传测试覆盖率
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./${{ matrix.component }}/coverage.xml
+        flags: ${{ matrix.component }}
+        name: ${{ matrix.component }}-coverage
+
+  # 安全扫描
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 构建镜像
+  build-images:
+    runs-on: ubuntu-latest
+    needs: [lint-and-test, security-scan]
+    if: github.event_name == 'push'
+    
+    strategy:
+      matrix:
+        component: [gateway, algo, voice, frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.component }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./${{ matrix.component }}/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  # E2E 测试
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd tests/e2e
+        npm ci
+        npx playwright install --with-deps
+        
+    - name: Start test environment
+      run: |
+        docker-compose -f docker-compose.test.yml up -d
+        sleep 30  # 等待服务启动
+        
+    - name: Run E2E tests
+      run: |
+        cd tests/e2e
+        npm run test:e2e
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-test-results
+        path: tests/e2e/test-results/
+        
+    - name: Cleanup test environment
+      if: always()
+      run: docker-compose -f docker-compose.test.yml down -v
+
+  # 性能测试
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup k6
+      run: |
+        sudo gpg -k
+        sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+        
+    - name: Start test environment
+      run: |
+        docker-compose -f docker-compose.test.yml up -d
+        sleep 30
+        
+    - name: Run performance tests
+      run: |
+        cd tests/performance
+        k6 run --out json=results.json voice_load_test.js
+        
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: tests/performance/results.json
+        
+    - name: Cleanup
+      if: always()
+      run: docker-compose -f docker-compose.test.yml down -v
+
+  # 部署到测试环境
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [e2e-test, performance-test]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+        
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: '1.28.0'
+        
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
+        
+    - name: Deploy to staging
+      run: |
+        helm upgrade --install voicehelper-staging ./deploy/helm/voicehelper \
+          --namespace voicehelper-staging \
+          --create-namespace \
+          --values ./deploy/helm/voicehelper/values-staging.yaml \
+          --set image.tag=${{ github.sha }} \
+          --wait --timeout=10m
+          
+    - name: Run smoke tests
+      run: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=voicehelper -n voicehelper-staging --timeout=300s
+        curl -f https://staging-api.voicehelper.ai/health || exit 1
+
+  # 部署到生产环境
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+        
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: '1.28.0'
+        
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+        
+    - name: Deploy to production
+      run: |
+        helm upgrade --install voicehelper ./deploy/helm/voicehelper \
+          --namespace voicehelper \
+          --create-namespace \
+          --values ./deploy/helm/voicehelper/values-production.yaml \
+          --set image.tag=${{ github.ref_name }} \
+          --wait --timeout=15m
+          
+    - name: Run production smoke tests
+      run: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=voicehelper -n voicehelper --timeout=300s
+        curl -f https://api.voicehelper.ai/health || exit 1
+        
+    - name: Notify deployment
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        message: |
+          🚀 VoiceHelper ${{ github.ref_name }} deployed to production!
+          📊 Metrics: https://grafana.voicehelper.ai
+          🔍 Logs: https://kibana.voicehelper.ai
+
+  # 清理旧镜像
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+    - name: Delete old container images
+      uses: actions/delete-package-versions@v4
+      with:
+        package-name: ${{ env.IMAGE_NAME }}
+        package-type: container
+        min-versions-to-keep: 10
+        delete-only-untagged-versions: true

@@ -1,0 +1,78 @@
+# VoiceHelper 代码所有者配置
+# 详细信息: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 全局默认所有者
+* @lintao @voicehelper-team
+
+# 前端代码
+/frontend/ @frontend-team @lintao
+/frontend/audio/ @audio-team @lintao
+/frontend/components/ @ui-team @frontend-team
+
+# 后端代码
+/backend/ @backend-team @lintao
+/backend/internal/handlers/ @api-team @backend-team
+/backend/pkg/metrics/ @monitoring-team @backend-team
+
+# 算法服务
+/algo/ @ai-team @lintao
+/algo/core/ @ai-team @lintao
+/algo/services/ @ai-team @backend-team
+
+# 基础设施和部署
+/deploy/ @devops-team @lintao
+/docker-compose*.yml @devops-team
+/Dockerfile* @devops-team
+/k8s/ @devops-team
+/.github/ @devops-team @lintao
+
+# 测试代码
+/tests/ @qa-team @lintao
+/tests/e2e/ @qa-team @frontend-team
+/tests/performance/ @qa-team @backend-team
+
+# 文档
+/docs/ @docs-team @lintao
+README.md @docs-team @lintao
+*.md @docs-team
+
+# 配置文件
+/.cursorrules @lintao
+/env.* @devops-team @lintao
+/package.json @frontend-team
+/go.mod @backend-team
+/requirements*.txt @ai-team
+
+# 监控和日志
+/deploy/monitoring/ @monitoring-team @devops-team
+/scripts/monitoring/ @monitoring-team
+
+# 安全相关
+/deploy/ssl/ @security-team @devops-team
+/scripts/security/ @security-team
+
+# 移动端 (实验性)
+/mobile/ @mobile-team
+/miniprogram/ @mobile-team
+
+# 桌面端 (实验性)  
+/desktop/ @desktop-team
+
+# 浏览器扩展 (实验性)
+/browser-extension/ @extension-team
+
+# SDK
+/sdks/ @sdk-team @lintao
+/sdks/python/ @ai-team @sdk-team
+/sdks/javascript/ @frontend-team @sdk-team
+
+# 开发者门户 (实验性)
+/developer-portal/ @portal-team
+
+# 管理后台 (实验性)
+/admin/ @admin-team
+
+# 关键配置文件需要多人审查
+/.github/workflows/ @devops-team @lintao
+/deploy/k8s/production/ @devops-team @security-team @lintao
+/deploy/config/production/ @devops-team @security-team @lintao
