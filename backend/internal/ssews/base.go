@@ -1,11 +1,9 @@
-package handlers
+package ssews
 
 import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-
-	"voicehelper/backend/internal/ssews"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,8 +32,8 @@ func (h *BaseHandler) generateTraceID() string {
 	return fmt.Sprintf("trace_%s", hex.EncodeToString(bytes))
 }
 
-func (h *BaseHandler) createStreamHandler(writer ssews.StreamWriter, traceID, tenantID string) *ssews.BaseStreamHandler {
-	return &ssews.BaseStreamHandler{
+func (h *BaseHandler) createStreamHandler(writer StreamWriter, traceID, tenantID string) *BaseStreamHandler {
+	return &BaseStreamHandler{
 		Writer:   writer,
 		TraceID:  traceID,
 		TenantID: tenantID,

@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
 	"voicehelper/backend/internal/ssews"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +27,64 @@ type CancelRequest struct {
 	SessionID string `json:"session_id"`
 }
 
+// SSEWriter SSE写入器
+type SSEWriter struct {
+	w       http.ResponseWriter
+	flusher http.Flusher
+	closed  bool
+}
+
+// ErrorInfo 错误信息
+type ErrorInfo struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// NewSSEWriter 创建SSE写入器
+func NewSSEWriter(w http.ResponseWriter) *SSEWriter {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return nil
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Cache-Control")
+
+	return &SSEWriter{w: w, flusher: flusher}
+}
+
+// WriteEvent 写入事件
+func (s *SSEWriter) WriteEvent(event string, payload interface{}) error {
+	if s.closed {
+		return fmt.Errorf("writer closed")
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(s.w, "event: %s\n", event)
+	fmt.Fprintf(s.w, "data: %s\n\n", data)
+	s.flusher.Flush()
+
+	return nil
+}
+
+// WriteError 写入错误
+func (s *SSEWriter) WriteError(code, message string) error {
+	return s.WriteEvent("error", ErrorInfo{Code: code, Message: message})
+}
+
+// Close 关闭写入器
+func (s *SSEWriter) Close() error {
+	s.closed = true
+	return nil
+}
+
 func NewV2ChatHandler(algoServiceURL string) *V2ChatHandler {
 	return &V2ChatHandler{
 		BaseHandler: BaseHandler{
@@ -38,7 +95,7 @@ func NewV2ChatHandler(algoServiceURL string) *V2ChatHandler {
 
 func (h *V2ChatHandler) StreamChat(c *gin.Context) {
 	// 创建 SSE 写入器
-	writer := ssews.NewSSEWriter(c.Writer)
+	writer := NewSSEWriter(c.Writer)
 	if writer == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "SSE not supported"})
 		return

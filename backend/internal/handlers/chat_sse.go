@@ -9,30 +9,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"voicehelper/backend/pkg/types"
 )
 
 // SSE Prometheus指标
 var (
-	sseActiveStreams = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "sse_active_streams",
 		Help: "Number of active SSE streams",
 	})
 
-	sseEventssent = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "sse_events_sent_total",
 		Help: "Total SSE events sent",
 	}, []string{"event_type", "session_id"})
 
-	sseErrors = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "sse_errors_total",
 		Help: "Total SSE errors",
 	}, []string{"error_type", "session_id"})
 
-	sseStreamDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "sse_stream_duration_seconds",
 		Help:    "SSE stream duration",
 		Buckets: []float64{1, 5, 10, 30, 60, 300, 600},

@@ -10,36 +10,29 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/pion/webrtc/v3"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"voicehelper/backend/pkg/types"
 )
 
 // WebRTC Prometheus指标
 var (
-	webrtcConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "webrtc_connections_active",
 		Help: "Number of active WebRTC connections",
 	})
 
-	webrtcConnectionsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "webrtc_connections_total",
 		Help: "Total WebRTC connections",
 	}, []string{"status"})
 
-	webrtcDataChannelMessages = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "webrtc_datachannel_messages_total",
 		Help: "Total WebRTC data channel messages",
 	}, []string{"direction", "session_id"})
 
-	webrtcConnectionDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "webrtc_connection_duration_seconds",
 		Help:    "WebRTC connection duration",
 		Buckets: []float64{1, 5, 10, 30, 60, 300, 600, 1800},
 	}, []string{"session_id"})
 
-	webrtcSignalingLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "webrtc_signaling_latency_seconds",
 		Help:    "WebRTC signaling latency",
 		Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0},

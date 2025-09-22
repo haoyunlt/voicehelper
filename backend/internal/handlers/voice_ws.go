@@ -10,46 +10,37 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"voicehelper/backend/pkg/types"
 )
 
 // Prometheus指标
 var (
-	wsActiveConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "ws_active_connections",
 		Help: "Number of active WebSocket connections",
 	})
 
-	audioFramesReceived = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "audio_frames_received_total",
 		Help: "Total audio frames received",
 	}, []string{"session_id"})
 
-	audioFramesSent = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "audio_frames_sent_total",
 		Help: "Total audio frames sent",
 	}, []string{"session_id"})
 
-	wsMessageLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "ws_message_latency_seconds",
 		Help:    "WebSocket message processing latency",
 		Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0},
 	}, []string{"message_type", "session_id"})
 
-	wsErrors = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "ws_errors_total",
 		Help: "Total WebSocket errors",
 	}, []string{"error_type", "session_id"})
 
-	heartbeatsSent = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "heartbeats_sent_total",
 		Help: "Total heartbeats sent",
 	}, []string{"session_id"})
 
-	throttleEvents = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "throttle_events_total",
 		Help: "Total throttle events",
 	}, []string{"reason", "session_id"})
