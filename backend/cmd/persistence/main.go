@@ -18,7 +18,7 @@ func main() {
 	log.Println("Starting persistence system demo")
 
 	// 加载配置
-	cfg, err := config.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -34,7 +34,7 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
 		Password: cfg.Redis.Password,
-		DB:       cfg.Redis.DB,
+		DB:       cfg.Redis.Database,
 	})
 	defer redisClient.Close()
 
@@ -114,29 +114,23 @@ func demonstratePersistence(ctx context.Context, pm *persistence.PersistenceMana
 
 	// 3. 创建用户
 	user := &repository.User{
-		UserID:   "demo-user",
+		ID:       "demo-user",
 		TenantID: tenant.TenantID,
 		Username: "demo_user",
 		Nickname: "Demo User",
 		Email:    "demo@example.com",
 		Role:     "user",
 		Status:   "active",
-		Metadata: map[string]interface{}{
-			"preferences": map[string]interface{}{
-				"language": "zh-CN",
-				"theme":    "dark",
-			},
-		},
 	}
 
 	userRepo := pm.GetUserRepository()
 	if err := userRepo.Create(ctx, user); err != nil {
 		return fmt.Errorf("failed to create user: %v", err)
 	}
-	log.Printf("Created user: %s", user.UserID)
+	log.Printf("Created user: %s", user.ID)
 
 	// 4. 获取用户（带缓存）
-	retrievedUser, err := pm.GetUserWithCache(ctx, user.UserID)
+	retrievedUser, err := pm.GetUserWithCache(ctx, user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %v", err)
 	}
@@ -145,7 +139,7 @@ func demonstratePersistence(ctx context.Context, pm *persistence.PersistenceMana
 	// 5. 创建会话
 	conversation := &repository.Conversation{
 		ID:       "demo-conversation",
-		UserID:   user.UserID,
+		UserID:   user.ID,
 		TenantID: tenant.TenantID,
 		Title:    "Demo Conversation",
 		Summary:  "This is a demo conversation",
@@ -182,7 +176,7 @@ func demonstratePersistence(ctx context.Context, pm *persistence.PersistenceMana
 	// 7. 创建语音会话
 	voiceSession := &repository.VoiceSession{
 		SessionID:      "demo-voice-session",
-		UserID:         user.UserID,
+		UserID:         user.ID,
 		TenantID:       tenant.TenantID,
 		ConversationID: conversation.ID,
 		Status:         "active",

@@ -30,7 +30,10 @@ export class RingBuffer {
         }
         
         for (let i = 0; i < writeLength; i++) {
-            this.buffer[this.writeIndex] = data[i];
+            const value = data[i];
+            if (value !== undefined) {
+                this.buffer[this.writeIndex] = value;
+            }
             this.writeIndex = (this.writeIndex + 1) % this.capacity;
         }
         
@@ -51,7 +54,8 @@ export class RingBuffer {
         }
         
         for (let i = 0; i < readLength; i++) {
-            output[i] = this.buffer[this.readIndex];
+            const value = this.buffer[this.readIndex];
+            output[i] = value !== undefined ? value : 0;
             this.readIndex = (this.readIndex + 1) % this.capacity;
         }
         
@@ -64,7 +68,10 @@ export class RingBuffer {
      */
     forceWrite(data: Float32Array): void {
         for (let i = 0; i < data.length; i++) {
-            this.buffer[this.writeIndex] = data[i];
+            const value = data[i];
+            if (value !== undefined) {
+                this.buffer[this.writeIndex] = value;
+            }
             this.writeIndex = (this.writeIndex + 1) % this.capacity;
             
             // 如果缓冲区满了，移动读指针
@@ -87,7 +94,8 @@ export class RingBuffer {
         let peekIndex = (this.readIndex + offset) % this.capacity;
         
         for (let i = 0; i < peekLength; i++) {
-            output[i] = this.buffer[peekIndex];
+            const value = this.buffer[peekIndex];
+            output[i] = value !== undefined ? value : 0;
             peekIndex = (peekIndex + 1) % this.capacity;
         }
         

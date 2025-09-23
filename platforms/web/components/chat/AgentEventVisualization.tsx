@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { 
   Brain, 
-  Search, 
   Wrench, 
   CheckCircle, 
   AlertCircle, 
@@ -26,7 +25,7 @@ interface AgentEvent {
   description?: string
   data?: any
   status: 'pending' | 'running' | 'completed' | 'failed'
-  duration?: number
+  duration?: number | undefined
   metadata?: {
     step_index?: number
     total_steps?: number
@@ -45,8 +44,7 @@ interface AgentEventVisualizationProps {
 export default function AgentEventVisualization({
   events,
   className,
-  showDetails = true,
-  onEventClick
+  showDetails = true
 }: AgentEventVisualizationProps) {
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<string>('all')

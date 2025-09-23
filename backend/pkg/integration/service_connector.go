@@ -386,7 +386,7 @@ func (sc *ServiceConnector) MakeBatchRequests(ctx context.Context, requests []Ba
 
 // TestConnection tests the connection to a service
 func (sc *ServiceConnector) TestConnection(ctx context.Context, serviceID string) error {
-	service, err := sc.registry.GetService(serviceID)
+	_, err := sc.registry.GetService(serviceID)
 	if err != nil {
 		return err
 	}

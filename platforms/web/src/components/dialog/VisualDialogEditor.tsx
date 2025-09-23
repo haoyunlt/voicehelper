@@ -14,6 +14,7 @@ import ReactFlow, {
   useEdgesState,
   Controls,
   Background,
+  BackgroundVariant,
   MiniMap,
   Panel,
   NodeTypes,
@@ -55,11 +56,12 @@ export interface DialogNode extends Node {
 
 export interface DialogEdge {
   id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
+  source: string | null;
+  target: string | null;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
   type?: string;
+  animated?: boolean;
   data?: {
     condition?: string;
     probability?: number;
@@ -113,11 +115,11 @@ const VisualDialogEditor: React.FC<VisualDialogEditorProps> = ({
   onSave,
   readOnly = false,
 }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState<DialogNode>(
-    initialFlow?.nodes || []
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    (initialFlow?.nodes || []) as Node<DialogNodeData>[]
   );
-  const [edges, setEdges, onEdgesChange] = useEdgesState<DialogEdge>(
-    initialFlow?.edges || []
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    (initialFlow?.edges || []) as Edge[]
   );
   
   const [selectedNode, setSelectedNode] = useState<DialogNode | null>(null);
@@ -131,7 +133,7 @@ const VisualDialogEditor: React.FC<VisualDialogEditorProps> = ({
 
   // 监听流程变化
   useEffect(() => {
-    onFlowChange?.(nodes, edges);
+    onFlowChange?.(nodes as DialogNode[], edges as DialogEdge[]);
   }, [nodes, edges, onFlowChange]);
 
   // 连接节点
@@ -148,7 +150,7 @@ const VisualDialogEditor: React.FC<VisualDialogEditorProps> = ({
           probability: 1.0,
         },
       };
-      setEdges((eds) => addEdge(newEdge, eds));
+      setEdges((eds) => addEdge(newEdge as Edge, eds));
     },
     [setEdges]
   );
@@ -406,7 +408,7 @@ const VisualDialogEditor: React.FC<VisualDialogEditorProps> = ({
         >
           <Controls />
           <MiniMap />
-          <Background variant="dots" gap={12} size={1} />
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           
           {/* 顶部面板 */}
           <Panel position="top-center">

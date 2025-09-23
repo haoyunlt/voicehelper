@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Send, Mic, MicOff, Volume2, VolumeX, Copy, ExternalLink } from 'lucide-react'
+import { Send, Copy, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Message {
@@ -169,7 +169,9 @@ export default function StreamingChat({
             ...prev,
             references: data.references
           } : null)
-          onVoiceReferences?.(data.references)
+          // 使用作用域中的变量
+          const handleReferences = onVoiceReferences;
+          handleReferences?.(data.references)
         }
         break
         
@@ -197,7 +199,8 @@ export default function StreamingChat({
       default:
         console.log('Unknown SSE message type:', data.type)
     }
-  }, [currentStreamingMessage, onVoiceReferences])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStreamingMessage])
 
   // 初始化连接
   useEffect(() => {

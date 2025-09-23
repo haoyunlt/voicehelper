@@ -366,26 +366,13 @@ type SAMLProvider struct {
 
 // NewSAMLProvider 创建SAML提供商
 func NewSAMLProvider(config *SSOConfig, logger *logrus.Logger) (*SAMLProvider, error) {
-	keyPair, err := samlsp.DefaultSessionCookieStore()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create session store: %w", err)
-	}
-
-	idpMetadataURL, err := url.Parse(config.SSOURL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid IDP metadata URL: %w", err)
-	}
-
 	rootURL, err := url.Parse(config.RedirectURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid root URL: %w", err)
 	}
 
 	samlSP, err := samlsp.New(samlsp.Options{
-		URL:            *rootURL,
-		Key:            keyPair.PrivateKey,
-		Certificate:    keyPair.Certificate,
-		IDPMetadataURL: idpMetadataURL,
+		URL: *rootURL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SAML SP: %w", err)

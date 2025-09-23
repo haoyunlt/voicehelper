@@ -135,21 +135,21 @@ const NodeToolbar: React.FC<NodeToolbarProps> = ({
           <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Actions</h3>
           <div className="space-y-2">
             <button
-              onClick={onAddNode.bind(null, 'start')}
+              onClick={() => onAddNode('start')}
               disabled={readOnly}
               className="w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-50 rounded disabled:opacity-50"
             >
               ➕ Add Start Node
             </button>
             <button
-              onClick={onAddNode.bind(null, 'response')}
+              onClick={() => onAddNode('response')}
               disabled={readOnly}
               className="w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-50 rounded disabled:opacity-50"
             >
               💬 Add Response
             </button>
             <button
-              onClick={onAddNode.bind(null, 'condition')}
+              onClick={() => onAddNode('condition')}
               disabled={readOnly}
               className="w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-50 rounded disabled:opacity-50"
             >

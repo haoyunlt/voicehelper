@@ -92,7 +92,7 @@ export abstract class BaseStreamClient {
         'Content-Type': 'application/json',
         ...headers,
       },
-      body: config.body ? JSON.stringify(config.body) : undefined,
+      body: config.body ? JSON.stringify(config.body) : null,
     };
 
     try {

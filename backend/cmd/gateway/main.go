@@ -84,6 +84,9 @@ func main() {
 	// 创建仓库
 	conversationRepo := repository.NewPostgresConversationRepository(db.DB)
 
+	// 创建语音处理器
+	voiceHandler := &handlers.RealtimeVoiceHandler{}
+
 	// 创建API处理器
 	apiHandler := handlers.NewAPIHandler(
 		authMiddleware,
@@ -91,6 +94,7 @@ func main() {
 		tenantMiddleware,
 		conversationRepo,
 		"http://localhost:8000", // 算法服务URL
+		voiceHandler,
 	)
 
 	// 设置Gin模式

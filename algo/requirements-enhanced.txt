@@ -1,0 +1,76 @@
+# VoiceHelper Enhanced Requirements
+# 增强版依赖包，包含所有新实现的功能
+
+# 基础框架
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# 异步支持
+asyncio-mqtt==0.13.0
+aiofiles==23.2.1
+aiohttp==3.9.1
+
+# OpenAI Whisper ASR
+openai-whisper==20231117
+torch>=2.0.0
+torchaudio>=2.0.0
+transformers>=4.35.0
+
+# 语音活动检测
+webrtcvad==2.0.10
+
+# Edge-TTS 语音合成
+edge-tts==6.1.9
+
+# 增强版FAISS RAG
+faiss-cpu==1.7.4
+sentence-transformers==2.2.2
+numpy>=1.24.0
+
+# Rasa对话管理
+# 注意：Rasa需要单独安装和配置
+# pip install rasa==3.6.0
+
+# 数据处理
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# 文本处理
+jieba==0.42.1
+nltk>=3.8.0
+
+# 网络和WebSocket
+websockets==12.0
+python-socketio==5.10.0
+
+# 缓存和存储
+redis>=5.0.0
+pickle5>=0.0.12
+
+# 日志和监控
+prometheus-client==0.19.0
+structlog==23.2.0
+
+# 工具库
+python-dotenv==1.0.0
+click>=8.1.0
+rich>=13.7.0
+typer>=0.9.0
+
+# 开发和测试
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.11.0
+isort>=5.12.0
+flake8>=6.1.0
+
+# 可选：GPU支持 (如果有NVIDIA GPU)
+# torch>=2.0.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+# torchaudio>=2.0.0+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+# faiss-gpu==1.7.4
+
+# 可选：更大的嵌入模型
+# sentence-transformers[all]==2.2.2

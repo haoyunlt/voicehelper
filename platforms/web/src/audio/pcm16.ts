@@ -7,9 +7,9 @@ import { BaseAudioProcessor, BasePlayer, AudioConfig } from './base';
 
 export class PCM16Processor extends BaseAudioProcessor {
   private mediaRecorder?: MediaRecorder;
-  private audioContext?: AudioContext;
-  private workletNode?: AudioWorkletNode;
-  private stream?: MediaStream;
+  private audioContext?: AudioContext | undefined;
+  private workletNode?: AudioWorkletNode | undefined;
+  private stream?: MediaStream | undefined;
   private onDataCallback?: (data: ArrayBuffer) => void;
   
   async start(): Promise<void> {
@@ -172,7 +172,7 @@ export class PCM16Processor extends BaseAudioProcessor {
 export class PCMChunkPlayer extends BasePlayer {
   private audioContext?: AudioContext;
   private gainNode?: GainNode;
-  private currentSource?: AudioBufferSourceNode;
+  private currentSource?: AudioBufferSourceNode | undefined;
   private isInitialized = false;
   
   constructor() {
@@ -262,9 +262,9 @@ export class PCMChunkPlayer extends BasePlayer {
   private isMP3Data(data: ArrayBuffer): boolean {
     const view = new Uint8Array(data);
     // 检查MP3文件头
-    return view.length > 3 && 
-           ((view[0] === 0xFF && (view[1] & 0xE0) === 0xE0) || // MP3 frame header
-            (view[0] === 0x49 && view[1] === 0x44 && view[2] === 0x33)); // ID3 tag
+    return view.length > 3 &&
+           (((view[0] || 0) === 0xFF && ((view[1] || 0) & 0xE0) === 0xE0) || // MP3 frame header
+            ((view[0] || 0) === 0x49 && (view[1] || 0) === 0x44 && (view[2] || 0) === 0x33)); // ID3 tag
   }
   
   private async createAudioBufferFromPCM16(data: ArrayBuffer): Promise<AudioBuffer> {
@@ -282,7 +282,7 @@ export class PCMChunkPlayer extends BasePlayer {
     
     // 转换PCM16到Float32
     for (let i = 0; i < pcm16Data.length; i++) {
-      channelData[i] = pcm16Data[i] / 32768;
+      channelData[i] = (pcm16Data[i] || 0) / 32768;
     }
     
     return audioBuffer;

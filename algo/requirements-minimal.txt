@@ -1,0 +1,28 @@
+# VoiceHelper 算法服务最小依赖
+# 用于解决路径问题和基本功能
+
+# Web框架
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+requests>=2.28.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+aiofiles>=23.0.0
+python-multipart>=0.0.5
+
+# 日志和工具
+loguru>=0.7.0
+httpx>=0.24.0
+
+# SSE支持
+sse-starlette>=1.6.0
+
+# 基础科学计算
+numpy>=1.24.0
+
+# 音频处理基础
+soundfile>=0.12.0
+pydub>=0.25.1
+
+# OpenAI API
+openai>=1.0.0

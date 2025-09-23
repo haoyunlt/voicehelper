@@ -73,8 +73,8 @@ export abstract class AudioTransport {
     protected events: TransportEvents;
     protected state: ConnectionState = ConnectionState.DISCONNECTED;
     protected stats: TransportStats;
-    protected reconnectTimer?: NodeJS.Timeout;
-    protected heartbeatTimer?: NodeJS.Timeout;
+    protected reconnectTimer?: NodeJS.Timeout | undefined;
+    protected heartbeatTimer?: NodeJS.Timeout | undefined;
     protected reconnectAttempts = 0;
 
     constructor(config: TransportConfig, events: TransportEvents = {}) {
@@ -251,8 +251,8 @@ export class TransportFactory {
 
 // WebSocket实现
 export class WebSocketTransport extends AudioTransport {
-    private ws?: WebSocket;
-    private pingInterval?: NodeJS.Timeout;
+    private ws?: WebSocket | undefined;
+    private pingInterval?: NodeJS.Timeout | undefined;
 
     async connect(): Promise<void> {
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -276,7 +276,7 @@ export class WebSocketTransport extends AudioTransport {
                     resolve();
                 };
 
-                this.ws.onclose = (event) => {
+                this.ws.onclose = (_event) => {
                     clearTimeout(timeout);
                     this.stopPing();
                     
@@ -419,9 +419,9 @@ export class WebSocketTransport extends AudioTransport {
 
 // WebRTC实现 (基础框架)
 export class WebRTCTransport extends AudioTransport {
-    private peerConnection?: RTCPeerConnection;
-    private dataChannel?: RTCDataChannel;
-    private signalingClient?: WebSocket;
+    private peerConnection?: RTCPeerConnection | undefined;
+    private dataChannel?: RTCDataChannel | undefined;
+    private signalingClient?: WebSocket | undefined;
 
     async connect(): Promise<void> {
         this.setState(ConnectionState.CONNECTING);
@@ -633,7 +633,7 @@ export class WebRTCTransport extends AudioTransport {
 
 // SSE实现 (仅用于文本流)
 export class SSETransport extends AudioTransport {
-    private eventSource?: EventSource;
+    private eventSource?: EventSource | undefined;
 
     async connect(): Promise<void> {
         this.setState(ConnectionState.CONNECTING);
@@ -665,7 +665,7 @@ export class SSETransport extends AudioTransport {
         this.setState(ConnectionState.DISCONNECTED);
     }
 
-    async sendAudioFrame(frame: AudioFrame): Promise<void> {
+    async sendAudioFrame(_frame: AudioFrame): Promise<void> {
         throw new Error('SSE does not support audio frame sending');
     }
 

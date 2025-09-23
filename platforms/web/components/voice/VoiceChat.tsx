@@ -228,7 +228,8 @@ export default function VoiceChat({
       case 'tts_chunk':
         // 处理TTS音频块
         if (data.audio) {
-          queueAudioForPlayback(data.audio)
+          // TODO: 实现音频播放队列
+          console.log('Received TTS audio chunk:', data.audio.length)
         }
         break
         
@@ -272,7 +273,7 @@ export default function VoiceChat({
     // 转换为PCM16
     const pcm16 = new Int16Array(audioData.length)
     for (let i = 0; i < audioData.length; i++) {
-      pcm16[i] = Math.max(-32768, Math.min(32767, audioData[i] * 32767))
+      pcm16[i] = Math.max(-32768, Math.min(32767, (audioData[i] || 0) * 32767))
     }
 
     // 构建二进制帧头部（20字节）

@@ -1,10 +1,6 @@
--- 聊天机器人数据库架构
+-- VoiceHelper 数据库架构
 -- Version: 1.1.0
 -- Sprint 1: 生产就绪
-
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS chatbot_prod;
-USE chatbot_prod;
 
 -- 启用必要的扩展
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

@@ -43,7 +43,10 @@ export default function DatasetsPage() {
     const formData = new FormData()
     
     for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i])
+      const file = files[i]
+      if (file) {
+        formData.append('files', file)
+      }
     }
     formData.append('dataset_id', 'default')
 

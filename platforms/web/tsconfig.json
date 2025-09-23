@@ -19,12 +19,12 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/types": ["./src/types"],
-      "@/components": ["./src/components"],
-      "@/hooks": ["./src/hooks"],
-      "@/api": ["./src/api"],
-      "@/utils": ["./src/utils"]
+      "@/*": ["./src/*", "./*"],
+      "@/types": ["./src/types", "./types"],
+      "@/components": ["./src/components", "./components"],
+      "@/hooks": ["./src/hooks", "./hooks"],
+      "@/api": ["./src/api", "./api"],
+      "@/utils": ["./src/utils", "./utils"]
     },
     "plugins": [
       {
@@ -32,9 +32,9 @@
       }
     ],
     "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true

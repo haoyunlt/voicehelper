@@ -53,8 +53,18 @@ export class VoiceClient {
     // State
     private isRecording = false;
     private isPlaying = false;
-    private isConnected = false;
-    private sessionId = '';
+    private _isConnected = false;
+    
+    // Getter for isConnected
+    get isConnected(): boolean {
+        return this._isConnected;
+    }
+    private _sessionId = '';
+    
+    // Getter for sessionId
+    get sessionId(): string {
+        return this._sessionId;
+    }
     
     // Metrics
     private metrics: VoiceMetrics = {
@@ -86,7 +96,7 @@ export class VoiceClient {
         
         this.events = events;
         this.jitterBuffer = new JitterBuffer(this.config.bufferConfig);
-        this.sessionId = this.generateSessionId();
+        this._sessionId = this.generateSessionId();
         
         console.log('VoiceClient initialized:', this.config);
     }
@@ -118,7 +128,7 @@ export class VoiceClient {
             // 连接播放器到输出
             this.playerProcessor.connect(this.audioContext.destination);
             
-            this.isConnected = true;
+            this._isConnected = true;
             this.events.onConnected?.();
             
             console.log('VoiceClient initialized successfully');
@@ -301,7 +311,7 @@ export class VoiceClient {
             this.audioContext = null;
         }
         
-        this.isConnected = false;
+        this._isConnected = false;
         this.events.onDisconnected?.();
         
         console.log('VoiceClient disconnected');
@@ -387,7 +397,7 @@ export class VoiceClient {
     }
     
     private updateMetrics(): void {
-        const bufferStats = this.jitterBuffer.getStats();
+        // const bufferStats = this.jitterBuffer.getStats(); // 未使用
         
         this.metrics.e2eLatency = this.metrics.captureLatency + 
                                  this.metrics.networkLatency + 

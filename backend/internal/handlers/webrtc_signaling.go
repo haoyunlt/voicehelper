@@ -6,8 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"voicehelper/backend/pkg/middleware"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -92,9 +90,7 @@ func (h *WebRTCSignalingHandler) HandleWebRTCSignaling(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	// 创建指标包装器
-	metricsWrapper := middleware.NewWSMetricsWrapper("/api/v2/webrtc/signaling")
-	defer metricsWrapper.Close()
+	// WebSocket 连接建立
 
 	// 提取客户端信息
 	traceID, tenantID := h.extractTraceInfo(c)
@@ -144,10 +140,8 @@ func (h *WebRTCSignalingHandler) HandleWebRTCSignaling(c *gin.Context) {
 
 	if err := conn.WriteJSON(welcomeMsg); err != nil {
 		logrus.WithError(err).Error("Failed to send welcome message")
-		metricsWrapper.RecordError("send_error")
 		return
 	}
-	metricsWrapper.RecordMessageSent("connected")
 
 	// 通知房间内其他客户端
 	room.broadcast(SignalingMessage{
@@ -162,8 +156,8 @@ func (h *WebRTCSignalingHandler) HandleWebRTCSignaling(c *gin.Context) {
 	}, clientID)
 
 	// 启动消息处理协程
-	go h.handleClientWrite(client, metricsWrapper)
-	h.handleClientRead(client, metricsWrapper)
+	go h.handleClientWrite(client)
+	h.handleClientRead(client)
 
 	// 清理
 	room.removeClient(clientID)
@@ -171,7 +165,7 @@ func (h *WebRTCSignalingHandler) HandleWebRTCSignaling(c *gin.Context) {
 }
 
 // handleClientRead 处理客户端读取
-func (h *WebRTCSignalingHandler) handleClientRead(client *Client, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleClientRead(client *Client) {
 	defer client.Conn.Close()
 
 	client.Conn.SetReadLimit(512)
@@ -188,12 +182,10 @@ func (h *WebRTCSignalingHandler) handleClientRead(client *Client, metricsWrapper
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				logrus.WithError(err).Error("WebRTC signaling read error")
-				metricsWrapper.RecordError("read_error")
 			}
 			break
 		}
 
-		metricsWrapper.RecordMessageReceived(msg.Type)
 		client.LastActive = time.Now()
 		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
@@ -203,12 +195,12 @@ func (h *WebRTCSignalingHandler) handleClientRead(client *Client, metricsWrapper
 		msg.Timestamp = time.Now().Unix()
 
 		// 处理信令消息
-		h.handleSignalingMessage(client, msg, metricsWrapper)
+		h.handleSignalingMessage(client, msg)
 	}
 }
 
 // handleClientWrite 处理客户端写入
-func (h *WebRTCSignalingHandler) handleClientWrite(client *Client, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleClientWrite(client *Client) {
 	ticker := time.NewTicker(54 * time.Second)
 	defer ticker.Stop()
 
@@ -223,7 +215,6 @@ func (h *WebRTCSignalingHandler) handleClientWrite(client *Client, metricsWrappe
 
 			if err := client.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				logrus.WithError(err).Error("Failed to write WebRTC signaling message")
-				metricsWrapper.RecordError("write_error")
 				return
 			}
 
@@ -237,16 +228,16 @@ func (h *WebRTCSignalingHandler) handleClientWrite(client *Client, metricsWrappe
 }
 
 // handleSignalingMessage 处理信令消息
-func (h *WebRTCSignalingHandler) handleSignalingMessage(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleSignalingMessage(client *Client, msg SignalingMessage) {
 	switch msg.Type {
 	case "offer", "answer":
-		h.handleSessionDescription(client, msg, metricsWrapper)
+		h.handleSessionDescription(client, msg)
 	case "ice_candidate":
-		h.handleICECandidate(client, msg, metricsWrapper)
+		h.handleICECandidate(client, msg)
 	case "join_room":
-		h.handleJoinRoom(client, msg, metricsWrapper)
+		h.handleJoinRoom(client, msg)
 	case "leave_room":
-		h.handleLeaveRoom(client, msg, metricsWrapper)
+		h.handleLeaveRoom(client, msg)
 	case "ping":
 		h.sendToClient(client, SignalingMessage{
 			Type:      "pong",
@@ -254,7 +245,7 @@ func (h *WebRTCSignalingHandler) handleSignalingMessage(client *Client, msg Sign
 			To:        client.ID,
 			RoomID:    client.Room.ID,
 			Timestamp: time.Now().Unix(),
-		}, metricsWrapper)
+		})
 	default:
 		logrus.WithField("message_type", msg.Type).Warn("Unknown WebRTC signaling message type")
 		h.sendToClient(client, SignalingMessage{
@@ -267,12 +258,12 @@ func (h *WebRTCSignalingHandler) handleSignalingMessage(client *Client, msg Sign
 				"error":   "unknown_message_type",
 				"message": "Unknown message type: " + msg.Type,
 			},
-		}, metricsWrapper)
+		})
 	}
 }
 
 // handleSessionDescription 处理会话描述（offer/answer）
-func (h *WebRTCSignalingHandler) handleSessionDescription(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleSessionDescription(client *Client, msg SignalingMessage) {
 	if msg.To == "" {
 		// 广播给房间内其他客户端
 		client.Room.broadcast(msg, client.ID)
@@ -280,11 +271,10 @@ func (h *WebRTCSignalingHandler) handleSessionDescription(client *Client, msg Si
 		// 发送给指定客户端
 		client.Room.sendToClient(msg.To, msg)
 	}
-	metricsWrapper.RecordMessageSent(msg.Type)
 }
 
 // handleICECandidate 处理ICE候选者
-func (h *WebRTCSignalingHandler) handleICECandidate(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleICECandidate(client *Client, msg SignalingMessage) {
 	if msg.To == "" {
 		// 广播给房间内其他客户端
 		client.Room.broadcast(msg, client.ID)
@@ -292,11 +282,10 @@ func (h *WebRTCSignalingHandler) handleICECandidate(client *Client, msg Signalin
 		// 发送给指定客户端
 		client.Room.sendToClient(msg.To, msg)
 	}
-	metricsWrapper.RecordMessageSent("ice_candidate")
 }
 
 // handleJoinRoom 处理加入房间
-func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMessage) {
 	roomID, ok := msg.Data.(string)
 	if !ok {
 		h.sendToClient(client, SignalingMessage{
@@ -308,7 +297,7 @@ func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMes
 				"error":   "invalid_room_id",
 				"message": "Invalid room ID",
 			},
-		}, metricsWrapper)
+		})
 		return
 	}
 
@@ -331,7 +320,7 @@ func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMes
 			"room_id": roomID,
 			"clients": newRoom.getClientIDs(),
 		},
-	}, metricsWrapper)
+	})
 
 	// 通知房间内其他客户端
 	newRoom.broadcast(SignalingMessage{
@@ -347,7 +336,7 @@ func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMes
 }
 
 // handleLeaveRoom 处理离开房间
-func (h *WebRTCSignalingHandler) handleLeaveRoom(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) handleLeaveRoom(client *Client, msg SignalingMessage) {
 	roomID := client.Room.ID
 	client.Room.removeClient(client.ID)
 
@@ -360,21 +349,19 @@ func (h *WebRTCSignalingHandler) handleLeaveRoom(client *Client, msg SignalingMe
 		Data: map[string]interface{}{
 			"room_id": roomID,
 		},
-	}, metricsWrapper)
+	})
 }
 
 // sendToClient 发送消息给客户端
-func (h *WebRTCSignalingHandler) sendToClient(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+func (h *WebRTCSignalingHandler) sendToClient(client *Client, msg SignalingMessage) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to marshal signaling message")
-		metricsWrapper.RecordError("marshal_error")
 		return
 	}
 
 	select {
 	case client.Send <- data:
-		metricsWrapper.RecordMessageSent(msg.Type)
 	default:
 		close(client.Send)
 		client.Room.removeClient(client.ID)

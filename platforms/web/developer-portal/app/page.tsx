@@ -122,21 +122,21 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/docs/quickstart"
+                href={"/docs/quickstart" as any}
                 className="inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 <RocketLaunchIcon className="w-5 h-5 mr-2" />
                 快速开始
               </Link>
               <Link
-                href="/docs/api"
+                href={"/docs/api" as any}
                 className="inline-flex items-center px-8 py-4 text-lg font-medium text-gray-300 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all duration-200 border border-white/20"
               >
                 <DocumentTextIcon className="w-5 h-5 mr-2" />
                 API文档
               </Link>
               <Link
-                href="/playground"
+                href={"/playground" as any}
                 className="inline-flex items-center px-8 py-4 text-lg font-medium text-gray-300 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all duration-200 border border-white/20"
               >
                 <PlayIcon className="w-5 h-5 mr-2" />
@@ -254,7 +254,7 @@ export default function HomePage() {
                 </div>
                 <div className="mt-4">
                   <Link
-                    href={`/docs/sdk/${example.language === 'bash' ? 'rest-api' : example.language}`}
+                    href={`/docs/sdk/${example.language === 'bash' ? 'rest-api' : example.language}` as any}
                     className="text-blue-400 hover:text-blue-300 text-sm font-medium"
                   >
                     查看完整文档 →
@@ -282,13 +282,13 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/auth/signup"
+                href={"/auth/signup" as any}
                 className="inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 免费注册
               </Link>
               <Link
-                href="/docs"
+                href={"/docs" as any}
                 className="inline-flex items-center px-8 py-4 text-lg font-medium text-gray-300 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all duration-200 border border-white/20"
               >
                 浏览文档

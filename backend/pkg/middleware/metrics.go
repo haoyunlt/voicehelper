@@ -25,13 +25,13 @@ func MetricsMiddleware() gin.HandlerFunc {
 		}
 
 		// 增加进行中的请求计数
-		collector.IncHTTPInFlight(method, path)
+		collector.IncHTTPInFlight()
 
 		// 处理请求
 		c.Next()
 
 		// 减少进行中的请求计数
-		collector.DecHTTPInFlight(method, path)
+		collector.DecHTTPInFlight()
 
 		// 记录请求指标
 		duration := time.Since(start)
@@ -46,7 +46,7 @@ func MetricsMiddleware() gin.HandlerFunc {
 			if c.Writer.Status() >= 500 {
 				errorType = "server_error"
 			}
-			collector.IncErrors(errorType, "http", tenantID)
+			collector.IncErrors(errorType, tenantID)
 		}
 	}
 }
@@ -90,7 +90,7 @@ func ConversationMetricsMiddleware() gin.HandlerFunc {
 
 		// 只在成功时记录指标
 		if c.Writer.Status() < 400 {
-			collector.IncConversations(action, tenantID, userID)
+			collector.IncConversations(action, tenantID)
 		}
 	}
 }
@@ -110,7 +110,7 @@ func AgentMetricsMiddleware() gin.HandlerFunc {
 		// 检查是否是Agent流式连接
 		if path == "/api/v2/agent/stream" {
 			collector.IncAgentStreamConnections(tenantID)
-			defer collector.DecAgentStreamConnections(tenantID)
+			defer collector.DecAgentStreamConnections()
 		}
 
 		c.Next()
@@ -145,7 +145,7 @@ func DocumentSearchMetricsMiddleware() gin.HandlerFunc {
 		}
 
 		collector.IncDocumentSearches(status, tenantID)
-		collector.ObserveDocumentSearchDuration(tenantID, duration)
+		collector.ObserveDocumentSearchDuration(status, tenantID, duration)
 	}
 }
 
@@ -165,7 +165,7 @@ func WebSocketMetricsMiddleware(connectionType string) gin.HandlerFunc {
 		c.Next()
 
 		// WebSocket连接关闭时减少计数
-		collector.DecWebSocketConnections(connectionType, tenantID)
+		collector.DecWebSocketConnections()
 	}
 }
 
@@ -197,13 +197,13 @@ func VoiceProcessingMetricsMiddleware() gin.HandlerFunc {
 		}
 
 		collector.IncVoiceSessions(status, tenantID)
-		collector.ObserveVoiceSessionDuration(tenantID, duration)
+		collector.ObserveVoiceSessionDuration(status, tenantID, duration)
 	}
 }
 
 // SystemMetricsCollector 系统指标收集器
 type SystemMetricsCollector struct {
-	collector *metrics.MetricsCollector
+	collector metrics.MetricsCollector
 	stopCh    chan struct{}
 }
 
@@ -245,13 +245,11 @@ func (s *SystemMetricsCollector) updateSystemMetrics() {
 	// 这里应该实现实际的系统指标收集
 	// 为了简化，使用模拟数据
 
-	// 模拟内存使用
-	s.collector.SetMemoryUsage("heap", 1024*1024*100) // 100MB
-	s.collector.SetMemoryUsage("stack", 1024*1024*10) // 10MB
+	// 模拟内存使用 (总计)
+	s.collector.SetMemoryUsage(1024 * 1024 * 110) // 110MB 总计
 
-	// 模拟CPU使用
-	s.collector.SetCPUUsage("user", 25.5)
-	s.collector.SetCPUUsage("system", 10.2)
+	// 模拟CPU使用 (总计)
+	s.collector.SetCPUUsage(35.7) // 35.7% 总计
 
 	// 模拟Goroutine数量
 	s.collector.SetGoroutinesCount(150)

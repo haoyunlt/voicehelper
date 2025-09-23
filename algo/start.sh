@@ -9,24 +9,38 @@ set -e
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}[INFO]${NC} 启动 VoiceHelper Algorithm Service..."
 
 # 设置工作目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$SCRIPT_DIR"
 
 # 设置Python路径
-export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+export PYTHONPATH="$SCRIPT_DIR:$PROJECT_ROOT:$PYTHONPATH"
 echo -e "${GREEN}[INFO]${NC} PYTHONPATH设置为: $PYTHONPATH"
 
-# 检查虚拟环境
-if [ -d "../voice_venv" ]; then
-    echo -e "${GREEN}[INFO]${NC} 激活虚拟环境..."
+# 检查虚拟环境（优先使用本地虚拟环境）
+if [ -d "$SCRIPT_DIR/algo_venv" ]; then
+    echo -e "${GREEN}[INFO]${NC} 激活本地虚拟环境..."
+    source "$SCRIPT_DIR/algo_venv/bin/activate"
+elif [ -d "../voice_venv" ]; then
+    echo -e "${GREEN}[INFO]${NC} 激活共享虚拟环境..."
     source ../voice_venv/bin/activate
 else
     echo -e "${YELLOW}[WARNING]${NC} 虚拟环境不存在，使用系统Python"
+    echo -e "${BLUE}[HINT]${NC} 运行 ./setup_venv.sh 创建虚拟环境"
+fi
+
+# 加载环境变量
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    echo -e "${GREEN}[INFO]${NC} 加载环境变量..."
+    set -a
+    source "$SCRIPT_DIR/.env"
+    set +a
 fi
 
 # 检查依赖
@@ -51,18 +65,36 @@ echo -e "  - 日志级别: $LOG_LEVEL"
 echo -e "  - 环境: $ENVIRONMENT"
 echo -e "  - AI模式: $AI_MODE"
 
-# 选择启动模式
-if [ "$AI_MODE" = "full" ]; then
+# 创建必要目录
+mkdir -p logs data models
+
+# 选择启动模式和文件
+if [ -f "app/v2_api.py" ]; then
+    MAIN_FILE="app/v2_api.py"
+    echo -e "${GREEN}[INFO]${NC} 使用V2 API版本..."
+elif [ -f "app/main.py" ]; then
+    MAIN_FILE="app/main.py"
+    echo -e "${GREEN}[INFO]${NC} 使用主程序版本..."
+elif [ "$AI_MODE" = "full" ] && [ -f "app/main_full.py" ]; then
     echo -e "${GREEN}[INFO]${NC} 检查完整AI依赖..."
     python -c "import torch, transformers, sentence_transformers, langchain, faiss" 2>/dev/null && {
+        MAIN_FILE="app/main_full.py"
         echo -e "${GREEN}[INFO]${NC} 启动完整AI功能版本..."
-        exec python app/main_full.py
     } || {
+        MAIN_FILE="app/main_simple.py"
         echo -e "${YELLOW}[WARNING]${NC} 完整AI依赖未安装，回退到简化版本"
         echo -e "${YELLOW}[WARNING]${NC} 要使用完整功能，请运行: pip install -r requirements-full.txt"
-        exec python app/main_simple.py
     }
-else
+elif [ -f "app/main_simple.py" ]; then
+    MAIN_FILE="app/main_simple.py"
     echo -e "${GREEN}[INFO]${NC} 启动简化版本..."
-    exec python app/main_simple.py
+else
+    echo -e "${RED}[ERROR]${NC} 未找到可启动的主程序文件"
+    exit 1
 fi
+
+echo -e "${GREEN}[INFO]${NC} 启动文件: $MAIN_FILE"
+echo -e "${GREEN}[INFO]${NC} 服务地址: http://$HOST:$PORT"
+
+# 启动服务
+exec python "$MAIN_FILE"

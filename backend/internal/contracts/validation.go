@@ -141,11 +141,11 @@ func (v *Validator) validateMin(field string, value interface{}, minStr string, 
 	switch v := value.(type) {
 	case string:
 		if utf8.RuneCountInString(v) < min {
-			return fmt.Errorf(v.getMessage("min", field, messages, "%s must be at least %d characters"))
+			return fmt.Errorf("%s must be at least %d characters", field, min)
 		}
 	case int, int32, int64:
 		if toInt(v) < min {
-			return fmt.Errorf(v.getMessage("min", field, messages, "%s must be at least %d"))
+			return fmt.Errorf("%s must be at least %d", field, min)
 		}
 	}
 
@@ -163,11 +163,11 @@ func (v *Validator) validateMax(field string, value interface{}, maxStr string, 
 	switch v := value.(type) {
 	case string:
 		if utf8.RuneCountInString(v) > max {
-			return fmt.Errorf(v.getMessage("max", field, messages, "%s must be at most %d characters"))
+			return fmt.Errorf("%s must be at most %d characters", field, max)
 		}
 	case int, int32, int64:
 		if toInt(v) > max {
-			return fmt.Errorf(v.getMessage("max", field, messages, "%s must be at most %d"))
+			return fmt.Errorf("%s must be at most %d", field, max)
 		}
 	}
 

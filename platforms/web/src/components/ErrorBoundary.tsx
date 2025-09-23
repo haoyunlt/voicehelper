@@ -22,7 +22,7 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  private logger = getLogger('ErrorBoundary');
+  private logger = getLogger();
 
   constructor(props: Props) {
     super(props);
@@ -40,7 +40,9 @@ class ErrorBoundary extends Component<Props, State> {
     this.setState({ errorInfo });
 
     // 记录错误日志
-    this.logger.exception('React组件错误', error, {
+    this.logger.error('React组件错误', {
+      error: error.message,
+      stack: error.stack,
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
       url: typeof window !== 'undefined' ? window.location.href : '',

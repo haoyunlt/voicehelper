@@ -114,7 +114,7 @@ export class FlowValidation {
 
     // 检查边的源节点和目标节点是否存在
     edges.forEach(edge => {
-      if (!nodeIds.has(edge.source)) {
+      if (edge.source && !nodeIds.has(edge.source)) {
         errors.push({
           type: 'error',
           message: `Edge ${edge.id} references non-existent source node: ${edge.source}`,
@@ -123,7 +123,7 @@ export class FlowValidation {
         });
       }
       
-      if (!nodeIds.has(edge.target)) {
+      if (edge.target && !nodeIds.has(edge.target)) {
         errors.push({
           type: 'error',
           message: `Edge ${edge.id} references non-existent target node: ${edge.target}`,
@@ -352,7 +352,7 @@ export class FlowValidation {
     const startNodes = nodes.filter(node => node.data.type === 'start');
     if (startNodes.length === 0) return errors;
 
-    const reachableNodes = this.getReachableNodes(startNodes[0].id, edges);
+    const reachableNodes = this.getReachableNodes(startNodes[0]?.id || '', edges);
     
     nodes.forEach(node => {
       if (!reachableNodes.has(node.id) && node.data.type !== 'start') {
@@ -380,7 +380,7 @@ export class FlowValidation {
       
       const outgoingEdges = edges.filter(edge => edge.source === currentId);
       outgoingEdges.forEach(edge => {
-        if (!reachable.has(edge.target)) {
+        if (edge.target && !reachable.has(edge.target)) {
           queue.push(edge.target);
         }
       });
@@ -412,7 +412,7 @@ export class FlowValidation {
       
       const outgoingEdges = edges.filter(edge => edge.source === nodeId);
       for (const edge of outgoingEdges) {
-        if (dfs(edge.target, path)) {
+        if (edge.target && dfs(edge.target, path)) {
           // 如果找到循环，继续搜索其他路径
         }
       }

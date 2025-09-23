@@ -8,10 +8,10 @@
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { initLogger, getLogger, pageView } from '@/lib/logger';
-import type VoiceHelperLogger from '@/lib/logger';
+import type { Logger } from '@/lib/logger';
 
 interface LoggerContextType {
-  logger: VoiceHelperLogger;
+  logger: Logger;
 }
 
 const LoggerContext = createContext<LoggerContextType | null>(null);

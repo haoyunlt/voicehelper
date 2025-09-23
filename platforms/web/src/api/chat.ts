@@ -38,7 +38,9 @@ export class ChatSSEClient extends BaseStreamClient {
     const timeoutId = setTimeout(() => controller.abort(), options.timeout || 30000);
     
     // 跟踪活跃连接
-    this.activeConnections.set(request.session_id, controller);
+    if (request.session_id) {
+      this.activeConnections.set(request.session_id, controller);
+    }
     
     try {
       await this.retryWithBackoff(async () => {
@@ -71,7 +73,9 @@ export class ChatSSEClient extends BaseStreamClient {
       }
     } finally {
       clearTimeout(timeoutId);
-      this.activeConnections.delete(request.session_id);
+      if (request.session_id) {
+        this.activeConnections.delete(request.session_id);
+      }
     }
   }
   
@@ -115,7 +119,7 @@ export class ChatSSEClient extends BaseStreamClient {
     let i = 0;
     
     while (i < lines.length) {
-      const line = lines[i].trim();
+      const line = lines[i]?.trim() || '';
       
       if (line === '') {
         // 空行表示事件结束
@@ -217,9 +221,9 @@ export class ChatSSEClient extends BaseStreamClient {
   
   // 取消所有活跃连接
   cancelAllConnections(): void {
-    for (const [sessionId, controller] of this.activeConnections) {
+    this.activeConnections.forEach((controller, sessionId) => {
       controller.abort();
-    }
+    });
     this.activeConnections.clear();
   }
 }

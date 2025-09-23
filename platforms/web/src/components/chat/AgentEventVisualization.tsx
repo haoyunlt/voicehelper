@@ -26,7 +26,7 @@ interface AgentEvent {
   description?: string
   data?: any
   status: 'pending' | 'running' | 'completed' | 'failed'
-  duration?: number
+  duration?: number | undefined
   metadata?: {
     step_index?: number
     total_steps?: number
@@ -313,7 +313,7 @@ export const updateEventStatus = (
 ): AgentEvent[] => {
   return events.map(event => 
     event.id === eventId 
-      ? { ...event, status, duration }
+      ? { ...event, status, duration: duration || event.duration }
       : event
   )
 }

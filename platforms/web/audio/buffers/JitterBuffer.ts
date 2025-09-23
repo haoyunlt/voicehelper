@@ -185,7 +185,8 @@ export class JitterBuffer {
     
     private findInsertPosition(timestamp: number): number {
         for (let i = 0; i < this.buffer.length; i++) {
-            if (this.buffer[i].timestamp > timestamp) {
+            const packet = this.buffer[i];
+            if (packet && packet.timestamp > timestamp) {
                 return i;
             }
         }

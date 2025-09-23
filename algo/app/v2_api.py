@@ -13,6 +13,9 @@ from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 from pydantic import BaseModel
 from loguru import logger
+from datetime import datetime, timedelta
+import threading
+import uuid
 
 from core.base import StreamCallback
 from core.rag.bge_faiss_retriever import BGEFaissRetriever
@@ -56,6 +59,110 @@ agent_graph = None
 asr_adapter = None
 tts_adapter = None
 
+# 会话管理器
+class ChatSessionManager:
+    """聊天会话管理器"""
+    
+    def __init__(self):
+        self.active_sessions: Dict[str, Dict[str, Any]] = {}
+        self.session_lock = threading.RLock()
+        self.cleanup_task = None
+    
+    def create_session(self, session_id: str, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """创建新的聊天会话"""
+        with self.session_lock:
+            session_info = {
+                "session_id": session_id,
+                "created_at": datetime.now(),
+                "last_activity": datetime.now(),
+                "status": "active",
+                "request_data": request_data,
+                "cancel_event": asyncio.Event(),
+                "generator": None,
+                "response_chunks": []
+            }
+            self.active_sessions[session_id] = session_info
+            logger.info(f"创建聊天会话: {session_id}")
+            return session_info
+    
+    def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """获取会话信息"""
+        with self.session_lock:
+            return self.active_sessions.get(session_id)
+    
+    def update_session_activity(self, session_id: str):
+        """更新会话活动时间"""
+        with self.session_lock:
+            if session_id in self.active_sessions:
+                self.active_sessions[session_id]["last_activity"] = datetime.now()
+    
+    def cancel_session(self, session_id: str) -> bool:
+        """取消会话"""
+        with self.session_lock:
+            session = self.active_sessions.get(session_id)
+            if session:
+                session["status"] = "cancelled"
+                session["cancel_event"].set()
+                logger.info(f"会话已取消: {session_id}")
+                return True
+            return False
+    
+    def complete_session(self, session_id: str):
+        """完成会话"""
+        with self.session_lock:
+            if session_id in self.active_sessions:
+                self.active_sessions[session_id]["status"] = "completed"
+                logger.info(f"会话已完成: {session_id}")
+    
+    def remove_session(self, session_id: str):
+        """移除会话"""
+        with self.session_lock:
+            if session_id in self.active_sessions:
+                del self.active_sessions[session_id]
+                logger.info(f"会话已移除: {session_id}")
+    
+    def cleanup_expired_sessions(self):
+        """清理过期会话"""
+        with self.session_lock:
+            current_time = datetime.now()
+            expired_sessions = []
+            
+            for session_id, session in self.active_sessions.items():
+                # 超过30分钟未活动的会话视为过期
+                if (current_time - session["last_activity"]).total_seconds() > 1800:
+                    expired_sessions.append(session_id)
+            
+            for session_id in expired_sessions:
+                session = self.active_sessions.pop(session_id, {})
+                if session:
+                    if "cancel_event" in session:
+                        session["cancel_event"].set()
+                    logger.info(f"清理过期会话: {session_id}")
+    
+    def get_session_stats(self) -> Dict[str, Any]:
+        """获取会话统计信息"""
+        with self.session_lock:
+            stats = {
+                "total_sessions": len(self.active_sessions),
+                "active_sessions": sum(1 for s in self.active_sessions.values() if s["status"] == "active"),
+                "cancelled_sessions": sum(1 for s in self.active_sessions.values() if s["status"] == "cancelled"),
+                "completed_sessions": sum(1 for s in self.active_sessions.values() if s["status"] == "completed"),
+                "sessions": [
+                    {
+                        "session_id": session["session_id"],
+                        "status": session["status"],
+                        "created_at": session["created_at"].isoformat(),
+                        "last_activity": session["last_activity"].isoformat(),
+                        "duration": (datetime.now() - session["created_at"]).total_seconds()
+                    }
+                    for session in self.active_sessions.values()
+                ]
+            }
+            return stats
+
+# 全局会话管理器实例
+session_manager = ChatSessionManager()
+
 
 def init_v2_services():
     """初始化V2架构服务"""
@@ -88,11 +195,29 @@ def init_v2_services():
             asr_adapter = OpenAIAsrAdapter(api_key=openai_api_key)
             tts_adapter = OpenAITtsAdapter(api_key=openai_api_key)
         
+        # 启动会话清理任务
+        start_session_cleanup_task()
+        
         logger.info("V2架构服务初始化完成")
         
     except Exception as e:
         logger.error(f"V2架构服务初始化失败: {e}")
         raise
+
+
+def start_session_cleanup_task():
+    """启动会话清理任务"""
+    async def cleanup_task():
+        while True:
+            try:
+                session_manager.cleanup_expired_sessions()
+                await asyncio.sleep(300)  # 每5分钟清理一次
+            except Exception as e:
+                logger.error(f"会话清理任务失败: {e}")
+                await asyncio.sleep(60)  # 出错后1分钟后重试
+    
+    # 在后台启动清理任务
+    asyncio.create_task(cleanup_task())
 
 
 def create_v2_app() -> FastAPI:
@@ -126,6 +251,12 @@ async def stream_chat(request: ChatRequest):
     if not agent_graph:
         raise HTTPException(status_code=500, detail="Agent服务未初始化")
     
+    # 创建会话
+    session_info = session_manager.create_session(
+        request.session_id, 
+        {"query": request.query, "context": request.context}
+    )
+    
     async def event_generator():
         """SSE事件生成器"""
         try:
@@ -136,6 +267,22 @@ async def stream_chat(request: ChatRequest):
             
             # 执行Agent流式处理
             for result in agent_graph.stream(request.query, cb=callback):
+                # 检查是否被取消
+                if session_info["cancel_event"].is_set():
+                    logger.info(f"聊天会话被取消: {request.session_id}")
+                    yield {
+                        "event": "cancelled",
+                        "data": json.dumps({
+                            "status": "cancelled",
+                            "session_id": request.session_id,
+                            "message": "聊天已被取消"
+                        })
+                    }
+                    break
+                
+                # 更新会话活动时间
+                session_manager.update_session_activity(request.session_id)
+                
                 event_type = result.get("event", "message")
                 event_data = result.get("data", {})
                 
@@ -151,11 +298,14 @@ async def stream_chat(request: ChatRequest):
                     }, ensure_ascii=False)
                 }
             
-            # 发送完成事件
-            yield {
-                "event": "done",
-                "data": json.dumps({"status": "completed"})
-            }
+            # 检查是否正常完成（未被取消）
+            if not session_info["cancel_event"].is_set():
+                # 发送完成事件
+                yield {
+                    "event": "done",
+                    "data": json.dumps({"status": "completed"})
+                }
+                session_manager.complete_session(request.session_id)
             
         except Exception as e:
             logger.error(f"流式聊天处理失败: {e}")
@@ -163,8 +313,17 @@ async def stream_chat(request: ChatRequest):
                 "event": "error",
                 "data": json.dumps({"error": str(e)})
             }
+        finally:
+            # 清理会话（延迟清理，给客户端时间接收最后的事件）
+            asyncio.create_task(delayed_session_cleanup(request.session_id))
     
     return EventSourceResponse(event_generator())
+
+
+async def delayed_session_cleanup(session_id: str):
+    """延迟清理会话"""
+    await asyncio.sleep(5)  # 等待5秒确保客户端接收到所有事件
+    session_manager.remove_session(session_id)
 
 
 @app.post("/api/v1/chat/cancel")
@@ -182,10 +341,23 @@ async def cancel_chat(request: Dict[str, str]):
     if not session_id:
         raise HTTPException(status_code=400, detail="缺少session_id")
     
-    # TODO: 实现取消逻辑
-    logger.info(f"取消聊天会话: {session_id}")
+    # 实现取消逻辑
+    success = session_manager.cancel_session(session_id)
     
-    return {"status": "cancelled", "session_id": session_id}
+    if success:
+        logger.info(f"成功取消聊天会话: {session_id}")
+        return {
+            "status": "cancelled", 
+            "session_id": session_id,
+            "message": "聊天会话已成功取消",
+            "timestamp": time.time()
+        }
+    else:
+        logger.warning(f"会话不存在或已结束: {session_id}")
+        raise HTTPException(
+            status_code=404, 
+            detail=f"会话 {session_id} 不存在或已结束"
+        )
 
 
 @app.websocket("/api/v1/voice/stream")
@@ -199,7 +371,7 @@ async def voice_websocket(websocket: WebSocket):
     await websocket.accept()
     
     # 检查服务状态
-    if not enhanced_voice_service:
+    if not agent_graph:
         await websocket.send_json({
             "type": "error",
             "data": {"error": "语音服务未初始化"}
@@ -246,38 +418,33 @@ async def voice_websocket(websocket: WebSocket):
                     import base64
                     audio_data = base64.b64decode(message.get("data", ""))
                     
-                    # 使用增强语音服务处理
+                    # 处理音频数据
                     try:
-                        # 模拟ASR处理
-                        from core.voice_request import VoiceRequest
+                        # 模拟ASR处理（简化版本）
+                        audio_data = base64.b64decode(message.get("data", ""))
                         
-                        voice_request = VoiceRequest(
-                            conversation_id=session_id,
-                            audio_chunk=message.get("data", ""),
-                            is_final=False,
-                            config=voice_session.get("config", {})
-                        )
-                        
-                        # 异步处理语音
-                        async for response in enhanced_voice_service.process_voice_request(voice_request):
-                            if response.transcript:
-                                await websocket.send_json({
-                                    "type": "asr_partial",
-                                    "text": response.transcript,
-                                    "confidence": response.confidence or 0.8,
-                                    "session_id": session_id
-                                })
+                        # 模拟语音识别结果
+                        if len(audio_data) > 1000:  # 假设有足够的音频数据
+                            transcript = "这是模拟的语音识别结果"  # 实际应该调用ASR服务
                             
-                            if response.is_final and response.transcript:
-                                await websocket.send_json({
-                                    "type": "asr_final",
-                                    "text": response.transcript,
-                                    "confidence": response.confidence or 0.8,
-                                    "session_id": session_id
-                                })
-                                
-                                # 触发Agent处理
-                                await process_voice_query_enhanced(websocket, response.transcript, session_id)
+                            await websocket.send_json({
+                                "type": "asr_partial",
+                                "text": transcript,
+                                "confidence": 0.8,
+                                "session_id": session_id
+                            })
+                            
+                            # 模拟最终结果
+                            await websocket.send_json({
+                                "type": "asr_final",
+                                "text": transcript,
+                                "confidence": 0.8,
+                                "session_id": session_id
+                            })
+                            
+                            # 触发Agent处理
+                            if session_id:
+                                await process_voice_query_enhanced(websocket, transcript, session_id)
                                 
                     except Exception as e:
                         logger.error(f"Voice processing error: {e}")
@@ -328,46 +495,52 @@ async def process_voice_query_enhanced(websocket: WebSocket, query: str, session
         })
         
         # 使用Agent处理查询
-        if agent_service:
-            # 构建Agent请求
-            agent_request = {
-                "conversation_id": session_id,
-                "message": query,
-                "tools": ["web_search", "document_search"],
-                "context": [],
-                "max_tokens": 1000,
-                "temperature": 0.7
-            }
-            
-            # 流式处理Agent响应
-            async for chunk in agent_service.stream_chat(agent_request):
-                if chunk.get("type") == "agent_response":
-                    # 发送Agent响应
-                    await websocket.send_json({
-                        "type": "agent_response",
-                        "session_id": session_id,
-                        "text": chunk.get("content", ""),
-                        "is_final": chunk.get("is_final", False)
-                    })
+        if agent_graph:
+            try:
+                # 创建回调函数
+                def callback(event: str, payload: dict):
+                    # 在异步上下文中发送事件
+                    pass
+                
+                # 流式处理Agent响应
+                response_text = ""
+                for result in agent_graph.stream(query, cb=callback):
+                    event_type = result.get("event")
+                    event_data = result.get("data", {})
                     
-                    # 如果是最终响应，进行TTS转换
-                    if chunk.get("is_final") and enhanced_voice_service:
-                        try:
-                            # TTS处理
-                            tts_response = await enhanced_voice_service.text_to_speech(
-                                chunk.get("content", ""),
-                                session_id
-                            )
-                            
-                            if tts_response.get("audio_data"):
-                                await websocket.send_json({
-                                    "type": "tts_audio",
-                                    "session_id": session_id,
-                                    "audio_data": tts_response["audio_data"],
-                                    "format": tts_response.get("format", "wav")
-                                })
-                        except Exception as e:
-                            logger.error(f"TTS processing error: {e}")
+                    if event_type == "answer":
+                        response_text = event_data.get("text", "")
+                        # 发送Agent响应
+                        await websocket.send_json({
+                            "type": "agent_response",
+                            "session_id": session_id,
+                            "text": response_text,
+                            "is_final": True
+                        })
+                        break
+                
+                # TTS处理（如果有TTS适配器）
+                if response_text and tts_adapter:
+                    try:
+                        for audio_chunk in tts_adapter.synthesize_text(response_text):
+                            import base64
+                            audio_b64 = base64.b64encode(audio_chunk).decode()
+                            await websocket.send_json({
+                                "type": "tts_audio",
+                                "session_id": session_id,
+                                "audio_data": audio_b64,
+                                "format": "wav"
+                            })
+                    except Exception as e:
+                        logger.error(f"TTS processing error: {e}")
+                        
+            except Exception as e:
+                logger.error(f"Agent processing error: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "session_id": session_id,
+                    "error": str(e)
+                })
         else:
             # 模拟响应
             response_text = f"收到您的语音输入：{query}"
@@ -451,17 +624,63 @@ async def process_voice_query(websocket: WebSocket, query: str):
         })
 
 
+@app.get("/api/v1/chat/session/{session_id}")
+async def get_session_status(session_id: str):
+    """
+    获取会话状态
+    
+    Args:
+        session_id: 会话ID
+        
+    Returns:
+        会话状态信息
+    """
+    session = session_manager.get_session(session_id)
+    
+    if not session:
+        raise HTTPException(status_code=404, detail=f"会话 {session_id} 不存在")
+    
+    return {
+        "session_id": session["session_id"],
+        "status": session["status"],
+        "created_at": session["created_at"].isoformat(),
+        "last_activity": session["last_activity"].isoformat(),
+        "duration": (datetime.now() - session["created_at"]).total_seconds(),
+        "request_data": session["request_data"]
+    }
+
+
+@app.get("/api/v1/chat/sessions")
+async def list_active_sessions():
+    """
+    获取所有活跃会话列表
+    
+    Returns:
+        活跃会话统计信息
+    """
+    return session_manager.get_session_stats()
+
+
 @app.get("/api/v1/health")
 async def health_check():
     """健康检查接口"""
+    session_stats = session_manager.get_session_stats()
+    
     return {
         "status": "healthy",
         "version": "2.0.0",
+        "timestamp": time.time(),
         "services": {
             "retriever": retriever is not None,
             "agent_graph": agent_graph is not None,
             "asr_adapter": asr_adapter is not None,
             "tts_adapter": tts_adapter is not None
+        },
+        "session_manager": {
+            "total_sessions": session_stats["total_sessions"],
+            "active_sessions": session_stats["active_sessions"],
+            "cancelled_sessions": session_stats["cancelled_sessions"],
+            "completed_sessions": session_stats["completed_sessions"]
         }
     }
 

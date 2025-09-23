@@ -66,7 +66,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   // 删除数组项
   const removeArrayItem = (key: string, index: number) => {
     const array = localData[key] || [];
-    const newArray = array.filter((_, i) => i !== index);
+    const newArray = array.filter((_item: any, i: number) => i !== index);
     updateLocalData(key, newArray);
   };
 
