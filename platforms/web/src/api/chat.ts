@@ -4,12 +4,16 @@
  */
 
 import { BaseStreamClient, EventSink, StreamOptions } from './base';
+import { 
+  ChatRequest as ChatRequestType, 
+  ChatStreamEvent, 
+  QueryResponse,
+  APIError,
+  CHAT_EVENTS 
+} from '@/types';
 
-export interface ChatRequest {
-  query: string;
-  session_id: string;
-  context?: Record<string, any>;
-}
+// 重新导出类型以保持向后兼容
+export type ChatRequest = ChatRequestType;
 
 export interface ChatResponse {
   event: string;

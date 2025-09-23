@@ -1,142 +1,80 @@
 package handlers
 
 import (
-	"context"
-	"fmt"
-	"log"
+	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 
+	"voicehelper/backend/pkg/middleware"
+
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/pion/webrtc/v3"
-
-	"voicehelper/backend/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
-// WebRTC Prometheus指标
-var (
-		Name: "webrtc_connections_active",
-		Help: "Number of active WebRTC connections",
-	})
+// WebRTCSignalingHandler WebRTC信令处理器
+type WebRTCSignalingHandler struct {
+	BaseHandler
+	upgrader websocket.Upgrader
+	rooms    map[string]*Room
+	roomsMux sync.RWMutex
+}
 
-		Name: "webrtc_connections_total",
-		Help: "Total WebRTC connections",
-	}, []string{"status"})
+// Room WebRTC房间
+type Room struct {
+	ID      string
+	Clients map[string]*Client
+	mutex   sync.RWMutex
+}
 
-		Name: "webrtc_datachannel_messages_total",
-		Help: "Total WebRTC data channel messages",
-	}, []string{"direction", "session_id"})
-
-		Name:    "webrtc_connection_duration_seconds",
-		Help:    "WebRTC connection duration",
-		Buckets: []float64{1, 5, 10, 30, 60, 300, 600, 1800},
-	}, []string{"session_id"})
-
-		Name:    "webrtc_signaling_latency_seconds",
-		Help:    "WebRTC signaling latency",
-		Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0},
-	}, []string{"message_type"})
-)
+// Client WebRTC客户端
+type Client struct {
+	ID         string
+	Conn       *websocket.Conn
+	Room       *Room
+	Send       chan []byte
+	LastActive time.Time
+}
 
 // SignalingMessage 信令消息
 type SignalingMessage struct {
 	Type      string                 `json:"type"`
-	SessionID string                 `json:"session_id"`
-	Data      map[string]interface{} `json:"data"`
+	Data      interface{}            `json:"data,omitempty"`
+	From      string                 `json:"from,omitempty"`
+	To        string                 `json:"to,omitempty"`
+	RoomID    string                 `json:"room_id,omitempty"`
 	Timestamp int64                  `json:"timestamp"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// RTCSession WebRTC会话
-type RTCSession struct {
-	ID             string
-	PeerConnection *webrtc.PeerConnection
-	DataChannel    *webrtc.DataChannel
-	SignalingConn  *websocket.Conn
-	Context        context.Context
-	Cancel         context.CancelFunc
-	CreatedAt      time.Time
-	LastActivity   time.Time
-
-	// 状态
-	ConnectionState webrtc.PeerConnectionState
-	ICEState        webrtc.ICEConnectionState
-
-	// 统计
-	BytesSent        int64
-	BytesReceived    int64
-	MessagesSent     int64
-	MessagesReceived int64
-
-	// 音频处理
-	AudioHandler func([]byte) error
-
-	mutex sync.RWMutex
+// ICECandidate ICE候选者
+type ICECandidate struct {
+	Candidate     string `json:"candidate"`
+	SDPMid        string `json:"sdpMid"`
+	SDPMLineIndex int    `json:"sdpMLineIndex"`
 }
 
-// WebRTCSignalingHandler WebRTC信令处理器
-type WebRTCSignalingHandler struct {
-	sessions    map[string]*RTCSession
-	sessionsMux sync.RWMutex
-	api         *webrtc.API
-	config      WebRTCConfig
-	eventBus    EventBus
-}
-
-// WebRTCConfig WebRTC配置
-type WebRTCConfig struct {
-	ICEServers        []webrtc.ICEServer
-	DataChannelConfig *webrtc.DataChannelInit
-	ConnectionTimeout time.Duration
-	KeepAliveInterval time.Duration
-	MaxSessions       int
-	AudioCodec        string
-	EnableTrickleICE  bool
+// SessionDescription 会话描述
+type SessionDescription struct {
+	Type string `json:"type"` // "offer" or "answer"
+	SDP  string `json:"sdp"`
 }
 
 // NewWebRTCSignalingHandler 创建WebRTC信令处理器
-func NewWebRTCSignalingHandler(config WebRTCConfig, eventBus EventBus) *WebRTCSignalingHandler {
-	// 默认配置
-	if len(config.ICEServers) == 0 {
-		config.ICEServers = []webrtc.ICEServer{
-			{URLs: []string{"stun:stun.l.google.com:19302"}},
-		}
-	}
-
-	if config.DataChannelConfig == nil {
-		ordered := false
-		maxRetransmits := uint16(0)
-		config.DataChannelConfig = &webrtc.DataChannelInit{
-			Ordered:        &ordered,
-			MaxRetransmits: &maxRetransmits,
-		}
-	}
-
-	if config.ConnectionTimeout == 0 {
-		config.ConnectionTimeout = 30 * time.Second
-	}
-
-	if config.KeepAliveInterval == 0 {
-		config.KeepAliveInterval = 30 * time.Second
-	}
-
-	if config.MaxSessions == 0 {
-		config.MaxSessions = 1000
-	}
-
-	// 创建WebRTC API
-	mediaEngine := &webrtc.MediaEngine{}
-	if err := mediaEngine.RegisterDefaultCodecs(); err != nil {
-		log.Fatalf("Failed to register WebRTC codecs: %v", err)
-	}
-
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(mediaEngine))
-
+func NewWebRTCSignalingHandler(algoServiceURL string) *WebRTCSignalingHandler {
 	handler := &WebRTCSignalingHandler{
-		sessions: make(map[string]*RTCSession),
-		api:      api,
-		config:   config,
-		eventBus: eventBus,
+		BaseHandler: BaseHandler{
+			AlgoServiceURL: algoServiceURL,
+		},
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+			ReadBufferSize:  1024 * 2,
+			WriteBufferSize: 1024 * 2,
+		},
+		rooms: make(map[string]*Room),
 	}
 
 	// 启动清理协程
@@ -145,506 +83,454 @@ func NewWebRTCSignalingHandler(config WebRTCConfig, eventBus EventBus) *WebRTCSi
 	return handler
 }
 
-// HandleSignaling 处理信令连接
-func (h *WebRTCSignalingHandler) HandleSignaling(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+// HandleWebRTCSignaling 处理WebRTC信令WebSocket连接
+func (h *WebRTCSignalingHandler) HandleWebRTCSignaling(c *gin.Context) {
+	conn, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("WebRTC signaling upgrade failed: %v", err)
+		logrus.WithError(err).Error("Failed to upgrade to WebSocket for WebRTC signaling")
 		return
 	}
+	defer conn.Close()
 
-	sessionID := h.generateSessionID()
-	log.Printf("New WebRTC signaling connection: %s", sessionID)
+	// 创建指标包装器
+	metricsWrapper := middleware.NewWSMetricsWrapper("/api/v2/webrtc/signaling")
+	defer metricsWrapper.Close()
 
-	// 处理信令消息
-	go h.handleSignalingConnection(conn, sessionID)
+	// 提取客户端信息
+	traceID, tenantID := h.extractTraceInfo(c)
+	clientID := c.Query("client_id")
+	if clientID == "" {
+		clientID = h.generateTraceID()
+	}
+
+	roomID := c.Query("room_id")
+	if roomID == "" {
+		roomID = "default"
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"trace_id":  traceID,
+		"tenant_id": tenantID,
+		"client_id": clientID,
+		"room_id":   roomID,
+	}).Info("WebRTC signaling connection established")
+
+	// 创建客户端
+	client := &Client{
+		ID:         clientID,
+		Conn:       conn,
+		Send:       make(chan []byte, 256),
+		LastActive: time.Now(),
+	}
+
+	// 加入房间
+	room := h.getOrCreateRoom(roomID)
+	room.addClient(client)
+	client.Room = room
+
+	// 发送连接确认
+	welcomeMsg := SignalingMessage{
+		Type:      "connected",
+		RoomID:    roomID,
+		From:      "server",
+		To:        clientID,
+		Timestamp: time.Now().Unix(),
+		Data: map[string]interface{}{
+			"client_id": clientID,
+			"room_id":   roomID,
+			"clients":   room.getClientIDs(),
+		},
+	}
+
+	if err := conn.WriteJSON(welcomeMsg); err != nil {
+		logrus.WithError(err).Error("Failed to send welcome message")
+		metricsWrapper.RecordError("send_error")
+		return
+	}
+	metricsWrapper.RecordMessageSent("connected")
+
+	// 通知房间内其他客户端
+	room.broadcast(SignalingMessage{
+		Type:      "client_joined",
+		RoomID:    roomID,
+		From:      "server",
+		Timestamp: time.Now().Unix(),
+		Data: map[string]interface{}{
+			"client_id": clientID,
+			"clients":   room.getClientIDs(),
+		},
+	}, clientID)
+
+	// 启动消息处理协程
+	go h.handleClientWrite(client, metricsWrapper)
+	h.handleClientRead(client, metricsWrapper)
+
+	// 清理
+	room.removeClient(clientID)
+	close(client.Send)
 }
 
-// handleSignalingConnection 处理信令连接
-func (h *WebRTCSignalingHandler) handleSignalingConnection(conn *websocket.Conn, sessionID string) {
-	defer func() {
-		conn.Close()
-		h.removeSession(sessionID)
-		log.Printf("WebRTC signaling connection closed: %s", sessionID)
-	}()
+// handleClientRead 处理客户端读取
+func (h *WebRTCSignalingHandler) handleClientRead(client *Client, metricsWrapper *middleware.WSMetricsWrapper) {
+	defer client.Conn.Close()
 
-	// 设置读取超时
-	conn.SetReadDeadline(time.Now().Add(h.config.ConnectionTimeout))
-	conn.SetPongHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(h.config.ConnectionTimeout))
+	client.Conn.SetReadLimit(512)
+	client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	client.Conn.SetPongHandler(func(string) error {
+		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		client.LastActive = time.Now()
 		return nil
 	})
 
 	for {
 		var msg SignalingMessage
-		if err := conn.ReadJSON(&msg); err != nil {
+		err := client.Conn.ReadJSON(&msg)
+		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebRTC signaling error: %v", err)
+				logrus.WithError(err).Error("WebRTC signaling read error")
+				metricsWrapper.RecordError("read_error")
 			}
 			break
 		}
 
-		msg.SessionID = sessionID
-		msg.Timestamp = time.Now().UnixMilli()
+		metricsWrapper.RecordMessageReceived(msg.Type)
+		client.LastActive = time.Now()
+		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+
+		// 设置发送者
+		msg.From = client.ID
+		msg.RoomID = client.Room.ID
+		msg.Timestamp = time.Now().Unix()
 
 		// 处理信令消息
-		if err := h.handleSignalingMessage(conn, &msg); err != nil {
-			log.Printf("Failed to handle signaling message: %v", err)
+		h.handleSignalingMessage(client, msg, metricsWrapper)
+	}
+}
 
-			// 发送错误响应
-			errorMsg := SignalingMessage{
-				Type:      "error",
-				SessionID: sessionID,
-				Data: map[string]interface{}{
-					"error": err.Error(),
-				},
-				Timestamp: time.Now().UnixMilli(),
+// handleClientWrite 处理客户端写入
+func (h *WebRTCSignalingHandler) handleClientWrite(client *Client, metricsWrapper *middleware.WSMetricsWrapper) {
+	ticker := time.NewTicker(54 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case message, ok := <-client.Send:
+			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if !ok {
+				client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
 			}
-			conn.WriteJSON(errorMsg)
+
+			if err := client.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				logrus.WithError(err).Error("Failed to write WebRTC signaling message")
+				metricsWrapper.RecordError("write_error")
+				return
+			}
+
+		case <-ticker.C:
+			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
 		}
 	}
 }
 
 // handleSignalingMessage 处理信令消息
-func (h *WebRTCSignalingHandler) handleSignalingMessage(conn *websocket.Conn, msg *SignalingMessage) error {
-	startTime := time.Now()
-	defer func() {
-		latency := time.Since(startTime).Seconds()
-		webrtcSignalingLatency.WithLabelValues(msg.Type).Observe(latency)
-	}()
-
+func (h *WebRTCSignalingHandler) handleSignalingMessage(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
 	switch msg.Type {
-	case "offer":
-		return h.handleOffer(conn, msg)
-	case "answer":
-		return h.handleAnswer(conn, msg)
-	case "ice-candidate":
-		return h.handleICECandidate(conn, msg)
+	case "offer", "answer":
+		h.handleSessionDescription(client, msg, metricsWrapper)
+	case "ice_candidate":
+		h.handleICECandidate(client, msg, metricsWrapper)
+	case "join_room":
+		h.handleJoinRoom(client, msg, metricsWrapper)
+	case "leave_room":
+		h.handleLeaveRoom(client, msg, metricsWrapper)
 	case "ping":
-		return h.handlePing(conn, msg)
+		h.sendToClient(client, SignalingMessage{
+			Type:      "pong",
+			From:      "server",
+			To:        client.ID,
+			RoomID:    client.Room.ID,
+			Timestamp: time.Now().Unix(),
+		}, metricsWrapper)
 	default:
-		return fmt.Errorf("unknown signaling message type: %s", msg.Type)
-	}
-}
-
-// handleOffer 处理Offer
-func (h *WebRTCSignalingHandler) handleOffer(conn *websocket.Conn, msg *SignalingMessage) error {
-	// 检查会话数限制
-	if len(h.sessions) >= h.config.MaxSessions {
-		return fmt.Errorf("maximum sessions reached")
-	}
-
-	// 解析SDP Offer
-	offerSDP, ok := msg.Data["sdp"].(string)
-	if !ok {
-		return fmt.Errorf("invalid offer SDP")
-	}
-
-	offer := webrtc.SessionDescription{
-		Type: webrtc.SDPTypeOffer,
-		SDP:  offerSDP,
-	}
-
-	// 创建WebRTC会话
-	session, err := h.createSession(msg.SessionID, conn)
-	if err != nil {
-		return fmt.Errorf("failed to create session: %v", err)
-	}
-
-	// 设置远端描述
-	if err := session.PeerConnection.SetRemoteDescription(offer); err != nil {
-		return fmt.Errorf("failed to set remote description: %v", err)
-	}
-
-	// 创建Answer
-	answer, err := session.PeerConnection.CreateAnswer(nil)
-	if err != nil {
-		return fmt.Errorf("failed to create answer: %v", err)
-	}
-
-	// 设置本地描述
-	if err := session.PeerConnection.SetLocalDescription(answer); err != nil {
-		return fmt.Errorf("failed to set local description: %v", err)
-	}
-
-	// 发送Answer
-	answerMsg := SignalingMessage{
-		Type:      "answer",
-		SessionID: msg.SessionID,
-		Data: map[string]interface{}{
-			"sdp": answer.SDP,
-		},
-		Timestamp: time.Now().UnixMilli(),
-	}
-
-	return conn.WriteJSON(answerMsg)
-}
-
-// handleAnswer 处理Answer
-func (h *WebRTCSignalingHandler) handleAnswer(conn *websocket.Conn, msg *SignalingMessage) error {
-	session := h.getSession(msg.SessionID)
-	if session == nil {
-		return fmt.Errorf("session not found: %s", msg.SessionID)
-	}
-
-	// 解析SDP Answer
-	answerSDP, ok := msg.Data["sdp"].(string)
-	if !ok {
-		return fmt.Errorf("invalid answer SDP")
-	}
-
-	answer := webrtc.SessionDescription{
-		Type: webrtc.SDPTypeAnswer,
-		SDP:  answerSDP,
-	}
-
-	// 设置远端描述
-	return session.PeerConnection.SetRemoteDescription(answer)
-}
-
-// handleICECandidate 处理ICE候选
-func (h *WebRTCSignalingHandler) handleICECandidate(conn *websocket.Conn, msg *SignalingMessage) error {
-	session := h.getSession(msg.SessionID)
-	if session == nil {
-		return fmt.Errorf("session not found: %s", msg.SessionID)
-	}
-
-	candidateData, ok := msg.Data["candidate"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("invalid ICE candidate")
-	}
-
-	candidate := webrtc.ICECandidateInit{
-		Candidate:     candidateData["candidate"].(string),
-		SDPMid:        stringPtr(candidateData["sdpMid"].(string)),
-		SDPMLineIndex: uint16Ptr(uint16(candidateData["sdpMLineIndex"].(float64))),
-	}
-
-	return session.PeerConnection.AddICECandidate(candidate)
-}
-
-// handlePing 处理Ping
-func (h *WebRTCSignalingHandler) handlePing(conn *websocket.Conn, msg *SignalingMessage) error {
-	pongMsg := SignalingMessage{
-		Type:      "pong",
-		SessionID: msg.SessionID,
-		Data: map[string]interface{}{
-			"timestamp": msg.Timestamp,
-		},
-		Timestamp: time.Now().UnixMilli(),
-	}
-
-	return conn.WriteJSON(pongMsg)
-}
-
-// createSession 创建WebRTC会话
-func (h *WebRTCSignalingHandler) createSession(sessionID string, conn *websocket.Conn) (*RTCSession, error) {
-	// 创建PeerConnection
-	config := webrtc.Configuration{
-		ICEServers: h.config.ICEServers,
-	}
-
-	peerConnection, err := h.api.NewPeerConnection(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create peer connection: %v", err)
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	session := &RTCSession{
-		ID:              sessionID,
-		PeerConnection:  peerConnection,
-		SignalingConn:   conn,
-		Context:         ctx,
-		Cancel:          cancel,
-		CreatedAt:       time.Now(),
-		LastActivity:    time.Now(),
-		ConnectionState: webrtc.PeerConnectionStateNew,
-		ICEState:        webrtc.ICEConnectionStateNew,
-	}
-
-	// 设置事件处理器
-	h.setupPeerConnectionHandlers(session)
-
-	// 创建数据通道
-	if err := h.createDataChannel(session); err != nil {
-		peerConnection.Close()
-		return nil, fmt.Errorf("failed to create data channel: %v", err)
-	}
-
-	// 添加到会话管理
-	h.addSession(session)
-
-	webrtcConnections.Inc()
-	webrtcConnectionsTotal.WithLabelValues("created").Inc()
-
-	return session, nil
-}
-
-// setupPeerConnectionHandlers 设置PeerConnection事件处理器
-func (h *WebRTCSignalingHandler) setupPeerConnectionHandlers(session *RTCSession) {
-	// 连接状态变化
-	session.PeerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
-		session.mutex.Lock()
-		session.ConnectionState = state
-		session.mutex.Unlock()
-
-		log.Printf("Session %s connection state: %s", session.ID, state)
-
-		switch state {
-		case webrtc.PeerConnectionStateConnected:
-			webrtcConnectionsTotal.WithLabelValues("connected").Inc()
-
-			// 发布连接事件
-			event := types.NewEventEnvelope("webrtc_connected", map[string]interface{}{
-				"session_id": session.ID,
-				"timestamp":  time.Now().UnixMilli(),
-			}, session.ID, h.generateTraceID())
-
-			h.eventBus.Publish("webrtc.connected", event)
-
-		case webrtc.PeerConnectionStateFailed:
-		case webrtc.PeerConnectionStateClosed:
-			webrtcConnectionsTotal.WithLabelValues("disconnected").Inc()
-			h.removeSession(session.ID)
-		}
-	})
-
-	// ICE连接状态变化
-	session.PeerConnection.OnICEConnectionStateChange(func(state webrtc.ICEConnectionState) {
-		session.mutex.Lock()
-		session.ICEState = state
-		session.mutex.Unlock()
-
-		log.Printf("Session %s ICE state: %s", session.ID, state)
-	})
-
-	// ICE候选
-	session.PeerConnection.OnICECandidate(func(candidate *webrtc.ICECandidate) {
-		if candidate == nil {
-			return
-		}
-
-		// 发送ICE候选到客户端
-		candidateMsg := SignalingMessage{
-			Type:      "ice-candidate",
-			SessionID: session.ID,
+		logrus.WithField("message_type", msg.Type).Warn("Unknown WebRTC signaling message type")
+		h.sendToClient(client, SignalingMessage{
+			Type:      "error",
+			From:      "server",
+			To:        client.ID,
+			RoomID:    client.Room.ID,
+			Timestamp: time.Now().Unix(),
 			Data: map[string]interface{}{
-				"candidate": map[string]interface{}{
-					"candidate":     candidate.String(),
-					"sdpMid":        nil, // WebRTC v3 API change
-					"sdpMLineIndex": 0,   // WebRTC v3 API change
-				},
+				"error":   "unknown_message_type",
+				"message": "Unknown message type: " + msg.Type,
 			},
-			Timestamp: time.Now().UnixMilli(),
-		}
-
-		if err := session.SignalingConn.WriteJSON(candidateMsg); err != nil {
-			log.Printf("Failed to send ICE candidate: %v", err)
-		}
-	})
+		}, metricsWrapper)
+	}
 }
 
-// createDataChannel 创建数据通道
-func (h *WebRTCSignalingHandler) createDataChannel(session *RTCSession) error {
-	dataChannel, err := session.PeerConnection.CreateDataChannel("audio", h.config.DataChannelConfig)
+// handleSessionDescription 处理会话描述（offer/answer）
+func (h *WebRTCSignalingHandler) handleSessionDescription(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+	if msg.To == "" {
+		// 广播给房间内其他客户端
+		client.Room.broadcast(msg, client.ID)
+	} else {
+		// 发送给指定客户端
+		client.Room.sendToClient(msg.To, msg)
+	}
+	metricsWrapper.RecordMessageSent(msg.Type)
+}
+
+// handleICECandidate 处理ICE候选者
+func (h *WebRTCSignalingHandler) handleICECandidate(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+	if msg.To == "" {
+		// 广播给房间内其他客户端
+		client.Room.broadcast(msg, client.ID)
+	} else {
+		// 发送给指定客户端
+		client.Room.sendToClient(msg.To, msg)
+	}
+	metricsWrapper.RecordMessageSent("ice_candidate")
+}
+
+// handleJoinRoom 处理加入房间
+func (h *WebRTCSignalingHandler) handleJoinRoom(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+	roomID, ok := msg.Data.(string)
+	if !ok {
+		h.sendToClient(client, SignalingMessage{
+			Type:      "error",
+			From:      "server",
+			To:        client.ID,
+			Timestamp: time.Now().Unix(),
+			Data: map[string]interface{}{
+				"error":   "invalid_room_id",
+				"message": "Invalid room ID",
+			},
+		}, metricsWrapper)
+		return
+	}
+
+	// 离开当前房间
+	client.Room.removeClient(client.ID)
+
+	// 加入新房间
+	newRoom := h.getOrCreateRoom(roomID)
+	newRoom.addClient(client)
+	client.Room = newRoom
+
+	// 发送确认
+	h.sendToClient(client, SignalingMessage{
+		Type:      "room_joined",
+		From:      "server",
+		To:        client.ID,
+		RoomID:    roomID,
+		Timestamp: time.Now().Unix(),
+		Data: map[string]interface{}{
+			"room_id": roomID,
+			"clients": newRoom.getClientIDs(),
+		},
+	}, metricsWrapper)
+
+	// 通知房间内其他客户端
+	newRoom.broadcast(SignalingMessage{
+		Type:      "client_joined",
+		From:      "server",
+		RoomID:    roomID,
+		Timestamp: time.Now().Unix(),
+		Data: map[string]interface{}{
+			"client_id": client.ID,
+			"clients":   newRoom.getClientIDs(),
+		},
+	}, client.ID)
+}
+
+// handleLeaveRoom 处理离开房间
+func (h *WebRTCSignalingHandler) handleLeaveRoom(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+	roomID := client.Room.ID
+	client.Room.removeClient(client.ID)
+
+	// 发送确认
+	h.sendToClient(client, SignalingMessage{
+		Type:      "room_left",
+		From:      "server",
+		To:        client.ID,
+		Timestamp: time.Now().Unix(),
+		Data: map[string]interface{}{
+			"room_id": roomID,
+		},
+	}, metricsWrapper)
+}
+
+// sendToClient 发送消息给客户端
+func (h *WebRTCSignalingHandler) sendToClient(client *Client, msg SignalingMessage, metricsWrapper *middleware.WSMetricsWrapper) {
+	data, err := json.Marshal(msg)
 	if err != nil {
-		return err
+		logrus.WithError(err).Error("Failed to marshal signaling message")
+		metricsWrapper.RecordError("marshal_error")
+		return
 	}
 
-	session.DataChannel = dataChannel
+	select {
+	case client.Send <- data:
+		metricsWrapper.RecordMessageSent(msg.Type)
+	default:
+		close(client.Send)
+		client.Room.removeClient(client.ID)
+	}
+}
 
-	// 设置数据通道事件处理器
-	dataChannel.OnOpen(func() {
-		log.Printf("Session %s data channel opened", session.ID)
-	})
+// getOrCreateRoom 获取或创建房间
+func (h *WebRTCSignalingHandler) getOrCreateRoom(roomID string) *Room {
+	h.roomsMux.Lock()
+	defer h.roomsMux.Unlock()
 
-	dataChannel.OnClose(func() {
-		log.Printf("Session %s data channel closed", session.ID)
-	})
-
-	dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
-		session.mutex.Lock()
-		session.BytesReceived += int64(len(msg.Data))
-		session.MessagesReceived++
-		session.LastActivity = time.Now()
-		session.mutex.Unlock()
-
-		webrtcDataChannelMessages.WithLabelValues("received", session.ID).Inc()
-
-		// 处理音频数据
-		if session.AudioHandler != nil {
-			if err := session.AudioHandler(msg.Data); err != nil {
-				log.Printf("Audio handler error: %v", err)
-			}
+	room, exists := h.rooms[roomID]
+	if !exists {
+		room = &Room{
+			ID:      roomID,
+			Clients: make(map[string]*Client),
 		}
-
-		// 发布音频帧事件
-		event := types.NewEventEnvelope("webrtc_audio_frame", map[string]interface{}{
-			"session_id": session.ID,
-			"data_size":  len(msg.Data),
-			"timestamp":  time.Now().UnixMilli(),
-		}, session.ID, h.generateTraceID())
-
-		h.eventBus.Publish("webrtc.audio_frame", event)
-	})
-
-	dataChannel.OnError(func(err error) {
-		log.Printf("Session %s data channel error: %v", session.ID, err)
-	})
-
-	return nil
-}
-
-// SendAudioFrame 发送音频帧
-func (h *WebRTCSignalingHandler) SendAudioFrame(sessionID string, audioData []byte) error {
-	session := h.getSession(sessionID)
-	if session == nil {
-		return fmt.Errorf("session not found: %s", sessionID)
+		h.rooms[roomID] = room
+		logrus.WithField("room_id", roomID).Info("Created new WebRTC room")
 	}
-
-	if session.DataChannel == nil || session.DataChannel.ReadyState() != webrtc.DataChannelStateOpen {
-		return fmt.Errorf("data channel not ready for session: %s", sessionID)
-	}
-
-	if err := session.DataChannel.Send(audioData); err != nil {
-		return fmt.Errorf("failed to send audio data: %v", err)
-	}
-
-	session.mutex.Lock()
-	session.BytesSent += int64(len(audioData))
-	session.MessagesSent++
-	session.LastActivity = time.Now()
-	session.mutex.Unlock()
-
-	webrtcDataChannelMessages.WithLabelValues("sent", sessionID).Inc()
-
-	return nil
+	return room
 }
 
-// 会话管理方法
-
-func (h *WebRTCSignalingHandler) addSession(session *RTCSession) {
-	h.sessionsMux.Lock()
-	h.sessions[session.ID] = session
-	h.sessionsMux.Unlock()
-}
-
-func (h *WebRTCSignalingHandler) getSession(sessionID string) *RTCSession {
-	h.sessionsMux.RLock()
-	defer h.sessionsMux.RUnlock()
-	return h.sessions[sessionID]
-}
-
-func (h *WebRTCSignalingHandler) removeSession(sessionID string) {
-	h.sessionsMux.Lock()
-	defer h.sessionsMux.Unlock()
-
-	if session, exists := h.sessions[sessionID]; exists {
-		// 记录连接持续时间
-		duration := time.Since(session.CreatedAt).Seconds()
-		webrtcConnectionDuration.WithLabelValues(sessionID).Observe(duration)
-
-		// 清理资源
-		session.Cancel()
-		if session.DataChannel != nil {
-			session.DataChannel.Close()
-		}
-		if session.PeerConnection != nil {
-			session.PeerConnection.Close()
-		}
-
-		delete(h.sessions, sessionID)
-		webrtcConnections.Dec()
-
-		log.Printf("Removed WebRTC session: %s, duration: %.2fs", sessionID, duration)
-	}
-}
-
-// cleanupRoutine 清理过期会话
+// cleanupRoutine 清理协程
 func (h *WebRTCSignalingHandler) cleanupRoutine() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		now := time.Now()
-		var expiredSessions []string
-
-		h.sessionsMux.RLock()
-		for sessionID, session := range h.sessions {
-			session.mutex.RLock()
-			if now.Sub(session.LastActivity) > 5*time.Minute {
-				expiredSessions = append(expiredSessions, sessionID)
+		h.roomsMux.Lock()
+		for roomID, room := range h.rooms {
+			room.mutex.Lock()
+			if len(room.Clients) == 0 {
+				delete(h.rooms, roomID)
+				logrus.WithField("room_id", roomID).Info("Cleaned up empty WebRTC room")
+			} else {
+				// 清理不活跃的客户端
+				for clientID, client := range room.Clients {
+					if time.Since(client.LastActive) > 10*time.Minute {
+						delete(room.Clients, clientID)
+						close(client.Send)
+						logrus.WithFields(logrus.Fields{
+							"room_id":   roomID,
+							"client_id": clientID,
+						}).Info("Cleaned up inactive WebRTC client")
+					}
+				}
 			}
-			session.mutex.RUnlock()
+			room.mutex.Unlock()
 		}
-		h.sessionsMux.RUnlock()
+		h.roomsMux.Unlock()
+	}
+}
 
-		// 清理过期会话
-		for _, sessionID := range expiredSessions {
-			h.removeSession(sessionID)
+// Room methods
+
+// addClient 添加客户端到房间
+func (r *Room) addClient(client *Client) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	r.Clients[client.ID] = client
+}
+
+// removeClient 从房间移除客户端
+func (r *Room) removeClient(clientID string) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	if client, exists := r.Clients[clientID]; exists {
+		delete(r.Clients, clientID)
+
+		// 通知其他客户端
+		r.broadcastUnsafe(SignalingMessage{
+			Type:      "client_left",
+			From:      "server",
+			RoomID:    r.ID,
+			Timestamp: time.Now().Unix(),
+			Data: map[string]interface{}{
+				"client_id": clientID,
+				"clients":   r.getClientIDsUnsafe(),
+			},
+		}, clientID)
+
+		logrus.WithFields(logrus.Fields{
+			"room_id":   r.ID,
+			"client_id": clientID,
+		}).Info("Client left WebRTC room")
+
+		// 关闭客户端连接
+		client.Conn.Close()
+	}
+}
+
+// broadcast 广播消息给房间内所有客户端（除了排除的客户端）
+func (r *Room) broadcast(msg SignalingMessage, excludeClientID string) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	r.broadcastUnsafe(msg, excludeClientID)
+}
+
+// broadcastUnsafe 不安全的广播（需要调用者持有锁）
+func (r *Room) broadcastUnsafe(msg SignalingMessage, excludeClientID string) {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to marshal broadcast message")
+		return
+	}
+
+	for clientID, client := range r.Clients {
+		if clientID != excludeClientID {
+			select {
+			case client.Send <- data:
+			default:
+				close(client.Send)
+				delete(r.Clients, clientID)
+			}
 		}
 	}
 }
 
-// GetSessionStats 获取会话统计信息
-func (h *WebRTCSignalingHandler) GetSessionStats(sessionID string) map[string]interface{} {
-	session := h.getSession(sessionID)
-	if session == nil {
-		return nil
+// sendToClient 发送消息给指定客户端
+func (r *Room) sendToClient(clientID string, msg SignalingMessage) {
+	r.mutex.RLock()
+	client, exists := r.Clients[clientID]
+	r.mutex.RUnlock()
+
+	if !exists {
+		return
 	}
 
-	session.mutex.RLock()
-	defer session.mutex.RUnlock()
+	data, err := json.Marshal(msg)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to marshal message to client")
+		return
+	}
 
-	return map[string]interface{}{
-		"session_id":        session.ID,
-		"created_at":        session.CreatedAt,
-		"last_activity":     session.LastActivity,
-		"connection_state":  session.ConnectionState.String(),
-		"ice_state":         session.ICEState.String(),
-		"bytes_sent":        session.BytesSent,
-		"bytes_received":    session.BytesReceived,
-		"messages_sent":     session.MessagesSent,
-		"messages_received": session.MessagesReceived,
-		"duration_seconds":  time.Since(session.CreatedAt).Seconds(),
+	select {
+	case client.Send <- data:
+	default:
+		close(client.Send)
+		r.removeClient(clientID)
 	}
 }
 
-// GetAllStats 获取所有会话统计信息
-func (h *WebRTCSignalingHandler) GetAllStats() map[string]interface{} {
-	h.sessionsMux.RLock()
-	defer h.sessionsMux.RUnlock()
+// getClientIDs 获取房间内所有客户端ID
+func (r *Room) getClientIDs() []string {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+	return r.getClientIDsUnsafe()
+}
 
-	stats := map[string]interface{}{
-		"total_sessions": len(h.sessions),
-		"sessions":       make([]map[string]interface{}, 0, len(h.sessions)),
+// getClientIDsUnsafe 不安全的获取客户端ID（需要调用者持有锁）
+func (r *Room) getClientIDsUnsafe() []string {
+	ids := make([]string, 0, len(r.Clients))
+	for id := range r.Clients {
+		ids = append(ids, id)
 	}
-
-	for _, session := range h.sessions {
-		sessionStats := h.GetSessionStats(session.ID)
-		if sessionStats != nil {
-			stats["sessions"] = append(stats["sessions"].([]map[string]interface{}), sessionStats)
-		}
-	}
-
-	return stats
-}
-
-// 辅助函数
-
-func (h *WebRTCSignalingHandler) generateSessionID() string {
-	return fmt.Sprintf("webrtc_%d_%d", time.Now().UnixNano(), len(h.sessions))
-}
-
-func (h *WebRTCSignalingHandler) generateTraceID() string {
-	return fmt.Sprintf("trace_%d", time.Now().UnixNano())
-}
-
-func stringPtr(s string) *string {
-	return &s
-}
-
-func uint16Ptr(u uint16) *uint16 {
-	return &u
+	return ids
 }

@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
-
-	"voicehelper/backend/internal/ssews"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -20,6 +20,67 @@ type VoiceMessage struct {
 	SessionID string                 `json:"session_id,omitempty"`
 	Data      string                 `json:"data,omitempty"`
 	Config    map[string]interface{} `json:"config,omitempty"`
+}
+
+// WSWriter WebSocket写入器
+type WSWriter struct {
+	conn   *websocket.Conn
+	mutex  sync.Mutex
+	closed bool
+}
+
+// NewWSWriter 创建WebSocket写入器
+func NewWSWriter(conn *websocket.Conn) *WSWriter {
+	return &WSWriter{
+		conn: conn,
+	}
+}
+
+// WriteEvent 写入事件
+func (w *WSWriter) WriteEvent(event string, payload interface{}) error {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	if w.closed {
+		return fmt.Errorf("writer closed")
+	}
+
+	message := map[string]interface{}{
+		"event": event,
+		"data":  payload,
+	}
+
+	return w.conn.WriteJSON(message)
+}
+
+// WriteError 写入错误
+func (w *WSWriter) WriteError(code, message string) error {
+	return w.WriteEvent("error", ErrorInfo{Code: code, Message: message})
+}
+
+// Close 关闭写入器
+func (w *WSWriter) Close() error {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	if w.closed {
+		return nil
+	}
+
+	w.closed = true
+	return w.conn.Close()
+}
+
+// ReadJSON 读取JSON消息
+func (w *WSWriter) ReadJSON(v interface{}) error {
+	return w.conn.ReadJSON(v)
+}
+
+// IsClosed 检查是否已关闭
+func (w *WSWriter) IsClosed() bool {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+	return w.closed
 }
 
 func NewV2VoiceHandler(algoServiceURL string) *V2VoiceHandler {
@@ -48,7 +109,7 @@ func (h *V2VoiceHandler) HandleWebSocket(c *gin.Context) {
 	traceID, tenantID := h.extractTraceInfo(c)
 
 	// 创建WebSocket写入器
-	wsWriter := ssews.NewWSWriter(conn)
+	wsWriter := NewWSWriter(conn)
 	streamHandler := h.createStreamHandler(wsWriter, traceID, tenantID)
 
 	logrus.WithFields(logrus.Fields{
@@ -65,7 +126,7 @@ func (h *V2VoiceHandler) HandleWebSocket(c *gin.Context) {
 	h.handleMessageLoop(streamHandler, wsWriter)
 }
 
-func (h *V2VoiceHandler) handleMessageLoop(handler *ssews.BaseStreamHandler, wsWriter *ssews.WSWriter) {
+func (h *V2VoiceHandler) handleMessageLoop(handler *BaseStreamHandler, wsWriter *WSWriter) {
 	sessionID := ""
 
 	for {
@@ -115,7 +176,7 @@ func (h *V2VoiceHandler) handleMessageLoop(handler *ssews.BaseStreamHandler, wsW
 	}).Info("WebSocket语音连接关闭")
 }
 
-func (h *V2VoiceHandler) handleVoiceStart(handler *ssews.BaseStreamHandler, msg VoiceMessage) {
+func (h *V2VoiceHandler) handleVoiceStart(handler *BaseStreamHandler, msg VoiceMessage) {
 	if msg.SessionID == "" {
 		handler.WriteErrorEnvelope("missing_session_id", "Session ID is required")
 		return
@@ -148,7 +209,7 @@ func (h *V2VoiceHandler) handleVoiceStart(handler *ssews.BaseStreamHandler, msg 
 	})
 }
 
-func (h *V2VoiceHandler) handleVoiceAudio(handler *ssews.BaseStreamHandler, msg VoiceMessage) {
+func (h *V2VoiceHandler) handleVoiceAudio(handler *BaseStreamHandler, msg VoiceMessage) {
 	if msg.Data == "" {
 		handler.WriteErrorEnvelope("empty_audio_data", "Audio data is empty")
 		return
@@ -170,7 +231,7 @@ func (h *V2VoiceHandler) handleVoiceAudio(handler *ssews.BaseStreamHandler, msg 
 	})
 }
 
-func (h *V2VoiceHandler) handleVoiceStop(handler *ssews.BaseStreamHandler, msg VoiceMessage) {
+func (h *V2VoiceHandler) handleVoiceStop(handler *BaseStreamHandler, msg VoiceMessage) {
 	logrus.WithFields(logrus.Fields{
 		"trace_id":   handler.TraceID,
 		"session_id": msg.SessionID,

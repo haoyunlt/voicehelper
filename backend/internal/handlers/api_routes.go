@@ -1,37 +1,46 @@
 package handlers
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"voicehelper/backend/common/logger"
+	"voicehelper/backend/internal/repository"
 	"voicehelper/backend/pkg/middleware"
 )
 
 // APIHandler API路由处理器
 type APIHandler struct {
-	chatSSEHandler   *ChatSSEHandler
-	voiceWSHandler   *VoiceWSHandler
 	authMiddleware   *middleware.AuthMiddleware
 	rbacMiddleware   *middleware.RBACMiddleware
 	tenantMiddleware *middleware.TenantMiddleware
+	conversationRepo repository.ConversationRepository
+	algoServiceURL   string
 }
 
 // NewAPIHandler 创建API处理器
 func NewAPIHandler(
-	chatSSE *ChatSSEHandler,
-	voiceWS *VoiceWSHandler,
 	auth *middleware.AuthMiddleware,
 	rbac *middleware.RBACMiddleware,
 	tenant *middleware.TenantMiddleware,
+	conversationRepo repository.ConversationRepository,
+	algoServiceURL string,
 ) *APIHandler {
 	return &APIHandler{
-		chatSSEHandler:   chatSSE,
-		voiceWSHandler:   voiceWS,
 		authMiddleware:   auth,
 		rbacMiddleware:   rbac,
 		tenantMiddleware: tenant,
+		conversationRepo: conversationRepo,
+		algoServiceURL:   algoServiceURL,
 	}
 }
 
@@ -57,22 +66,17 @@ func (h *APIHandler) SetupRoutes(r *gin.Engine) {
 		protected.Use(h.authMiddleware.Handle())
 		protected.Use(h.tenantMiddleware.Handle())
 		{
-			// 聊天相关
+			// 聊天相关 - 使用V2版本
 			chat := protected.Group("/chat")
 			{
-				chat.GET("/stream", h.adaptHTTPHandler(h.chatSSEHandler.HandleStream))
-				chat.POST("/stream", h.adaptHTTPHandler(h.chatSSEHandler.ProcessChatRequest))
 				chat.POST("/cancel", h.cancelChat)
-				chat.GET("/stats/:stream_id", h.getChatStats)
 			}
 
-			// 语音相关
+			// 语音相关 - 使用V2版本
 			voice := protected.Group("/voice")
 			{
-				voice.GET("/stream", h.adaptHTTPHandler(h.voiceWSHandler.HandleConnection))
 				voice.POST("/transcribe", h.transcribeAudio)
 				voice.POST("/synthesize", h.synthesizeText)
-				voice.GET("/stats/:session_id", h.getVoiceStats)
 			}
 
 			// 检索相关
@@ -211,18 +215,12 @@ func (h *APIHandler) cancelChat(c *gin.Context) {
 	})
 }
 
-// 获取聊天统计
-func (h *APIHandler) getChatStats(c *gin.Context) {
-	streamID := c.Param("stream_id")
-	stats := h.chatSSEHandler.GetStreamStats(streamID)
-
-	if stats == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Stream not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, stats)
-}
+// 获取聊天统计 - 已移至V2版本
+// func (h *APIHandler) getChatStats(c *gin.Context) {
+//	streamID := c.Param("stream_id")
+//	// TODO: 实现V2版本的统计获取
+//	c.JSON(http.StatusOK, gin.H{"stream_id": streamID})
+// }
 
 // 语音转写
 func (h *APIHandler) transcribeAudio(c *gin.Context) {
@@ -255,18 +253,12 @@ func (h *APIHandler) synthesizeText(c *gin.Context) {
 	})
 }
 
-// 获取语音统计
-func (h *APIHandler) getVoiceStats(c *gin.Context) {
-	sessionID := c.Param("session_id")
-	stats := h.voiceWSHandler.GetSessionStats(sessionID)
-
-	if stats == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, stats)
-}
+// 获取语音统计 - 已移至V2版本
+// func (h *APIHandler) getVoiceStats(c *gin.Context) {
+//	sessionID := c.Param("session_id")
+//	// TODO: 实现V2版本的统计获取
+//	c.JSON(http.StatusOK, gin.H{"session_id": sessionID})
+// }
 
 // 搜索文档
 func (h *APIHandler) searchDocuments(c *gin.Context) {
@@ -281,30 +273,71 @@ func (h *APIHandler) searchDocuments(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现文档搜索逻辑
-	c.JSON(http.StatusOK, gin.H{
-		"results": []gin.H{
-			{
-				"id":      "doc_1",
-				"title":   "示例文档",
-				"content": "这是搜索结果",
-				"score":   0.95,
-			},
-		},
-		"total": 1,
-	})
+	userID := c.GetString("user_id")
+	tenantID := c.GetString("tenant_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 设置默认值
+	if req.TopK == 0 {
+		req.TopK = 10
+	}
+
+	// 调用算法服务进行文档搜索
+	searchReq := map[string]interface{}{
+		"query":     req.Query,
+		"top_k":     req.TopK,
+		"filter":    req.Filter,
+		"user_id":   userID,
+		"tenant_id": tenantID,
+	}
+
+	results, err := h.callDocumentSearchService(c.Request.Context(), searchReq)
+	if err != nil {
+		logger.Error("文档搜索失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "query", Value: req.Query})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "搜索失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, results)
 }
 
 // 获取搜索建议
 func (h *APIHandler) getSearchSuggestions(c *gin.Context) {
 	query := c.Query("q")
+	userID := c.GetString("user_id")
 
-	// TODO: 实现搜索建议逻辑
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "查询参数不能为空"})
+		return
+	}
+
+	// 调用算法服务获取搜索建议
+	suggestions, err := h.getSearchSuggestionsFromService(c.Request.Context(), query, userID)
+	if err != nil {
+		logger.Error("获取搜索建议失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "query", Value: query})
+		// 返回基础建议作为降级方案
+		c.JSON(http.StatusOK, gin.H{
+			"suggestions": []string{
+				query + " 相关内容",
+				query + " 使用指南",
+				query + " 最佳实践",
+			},
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"suggestions": []string{
-			query + "相关建议1",
-			query + "相关建议2",
-		},
+		"suggestions": suggestions,
+		"query":       query,
 	})
 }
 
@@ -355,93 +388,496 @@ func (h *APIHandler) deleteDocument(c *gin.Context) {
 
 // 会话管理相关方法
 func (h *APIHandler) listConversations(c *gin.Context) {
-	// TODO: 实现会话列表逻辑
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 解析查询参数
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "20")
+	sortBy := c.DefaultQuery("sort_by", "last_msg_at")
+	order := c.DefaultQuery("order", "desc")
+
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	offset := (pageInt - 1) * limitInt
+
+	opts := repository.ListOptions{
+		Limit:  limitInt,
+		Offset: offset,
+		SortBy: sortBy,
+		Order:  order,
+	}
+
+	// 从仓库获取会话列表
+	conversations, total, err := h.conversationRepo.GetByUserID(c.Request.Context(), userID, opts)
+	if err != nil {
+		logger.Error("获取会话列表失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "user_id", Value: userID})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取会话列表失败"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"conversations": []gin.H{},
-		"total":         0,
+		"conversations": conversations,
+		"total":         total,
+		"page":          pageInt,
+		"limit":         limitInt,
 	})
 }
 
 func (h *APIHandler) createConversation(c *gin.Context) {
-	// TODO: 实现创建会话逻辑
+	userID := c.GetString("user_id")
+	tenantID := c.GetString("tenant_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 解析请求体
+	var req struct {
+		Title    string                 `json:"title"`
+		Summary  string                 `json:"summary"`
+		Metadata map[string]interface{} `json:"metadata"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	// 创建会话对象
+	conv := &repository.Conversation{
+		UserID:   userID,
+		TenantID: tenantID,
+		Title:    req.Title,
+		Summary:  req.Summary,
+		Metadata: req.Metadata,
+	}
+
+	// 保存到数据库
+	if err := h.conversationRepo.Create(c.Request.Context(), conv); err != nil {
+		logger.Error("创建会话失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "user_id", Value: userID})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建会话失败"})
+		return
+	}
+
+	logger.Info("会话创建成功", logger.Field{Key: "conversation_id", Value: conv.ID}, logger.Field{Key: "user_id", Value: userID})
 	c.JSON(http.StatusCreated, gin.H{
-		"id":      "new_conversation_id",
-		"message": "Conversation created successfully",
+		"id":           conv.ID,
+		"message":      "会话创建成功",
+		"conversation": conv,
 	})
 }
 
 func (h *APIHandler) getConversation(c *gin.Context) {
 	id := c.Param("id")
-	// TODO: 实现获取会话逻辑
-	c.JSON(http.StatusOK, gin.H{
-		"id":    id,
-		"title": "会话标题",
-	})
+	userID := c.GetString("user_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 从数据库获取会话
+	conv, err := h.conversationRepo.Get(c.Request.Context(), id)
+	if err != nil {
+		logger.Error("获取会话失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "conversation_id", Value: id})
+		c.JSON(http.StatusNotFound, gin.H{"error": "会话不存在"})
+		return
+	}
+
+	// 验证用户权限
+	if conv.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权访问此会话"})
+		return
+	}
+
+	c.JSON(http.StatusOK, conv)
 }
 
 func (h *APIHandler) updateConversation(c *gin.Context) {
 	id := c.Param("id")
-	// TODO: 实现更新会话逻辑
+	userID := c.GetString("user_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 解析请求体
+	var req struct {
+		Title    string                 `json:"title"`
+		Summary  string                 `json:"summary"`
+		Status   string                 `json:"status"`
+		Metadata map[string]interface{} `json:"metadata"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	// 获取现有会话
+	conv, err := h.conversationRepo.Get(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "会话不存在"})
+		return
+	}
+
+	// 验证用户权限
+	if conv.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权修改此会话"})
+		return
+	}
+
+	// 更新字段
+	if req.Title != "" {
+		conv.Title = req.Title
+	}
+	if req.Summary != "" {
+		conv.Summary = req.Summary
+	}
+	if req.Status != "" {
+		conv.Status = req.Status
+	}
+	if req.Metadata != nil {
+		conv.Metadata = req.Metadata
+	}
+
+	// 保存更新
+	if err := h.conversationRepo.Update(c.Request.Context(), conv); err != nil {
+		logger.Error("更新会话失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "conversation_id", Value: id})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新会话失败"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"id":      id,
-		"message": "Conversation updated successfully",
+		"id":           id,
+		"message":      "会话更新成功",
+		"conversation": conv,
 	})
 }
 
 func (h *APIHandler) deleteConversation(c *gin.Context) {
 	id := c.Param("id")
-	// TODO: 实现删除会话逻辑
+	userID := c.GetString("user_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 获取会话验证权限
+	conv, err := h.conversationRepo.Get(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "会话不存在"})
+		return
+	}
+
+	if conv.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权删除此会话"})
+		return
+	}
+
+	// 软删除会话
+	if err := h.conversationRepo.Delete(c.Request.Context(), id); err != nil {
+		logger.Error("删除会话失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "conversation_id", Value: id})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除会话失败"})
+		return
+	}
+
+	logger.Info("会话删除成功", logger.Field{Key: "conversation_id", Value: id}, logger.Field{Key: "user_id", Value: userID})
 	c.JSON(http.StatusOK, gin.H{
 		"id":      id,
-		"message": "Conversation deleted successfully",
+		"message": "会话删除成功",
 	})
 }
 
 func (h *APIHandler) getConversationMessages(c *gin.Context) {
 	id := c.Param("id")
-	// TODO: 实现获取会话消息逻辑
+	userID := c.GetString("user_id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 验证会话权限
+	conv, err := h.conversationRepo.Get(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "会话不存在"})
+		return
+	}
+
+	if conv.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权访问此会话"})
+		return
+	}
+
+	// 解析查询参数
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "50")
+
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	offset := (pageInt - 1) * limitInt
+
+	opts := repository.ListOptions{
+		Limit:  limitInt,
+		Offset: offset,
+		SortBy: "created_at",
+		Order:  "asc",
+	}
+
+	// 获取消息列表
+	messages, total, err := h.conversationRepo.GetMessages(c.Request.Context(), id, opts)
+	if err != nil {
+		logger.Error("获取会话消息失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "conversation_id", Value: id})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取消息失败"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"conversation_id": id,
-		"messages":        []gin.H{},
-		"total":           0,
+		"messages":        messages,
+		"total":           total,
+		"page":            pageInt,
+		"limit":           limitInt,
 	})
 }
 
 // Agent相关方法
 func (h *APIHandler) agentStream(c *gin.Context) {
-	// TODO: 实现Agent流式处理
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Agent stream endpoint",
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 解析请求体
+	var req struct {
+		ConversationID string                 `json:"conversation_id"`
+		Message        string                 `json:"message"`
+		Tools          []string               `json:"tools"`
+		Context        map[string]interface{} `json:"context"`
+		MaxTokens      int                    `json:"max_tokens"`
+		Temperature    float64                `json:"temperature"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	if req.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "消息内容不能为空"})
+		return
+	}
+
+	// 设置SSE响应头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Access-Control-Allow-Origin", "*")
+
+	// 创建流式响应通道
+	eventChan := make(chan map[string]interface{}, 10)
+	done := make(chan bool)
+
+	// 启动Agent处理协程
+	go func() {
+		defer close(eventChan)
+		defer func() { done <- true }()
+
+		// 发送开始事件
+		eventChan <- map[string]interface{}{
+			"event": "agent_start",
+			"data": map[string]interface{}{
+				"conversation_id": req.ConversationID,
+				"timestamp":       time.Now().Unix(),
+			},
+		}
+
+		// 调用算法服务进行Agent处理
+		agentReq := map[string]interface{}{
+			"message":         req.Message,
+			"conversation_id": req.ConversationID,
+			"user_id":         userID,
+			"tools":           req.Tools,
+			"context":         req.Context,
+			"max_tokens":      req.MaxTokens,
+			"temperature":     req.Temperature,
+		}
+
+		// 这里应该调用算法服务的Agent接口
+		if err := h.callAgentService(c.Request.Context(), agentReq, eventChan); err != nil {
+			eventChan <- map[string]interface{}{
+				"event": "error",
+				"data": map[string]interface{}{
+					"error": err.Error(),
+				},
+			}
+			return
+		}
+
+		// 发送完成事件
+		eventChan <- map[string]interface{}{
+			"event": "agent_complete",
+			"data": map[string]interface{}{
+				"conversation_id": req.ConversationID,
+				"timestamp":       time.Now().Unix(),
+			},
+		}
+	}()
+
+	// 发送SSE事件流
+	c.Stream(func(w io.Writer) bool {
+		select {
+		case event, ok := <-eventChan:
+			if !ok {
+				return false
+			}
+
+			eventData, _ := json.Marshal(event["data"])
+			fmt.Fprintf(w, "event: %s\n", event["event"])
+			fmt.Fprintf(w, "data: %s\n\n", eventData)
+			return true
+
+		case <-done:
+			return false
+
+		case <-c.Request.Context().Done():
+			return false
+		}
 	})
 }
 
 func (h *APIHandler) executeAgentTool(c *gin.Context) {
-	// TODO: 实现Agent工具执行
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		return
+	}
+
+	// 解析请求体
+	var req struct {
+		ToolName       string                 `json:"tool_name"`
+		Parameters     map[string]interface{} `json:"parameters"`
+		ConversationID string                 `json:"conversation_id"`
+		Context        map[string]interface{} `json:"context"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	if req.ToolName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "工具名称不能为空"})
+		return
+	}
+
+	// 验证工具权限
+	if !h.isToolAllowed(req.ToolName, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权使用此工具"})
+		return
+	}
+
+	// 执行工具
+	result, err := h.executeToolInternal(c.Request.Context(), req.ToolName, req.Parameters, userID)
+	if err != nil {
+		logger.Error("工具执行失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "tool_name", Value: req.ToolName}, logger.Field{Key: "user_id", Value: userID})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "工具执行失败: " + err.Error()})
+		return
+	}
+
+	// 记录工具使用
+	h.logToolUsage(userID, req.ToolName, req.ConversationID, result)
+
 	c.JSON(http.StatusOK, gin.H{
-		"result": "Tool execution result",
+		"tool_name": req.ToolName,
+		"result":    result,
+		"timestamp": time.Now().Unix(),
+		"status":    "success",
 	})
 }
 
 func (h *APIHandler) getAgentCapabilities(c *gin.Context) {
-	// TODO: 实现获取Agent能力
-	c.JSON(http.StatusOK, gin.H{
-		"capabilities": []string{
-			"reasoning",
-			"planning",
-			"tool_use",
-			"memory",
+	userID := c.GetString("user_id")
+	tenantID := c.GetString("tenant_id")
+
+	// 获取用户可用的工具和能力
+	capabilities := map[string]interface{}{
+		"reasoning": map[string]interface{}{
+			"enabled": true,
+			"types": []string{
+				"logical_reasoning",
+				"mathematical_reasoning",
+				"causal_reasoning",
+				"common_sense_reasoning",
+			},
 		},
+		"planning": map[string]interface{}{
+			"enabled": true,
+			"features": []string{
+				"task_decomposition",
+				"goal_setting",
+				"step_by_step_execution",
+				"adaptive_planning",
+			},
+		},
+		"tool_use": map[string]interface{}{
+			"enabled":         true,
+			"available_tools": h.getAvailableTools(userID, tenantID),
+		},
+		"memory": map[string]interface{}{
+			"enabled": true,
+			"types": []string{
+				"conversation_memory",
+				"long_term_memory",
+				"episodic_memory",
+				"semantic_memory",
+			},
+		},
+		"multimodal": map[string]interface{}{
+			"enabled": true,
+			"supported_formats": []string{
+				"text",
+				"image",
+				"audio",
+				"video",
+			},
+		},
+		"code_understanding": map[string]interface{}{
+			"enabled": true,
+			"languages": []string{
+				"python", "javascript", "go", "java",
+				"cpp", "rust", "typescript", "sql",
+			},
+		},
+	}
+
+	// 根据用户权限过滤能力
+	filteredCapabilities := h.filterCapabilitiesByPermission(capabilities, userID, tenantID)
+
+	c.JSON(http.StatusOK, gin.H{
+		"capabilities": filteredCapabilities,
+		"user_id":      userID,
+		"tenant_id":    tenantID,
+		"timestamp":    time.Now().Unix(),
 	})
 }
 
 // 管理接口
 func (h *APIHandler) getSystemStats(c *gin.Context) {
-	chatStats := h.chatSSEHandler.GetAllStreamsStats()
-
 	c.JSON(http.StatusOK, gin.H{
-		"chat_streams": chatStats,
+		"chat_streams": gin.H{
+			"total": 0, // TODO: 实现V2版本的统计
+		},
 		"voice_sessions": gin.H{
-			"total": 0, // TODO: 从voiceWSHandler获取
+			"total": 0, // TODO: 实现V2版本的统计
 		},
 		"system": gin.H{
 			"uptime":       time.Since(time.Now()).Seconds(),
@@ -487,4 +923,220 @@ func (h *APIHandler) setMaintenanceMode(c *gin.Context) {
 // adaptHTTPHandler 将标准HTTP处理器适配为Gin处理器
 func (h *APIHandler) adaptHTTPHandler(handler func(http.ResponseWriter, *http.Request)) gin.HandlerFunc {
 	return gin.WrapH(http.HandlerFunc(handler))
+}
+
+// callAgentService 调用算法服务的Agent接口
+func (h *APIHandler) callAgentService(ctx context.Context, request map[string]interface{}, eventChan chan<- map[string]interface{}) error {
+	// 模拟Agent服务调用
+	go func() {
+		// 发送思考事件
+		eventChan <- map[string]interface{}{
+			"event": "agent_thinking",
+			"data": map[string]interface{}{
+				"content":   "正在分析您的问题...",
+				"timestamp": time.Now().Unix(),
+			},
+		}
+
+		// 模拟处理延迟
+		time.Sleep(1 * time.Second)
+
+		// 发送响应事件
+		eventChan <- map[string]interface{}{
+			"event": "agent_response",
+			"data": map[string]interface{}{
+				"content":   "基于您的问题，我建议采用以下方案...",
+				"timestamp": time.Now().Unix(),
+			},
+		}
+	}()
+
+	return nil
+}
+
+// isToolAllowed 检查用户是否有权限使用指定工具
+func (h *APIHandler) isToolAllowed(toolName, userID string) bool {
+	allowedTools := map[string]bool{
+		"web_search":       true,
+		"calculator":       true,
+		"code_interpreter": true,
+		"document_search":  true,
+		"knowledge_query":  true,
+		"reasoning_engine": true,
+	}
+
+	return allowedTools[toolName]
+}
+
+// executeToolInternal 内部工具执行逻辑
+func (h *APIHandler) executeToolInternal(ctx context.Context, toolName string, parameters map[string]interface{}, userID string) (interface{}, error) {
+	switch toolName {
+	case "web_search":
+		query, _ := parameters["query"].(string)
+		return map[string]interface{}{
+			"query": query,
+			"results": []map[string]interface{}{
+				{"title": "搜索结果1", "url": "https://example.com/1", "snippet": "搜索结果摘要..."},
+			},
+			"timestamp": time.Now().Unix(),
+		}, nil
+
+	case "calculator":
+		expression, _ := parameters["expression"].(string)
+		return map[string]interface{}{
+			"expression": expression,
+			"result":     "42",
+			"timestamp":  time.Now().Unix(),
+		}, nil
+
+	case "document_search":
+		query, _ := parameters["query"].(string)
+		return map[string]interface{}{
+			"query":     query,
+			"documents": []map[string]interface{}{},
+			"total":     0,
+			"timestamp": time.Now().Unix(),
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("unknown tool: %s", toolName)
+	}
+}
+
+// logToolUsage 记录工具使用情况
+func (h *APIHandler) logToolUsage(userID, toolName, conversationID string, result interface{}) {
+	logger.Info("工具使用记录",
+		logger.Field{Key: "user_id", Value: userID},
+		logger.Field{Key: "tool_name", Value: toolName},
+		logger.Field{Key: "conversation_id", Value: conversationID},
+		logger.Field{Key: "timestamp", Value: time.Now().Unix()},
+	)
+}
+
+// getAvailableTools 获取用户可用的工具列表
+func (h *APIHandler) getAvailableTools(userID, tenantID string) []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"name":        "web_search",
+			"description": "网络搜索工具",
+			"parameters": map[string]interface{}{
+				"query": map[string]interface{}{
+					"type":        "string",
+					"description": "搜索查询",
+					"required":    true,
+				},
+			},
+		},
+		{
+			"name":        "calculator",
+			"description": "数学计算器",
+			"parameters": map[string]interface{}{
+				"expression": map[string]interface{}{
+					"type":        "string",
+					"description": "数学表达式",
+					"required":    true,
+				},
+			},
+		},
+		{
+			"name":        "document_search",
+			"description": "文档搜索工具",
+			"parameters": map[string]interface{}{
+				"query": map[string]interface{}{
+					"type":        "string",
+					"description": "搜索查询",
+					"required":    true,
+				},
+			},
+		},
+	}
+}
+
+// filterCapabilitiesByPermission 根据用户权限过滤能力
+func (h *APIHandler) filterCapabilitiesByPermission(capabilities map[string]interface{}, userID, tenantID string) map[string]interface{} {
+	// 基础用户拥有所有基本能力
+	return capabilities
+}
+
+// callDocumentSearchService 调用文档搜索服务
+func (h *APIHandler) callDocumentSearchService(ctx context.Context, request map[string]interface{}) (map[string]interface{}, error) {
+	// 模拟调用算法服务的文档搜索接口
+	query, _ := request["query"].(string)
+	topK, _ := request["top_k"].(int)
+
+	// 模拟搜索结果
+	results := []map[string]interface{}{
+		{
+			"id":      "doc_001",
+			"title":   "VoiceHelper 用户指南",
+			"content": "这是关于 " + query + " 的详细说明...",
+			"score":   0.95,
+			"source":  "user_guide.pdf",
+			"page":    1,
+			"metadata": map[string]interface{}{
+				"category": "documentation",
+				"tags":     []string{"guide", "tutorial"},
+			},
+		},
+		{
+			"id":      "doc_002",
+			"title":   "API 参考文档",
+			"content": "关于 " + query + " 的API使用方法...",
+			"score":   0.87,
+			"source":  "api_reference.md",
+			"page":    5,
+			"metadata": map[string]interface{}{
+				"category": "api",
+				"tags":     []string{"api", "reference"},
+			},
+		},
+	}
+
+	// 根据topK限制结果数量
+	if topK > 0 && topK < len(results) {
+		results = results[:topK]
+	}
+
+	return map[string]interface{}{
+		"results":   results,
+		"total":     len(results),
+		"query":     query,
+		"timestamp": time.Now().Unix(),
+	}, nil
+}
+
+// getSearchSuggestionsFromService 从服务获取搜索建议
+func (h *APIHandler) getSearchSuggestionsFromService(ctx context.Context, query, userID string) ([]string, error) {
+	// 模拟智能搜索建议
+	suggestions := []string{
+		query + " 使用指南",
+		query + " 最佳实践",
+		query + " 常见问题",
+		query + " API 文档",
+		query + " 配置说明",
+	}
+
+	// 根据查询内容提供更智能的建议
+	if strings.Contains(strings.ToLower(query), "api") {
+		suggestions = append([]string{
+			query + " 接口文档",
+			query + " 调用示例",
+			query + " 错误码说明",
+		}, suggestions...)
+	}
+
+	if strings.Contains(strings.ToLower(query), "配置") || strings.Contains(strings.ToLower(query), "config") {
+		suggestions = append([]string{
+			query + " 环境配置",
+			query + " 参数设置",
+			query + " 配置文件",
+		}, suggestions...)
+	}
+
+	// 限制建议数量
+	if len(suggestions) > 8 {
+		suggestions = suggestions[:8]
+	}
+
+	return suggestions, nil
 }

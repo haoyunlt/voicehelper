@@ -1,270 +1,342 @@
 package handlers
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
-	"voicehelper/backend/internal/ssews"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
-type V2ChatHandler struct {
+type V2ChatHandlerSimple struct {
 	BaseHandler
 }
 
 type ChatRequest struct {
 	Query     string                 `json:"query"`
+	SessionID string                 `json:"session_id,omitempty"`
+	UserID    string                 `json:"user_id,omitempty"`
+	Context   map[string]interface{} `json:"context,omitempty"`
+}
+
+// AlgoChatRequest 算法服务聊天请求
+type AlgoChatRequest struct {
+	Query     string                 `json:"query"`
 	SessionID string                 `json:"session_id"`
 	Context   map[string]interface{} `json:"context,omitempty"`
 }
 
-type CancelRequest struct {
-	SessionID string `json:"session_id"`
+type ChatResponse struct {
+	Status    string      `json:"status"`
+	Message   string      `json:"message,omitempty"`
+	Data      interface{} `json:"data,omitempty"`
+	SessionID string      `json:"session_id,omitempty"`
 }
 
-// SSEWriter SSE写入器
-type SSEWriter struct {
-	w       http.ResponseWriter
-	flusher http.Flusher
-	closed  bool
+// SSEEvent SSE事件结构
+type SSEEvent struct {
+	Event string      `json:"event"`
+	Data  interface{} `json:"data"`
 }
 
-// ErrorInfo 错误信息
-type ErrorInfo struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+// SSEEventData SSE事件数据
+type SSEEventData struct {
+	Meta map[string]interface{} `json:"meta,omitempty"`
+	Data interface{}            `json:"data,omitempty"`
 }
 
-// NewSSEWriter 创建SSE写入器
-func NewSSEWriter(w http.ResponseWriter) *SSEWriter {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		return nil
-	}
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Cache-Control")
-
-	return &SSEWriter{w: w, flusher: flusher}
-}
-
-// WriteEvent 写入事件
-func (s *SSEWriter) WriteEvent(event string, payload interface{}) error {
-	if s.closed {
-		return fmt.Errorf("writer closed")
-	}
-
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(s.w, "event: %s\n", event)
-	fmt.Fprintf(s.w, "data: %s\n\n", data)
-	s.flusher.Flush()
-
-	return nil
-}
-
-// WriteError 写入错误
-func (s *SSEWriter) WriteError(code, message string) error {
-	return s.WriteEvent("error", ErrorInfo{Code: code, Message: message})
-}
-
-// Close 关闭写入器
-func (s *SSEWriter) Close() error {
-	s.closed = true
-	return nil
-}
-
-func NewV2ChatHandler(algoServiceURL string) *V2ChatHandler {
-	return &V2ChatHandler{
+func NewV2ChatHandlerSimple(algoServiceURL string) *V2ChatHandlerSimple {
+	return &V2ChatHandlerSimple{
 		BaseHandler: BaseHandler{
 			AlgoServiceURL: algoServiceURL,
 		},
 	}
 }
 
-func (h *V2ChatHandler) StreamChat(c *gin.Context) {
-	// 创建 SSE 写入器
-	writer := NewSSEWriter(c.Writer)
-	if writer == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "SSE not supported"})
-		return
-	}
-	defer writer.Close()
-
-	// 提取追踪信息
-	traceID, tenantID := h.extractTraceInfo(c)
-	streamHandler := h.createStreamHandler(writer, traceID, tenantID)
-
-	// 解析请求
+// HandleChatQuery 处理聊天查询
+func (h *V2ChatHandlerSimple) HandleChatQuery(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		streamHandler.WriteErrorEnvelope("invalid_request", err.Error())
+		c.JSON(http.StatusBadRequest, ChatResponse{
+			Status:  "error",
+			Message: "Invalid request format: " + err.Error(),
+		})
 		return
 	}
 
-	// 验证请求
-	if req.Query == "" {
-		streamHandler.WriteErrorEnvelope("empty_query", "Query cannot be empty")
-		return
-	}
-
-	if req.SessionID == "" {
-		streamHandler.WriteErrorEnvelope("missing_session_id", "Session ID is required")
-		return
-	}
+	traceID, tenantID := h.extractTraceInfo(c)
 
 	logrus.WithFields(logrus.Fields{
 		"trace_id":   traceID,
 		"tenant_id":  tenantID,
 		"session_id": req.SessionID,
-		"query":      req.Query[:min(len(req.Query), 100)],
-	}).Info("开始处理聊天请求")
+		"query":      req.Query,
+	}).Info("处理聊天查询")
 
-	// 转发到算法服务
-	h.forwardToAlgoService(streamHandler, req)
+	// 调用算法服务
+	response, err := h.callAlgoService(req, traceID)
+	if err != nil {
+		logrus.WithError(err).Error("算法服务调用失败")
+		c.JSON(http.StatusInternalServerError, ChatResponse{
+			Status:  "error",
+			Message: "算法服务调用失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
-func (h *V2ChatHandler) CancelChat(c *gin.Context) {
-	var req CancelRequest
+// HandleChatStream 处理聊天流
+func (h *V2ChatHandlerSimple) HandleChatStream(c *gin.Context) {
+	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		c.JSON(http.StatusBadRequest, ChatResponse{
+			Status:  "error",
+			Message: "Invalid request format: " + err.Error(),
+		})
 		return
 	}
 
-	if req.SessionID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Session ID is required"})
-		return
-	}
+	traceID, tenantID := h.extractTraceInfo(c)
 
-	// TODO: 实现取消逻辑，向算法服务发送取消请求
-	logrus.WithField("session_id", req.SessionID).Info("取消聊天会话")
-
-	c.JSON(http.StatusOK, gin.H{
-		"status":     "cancelled",
+	logrus.WithFields(logrus.Fields{
+		"trace_id":   traceID,
+		"tenant_id":  tenantID,
 		"session_id": req.SessionID,
+		"query":      req.Query,
+	}).Info("处理流式聊天")
+
+	// 设置SSE头
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Headers", "Cache-Control")
+
+	// 调用算法服务流式接口
+	err := h.streamFromAlgoService(c, req, traceID, tenantID)
+	if err != nil {
+		logrus.WithError(err).Error("流式聊天处理失败")
+		// 发送错误事件
+		h.sendSSEEvent(c, "error", map[string]interface{}{
+			"error":   "stream_failed",
+			"message": err.Error(),
+		}, traceID, tenantID)
+	}
+}
+
+// StreamChat 处理流式聊天
+func (h *V2ChatHandlerSimple) StreamChat(c *gin.Context) {
+	h.HandleChatStream(c)
+}
+
+// CancelChat 取消聊天
+func (h *V2ChatHandlerSimple) CancelChat(c *gin.Context) {
+	var req map[string]string
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ChatResponse{
+			Status:  "error",
+			Message: "Invalid request format: " + err.Error(),
+		})
+		return
+	}
+
+	sessionID := req["session_id"]
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, ChatResponse{
+			Status:  "error",
+			Message: "缺少session_id",
+		})
+		return
+	}
+
+	traceID, _ := h.extractTraceInfo(c)
+
+	logrus.WithFields(logrus.Fields{
+		"trace_id":   traceID,
+		"session_id": sessionID,
+	}).Info("取消聊天会话")
+
+	// 调用算法服务取消接口
+	err := h.cancelAlgoServiceChat(sessionID, traceID)
+	if err != nil {
+		logrus.WithError(err).Error("取消聊天失败")
+		c.JSON(http.StatusInternalServerError, ChatResponse{
+			Status:  "error",
+			Message: "取消聊天失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, ChatResponse{
+		Status:    "success",
+		Message:   "Chat cancelled successfully",
+		SessionID: sessionID,
 	})
 }
 
-func (h *V2ChatHandler) forwardToAlgoService(handler *ssews.BaseStreamHandler, req ChatRequest) {
-	// 构建到算法服务的请求
-	reqBody, err := json.Marshal(req)
-	if err != nil {
-		handler.WriteErrorEnvelope("marshal_error", err.Error())
-		return
+// callAlgoService 调用算法服务
+func (h *V2ChatHandlerSimple) callAlgoService(req ChatRequest, traceID string) (*ChatResponse, error) {
+	// 构建算法服务请求
+	algoReq := AlgoChatRequest{
+		Query:     req.Query,
+		SessionID: req.SessionID,
+		Context:   req.Context,
 	}
 
-	// 创建HTTP请求
+	reqBody, err := json.Marshal(algoReq)
+	if err != nil {
+		return nil, fmt.Errorf("序列化请求失败: %w", err)
+	}
+
+	// 发送HTTP请求到算法服务
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
 	url := fmt.Sprintf("%s/api/v1/chat/stream", h.AlgoServiceURL)
-	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
-		handler.WriteErrorEnvelope("request_error", err.Error())
-		return
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("X-Trace-ID", handler.TraceID)
-	httpReq.Header.Set("X-Tenant-ID", handler.TenantID)
-
-	// 发送请求
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		handler.WriteErrorEnvelope("algo_service_error", err.Error())
-		return
+		return nil, fmt.Errorf("请求算法服务失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		handler.WriteErrorEnvelope("algo_service_error", fmt.Sprintf("Status: %d", resp.StatusCode))
-		return
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("算法服务返回错误: %d, %s", resp.StatusCode, string(body))
 	}
 
-	// 转发SSE流
-	h.forwardSSEStream(handler, resp.Body)
+	// 读取响应
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("读取响应失败: %w", err)
+	}
+
+	// 解析响应（简化处理，实际应该解析SSE流）
+	return &ChatResponse{
+		Status:    "success",
+		Message:   "Chat completed",
+		Data:      map[string]interface{}{"response": string(body)},
+		SessionID: req.SessionID,
+	}, nil
 }
 
-func (h *V2ChatHandler) forwardSSEStream(handler *ssews.BaseStreamHandler, body io.Reader) {
-	buf := make([]byte, 4096)
-	var eventBuffer []byte
+// streamFromAlgoService 从算法服务流式获取响应
+func (h *V2ChatHandlerSimple) streamFromAlgoService(c *gin.Context, req ChatRequest, traceID, tenantID string) error {
+	// 构建算法服务请求
+	algoReq := AlgoChatRequest{
+		Query:     req.Query,
+		SessionID: req.SessionID,
+		Context:   req.Context,
+	}
 
-	for {
-		n, err := body.Read(buf)
-		if n > 0 {
-			eventBuffer = append(eventBuffer, buf[:n]...)
+	reqBody, err := json.Marshal(algoReq)
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %w", err)
+	}
 
-			// 处理SSE事件
-			for {
-				lineEnd := bytes.Index(eventBuffer, []byte("\n\n"))
-				if lineEnd == -1 {
-					break
-				}
+	// 创建HTTP客户端
+	client := &http.Client{
+		Timeout: 60 * time.Second,
+	}
 
-				eventData := eventBuffer[:lineEnd]
-				eventBuffer = eventBuffer[lineEnd+2:]
+	url := fmt.Sprintf("%s/api/v1/chat/stream", h.AlgoServiceURL)
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return fmt.Errorf("请求算法服务失败: %w", err)
+	}
+	defer resp.Body.Close()
 
-				h.processSSEEvent(handler, eventData)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("算法服务返回错误: %d, %s", resp.StatusCode, string(body))
+	}
+
+	// 发送开始事件
+	h.sendSSEEvent(c, "start", map[string]interface{}{
+		"session_id": req.SessionID,
+		"status":     "started",
+	}, traceID, tenantID)
+
+	// 读取SSE流并转发
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "data: ") {
+			dataStr := strings.TrimPrefix(line, "data: ")
+			if dataStr == "[DONE]" {
+				break
 			}
-		}
 
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			logrus.WithError(err).Error("读取算法服务响应失败")
-			handler.WriteErrorEnvelope("stream_error", err.Error())
-			break
+			// 解析事件数据
+			var eventData map[string]interface{}
+			if err := json.Unmarshal([]byte(dataStr), &eventData); err != nil {
+				logrus.WithError(err).Warn("解析SSE事件失败")
+				continue
+			}
+
+			// 转发事件
+			h.sendSSEEvent(c, "message", eventData, traceID, tenantID)
 		}
 	}
 
-	// 处理剩余数据
-	if len(eventBuffer) > 0 {
-		h.processSSEEvent(handler, eventBuffer)
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("读取流失败: %w", err)
 	}
+
+	// 发送完成事件
+	h.sendSSEEvent(c, "done", map[string]interface{}{
+		"session_id": req.SessionID,
+		"status":     "completed",
+	}, traceID, tenantID)
+
+	return nil
 }
 
-func (h *V2ChatHandler) processSSEEvent(handler *ssews.BaseStreamHandler, eventData []byte) {
-	lines := bytes.Split(eventData, []byte("\n"))
-	var event string
-	var data []byte
-
-	for _, line := range lines {
-		if bytes.HasPrefix(line, []byte("event: ")) {
-			event = string(line[7:])
-		} else if bytes.HasPrefix(line, []byte("data: ")) {
-			data = line[6:]
-		}
+// cancelAlgoServiceChat 取消算法服务聊天
+func (h *V2ChatHandlerSimple) cancelAlgoServiceChat(sessionID, traceID string) error {
+	reqBody, err := json.Marshal(map[string]string{"session_id": sessionID})
+	if err != nil {
+		return fmt.Errorf("序列化请求失败: %w", err)
 	}
 
-	if len(data) > 0 {
-		// 解析数据并重新封装
-		var payload interface{}
-		if err := json.Unmarshal(data, &payload); err != nil {
-			logrus.WithError(err).Error("解析SSE数据失败")
-			return
-		}
-
-		// 转发事件
-		if event == "" {
-			event = "message"
-		}
-		handler.WriteEnvelope(event, payload)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
 	}
+
+	url := fmt.Sprintf("%s/api/v1/chat/cancel", h.AlgoServiceURL)
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return fmt.Errorf("请求算法服务失败: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("算法服务返回错误: %d, %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
+// sendSSEEvent 发送SSE事件
+func (h *V2ChatHandlerSimple) sendSSEEvent(c *gin.Context, event string, data interface{}, traceID, tenantID string) {
+	eventData := SSEEventData{
+		Meta: map[string]interface{}{
+			"trace_id":  traceID,
+			"tenant_id": tenantID,
+			"timestamp": time.Now().Unix(),
+		},
+		Data: data,
 	}
-	return b
+
+	c.SSEvent(event, eventData)
+	c.Writer.Flush()
 }

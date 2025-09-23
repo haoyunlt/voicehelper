@@ -2,10 +2,13 @@
 const nextConfig = {
   output: 'standalone',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // 启用TypeScript类型检查
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // 启用ESLint检查
+  },
+  experimental: {
+    typedRoutes: true, // 启用类型化路由
   },
   async rewrites() {
     return [

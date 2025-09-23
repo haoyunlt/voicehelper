@@ -14,10 +14,12 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"voicehelper/backend/internal/handlers"
+	"voicehelper/backend/internal/repository"
 	"voicehelper/backend/pkg/cache"
 	"voicehelper/backend/pkg/config"
 	"voicehelper/backend/pkg/database"
 	"voicehelper/backend/pkg/middleware"
+	"voicehelper/backend/pkg/monitoring"
 )
 
 func main() {
@@ -26,6 +28,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	// 初始化监控系统
+	monitoringConfig := &monitoring.MonitoringConfig{
+		HealthCheckInterval:          30 * time.Second,
+		HealthCheckTimeout:           10 * time.Second,
+		PerformanceMonitoringEnabled: true,
+		SystemMetricsInterval:        15 * time.Second,
+		PrometheusEnabled:            true,
+		PrometheusPath:               "/metrics",
+	}
+	
+	monitoringSystem := monitoring.NewMonitoringSystem(monitoringConfig, cfg.Version)
 
 	// 设置日志级别
 	level, err := logrus.ParseLevel(cfg.LogLevel)
@@ -49,41 +63,34 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	// 初始化事件总线
-	eventBus := handlers.NewEventBus(redisClient)
+	// 注册健康检查器
+	monitoringSystem.RegisterDatabaseHealthChecker("postgres", db.DB)
+	monitoringSystem.RegisterRedisHealthChecker("redis", redisClient.Client)
+	monitoringSystem.RegisterHTTPServiceHealthChecker("algo-service", "http://localhost:8000/health")
+
+	// 初始化监控系统
+	if err := monitoringSystem.Initialize(); err != nil {
+		logrus.Fatalf("Failed to initialize monitoring system: %v", err)
+	}
 
 	// 创建处理器
-	sseConfig := handlers.SSEConfig{
-		MaxStreams:        cfg.SSE.MaxStreams,
-		EventQueueSize:    cfg.SSE.EventQueueSize,
-		KeepAliveInterval: time.Duration(cfg.SSE.KeepAliveInterval) * time.Second,
-		StreamTimeout:     time.Duration(cfg.SSE.StreamTimeout) * time.Minute,
-		MaxEventSize:      cfg.SSE.MaxEventSize,
-	}
-	chatSSEHandler := handlers.NewChatSSEHandler(eventBus, sseConfig)
-
-	wsConfig := handlers.WSConfig{
-		MaxConnections:    cfg.WebSocket.MaxConnections,
-		SendQueueSize:     cfg.WebSocket.SendQueueSize,
-		HeartbeatInterval: time.Duration(cfg.WebSocket.HeartbeatInterval) * time.Second,
-		HeartbeatTimeout:  time.Duration(cfg.WebSocket.HeartbeatTimeout) * time.Second,
-		ThrottleLimit:     int32(cfg.WebSocket.ThrottleLimit),
-		MaxFrameSize:      cfg.WebSocket.MaxFrameSize,
-	}
-	voiceWSHandler := handlers.NewVoiceWSHandler(eventBus, wsConfig)
+	// 旧版处理器已删除，使用V2版本
 
 	// 创建中间件
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWT.Secret, cfg.Auth.SkipPaths)
 	rbacMiddleware := middleware.NewRBACMiddleware()
 	tenantMiddleware := middleware.NewTenantMiddleware()
 
+	// 创建仓库
+	conversationRepo := repository.NewPostgresConversationRepository(db.DB)
+
 	// 创建API处理器
 	apiHandler := handlers.NewAPIHandler(
-		chatSSEHandler,
-		voiceWSHandler,
 		authMiddleware,
 		rbacMiddleware,
 		tenantMiddleware,
+		conversationRepo,
+		"http://localhost:8000", // 算法服务URL
 	)
 
 	// 设置Gin模式
@@ -99,10 +106,17 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.CORS())
 	router.Use(middleware.RequestID())
+	router.Use(monitoringSystem.MonitoringMiddleware()) // 使用监控系统中间件
 	router.Use(middleware.RateLimit(redisClient))
 
-	// 设置路由
+	// 设置监控路由
+	monitoringSystem.SetupRoutes(router)
+
+	// 设置API路由
 	apiHandler.SetupRoutes(router)
+
+	// 设置V2路由
+	handlers.SetupV2Routes(router)
 
 	// 创建HTTP服务器
 	server := &http.Server{
@@ -140,6 +154,9 @@ func main() {
 	if err := server.Shutdown(ctx); err != nil {
 		logrus.Errorf("Server forced to shutdown: %v", err)
 	}
+
+	// 关闭监控系统
+	monitoringSystem.Shutdown()
 
 	logrus.Info("Server exited")
 }

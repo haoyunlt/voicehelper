@@ -15,8 +15,10 @@ func SetupV2Routes(router *gin.Engine) {
 	}
 
 	// 创建处理器
-	chatHandler := NewV2ChatHandler(algoServiceURL)
+	chatHandler := NewV2ChatHandlerSimple(algoServiceURL)
 	voiceHandler := NewV2VoiceHandler(algoServiceURL)
+	voiceWSHandler := NewVoiceWSHandler(algoServiceURL)
+	webrtcHandler := NewWebRTCSignalingHandler(algoServiceURL)
 
 	// V2 API路由组
 	v2 := router.Group("/api/v2")
@@ -32,6 +34,13 @@ func SetupV2Routes(router *gin.Engine) {
 		voice := v2.Group("/voice")
 		{
 			voice.GET("/stream", voiceHandler.HandleWebSocket)
+			voice.GET("/ws", voiceWSHandler.HandleVoiceWebSocket)
+		}
+
+		// WebRTC信令路由
+		webrtc := v2.Group("/webrtc")
+		{
+			webrtc.GET("/signaling", webrtcHandler.HandleWebRTCSignaling)
 		}
 	}
 
