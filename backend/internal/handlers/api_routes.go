@@ -6,16 +6,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 
 	"voicehelper/backend/common/logger"
 	"voicehelper/backend/internal/repository"
 	"voicehelper/backend/pkg/middleware"
+	"voicehelper/backend/pkg/wechat"
 )
 
 // APIHandler API路由处理器

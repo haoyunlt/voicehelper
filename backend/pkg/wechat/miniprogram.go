@@ -96,7 +96,7 @@ func (c *MiniProgramClient) Code2Session(code string) (*SessionResponse, error) 
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"openid": sessionResp.OpenID[:8] + "...", // 只记录前8位
+		"openid":      sessionResp.OpenID[:8] + "...", // 只记录前8位
 		"has_unionid": sessionResp.UnionID != "",
 	}).Info("微信Code2Session成功")
 
@@ -155,19 +155,19 @@ func removePKCS7Padding(data []byte) []byte {
 	if length == 0 {
 		return data
 	}
-	
+
 	padding := int(data[length-1])
 	if padding > length || padding == 0 {
 		return data
 	}
-	
+
 	// 验证填充是否有效
 	for i := length - padding; i < length; i++ {
 		if data[i] != byte(padding) {
 			return data
 		}
 	}
-	
+
 	return data[:length-padding]
 }
 
