@@ -1,0 +1,58 @@
+# Milvus 配置文件
+# 版本: 2.3.3
+
+etcd:
+  endpoints:
+    - milvus-etcd:2379
+
+minio:
+  address: milvus-minio
+  port: 9000
+  accessKeyID: minioadmin
+  secretAccessKey: minioadmin
+  useSSL: false
+  bucketName: "a-bucket"
+  rootPath: "files"
+
+# 日志配置
+log:
+  level: info
+  file:
+    rootPath: ""
+    maxSize: 300
+    maxAge: 10
+    maxBackups: 20
+  format: text
+
+# 服务器配置
+server:
+  address: 0.0.0.0
+  port: 19530
+
+# 数据库配置
+database:
+  primaryPath: /var/lib/milvus/data
+  maxSize: 512
+
+# 存储配置
+storage:
+  path: /var/lib/milvus/data
+
+# 内存配置
+cache:
+  size: 2GB
+
+# 性能配置
+queryNode:
+  cacheSize: 1GB
+  
+indexNode:
+  buildParallel: 4
+
+# 集合配置
+collection:
+  maxPartitionNum: 4096
+
+# 索引配置
+index:
+  buildParallel: 4

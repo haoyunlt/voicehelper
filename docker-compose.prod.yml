@@ -1,0 +1,229 @@
+# VoiceHelper AI - 生产环境 Docker Compose 配置
+# 使用方法: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # 生产环境特定配置
+  # ===========================================
+
+  # PostgreSQL - 生产优化
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_SHARED_PRELOAD_LIBRARIES=pg_stat_statements
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 1G
+          cpus: '1'
+
+  # Redis - 生产优化
+  redis:
+    image: redis:7-alpine
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Milvus - 生产优化
+  milvus:
+    image: milvusdb/milvus:v2.3.3
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4'
+        reservations:
+          memory: 2G
+          cpus: '2'
+
+  # Go API 网关 - 生产配置
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - GIN_MODE=release
+      - LOG_LEVEL=info
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # Python 算法服务 - 生产配置
+  algo-service:
+    build:
+      context: ./algo
+      dockerfile: Dockerfile
+    environment:
+      - LOG_LEVEL=info
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+        reservations:
+          memory: 4G
+          cpus: '2'
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+
+  # 语音处理服务 - 生产配置
+  voice-service:
+    build:
+      context: ./algo
+      dockerfile: Dockerfile
+    environment:
+      - LOG_LEVEL=info
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2'
+        reservations:
+          memory: 2G
+          cpus: '1'
+
+  # Next.js 前端 - 生产配置
+  frontend:
+    build:
+      context: ./platforms/web
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # ===========================================
+  # 生产环境安全和监控
+  # ===========================================
+
+  # 安全扫描器
+  security-scanner:
+    image: aquasec/trivy:latest
+    container_name: voicehelper-security-scanner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - trivy_cache:/root/.cache/trivy
+    command: ["sleep", "infinity"]
+    networks:
+      - voicehelper-network
+    profiles:
+      - security
+
+  # 日志聚合器
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: voicehelper-fluentd
+    restart: unless-stopped
+    volumes:
+      - ./tools/deployment/config/fluentd:/fluentd/etc
+      - fluentd_logs:/var/log/fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    networks:
+      - voicehelper-network
+    profiles:
+      - logging
+
+  # 备份服务
+  backup-service:
+    image: postgres:15-alpine
+    container_name: voicehelper-backup
+    restart: unless-stopped
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD:-voicehelper123}
+    volumes:
+      - ./tools/deployment/scripts/backup.sh:/backup.sh
+      - backup_data:/backups
+    command: ["sleep", "infinity"]
+    networks:
+      - voicehelper-network
+    profiles:
+      - backup
+
+  # ===========================================
+  # 负载均衡器配置
+  # ===========================================
+
+  # HAProxy - 高可用负载均衡
+  haproxy:
+    image: haproxy:2.8-alpine
+    container_name: voicehelper-haproxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"  # HAProxy Stats
+    volumes:
+      - ./tools/deployment/config/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./tools/deployment/ssl:/etc/ssl/certs
+    depends_on:
+      - gateway
+      - frontend
+    networks:
+      - voicehelper-network
+    profiles:
+      - loadbalancer
+
+# ===========================================
+# 生产环境数据卷
+# ===========================================
+volumes:
+  # 安全和监控数据卷
+  trivy_cache:
+    driver: local
+  fluentd_logs:
+    driver: local
+  backup_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/backups/voicehelper

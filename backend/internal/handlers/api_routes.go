@@ -155,28 +155,99 @@ func (h *APIHandler) healthCheck(c *gin.Context) {
 // 微信小程序登录
 func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 	var req struct {
-		Code     string                 `json:"code" binding:"required"`
-		UserInfo map[string]interface{} `json:"user_info"`
-		TenantID string                 `json:"tenant_id"`
+		Code          string `json:"code" binding:"required"`
+		EncryptedData string `json:"encrypted_data,omitempty"`
+		IV            string `json:"iv,omitempty"`
+		Signature     string `json:"signature,omitempty"`
+		RawData       string `json:"raw_data,omitempty"`
+		TenantID      string `json:"tenant_id"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logrus.WithError(err).Error("微信登录请求参数错误")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "请求参数错误",
+			"code":  "INVALID_PARAMS",
+		})
 		return
 	}
 
-	// TODO: 实现微信登录逻辑
 	// 1. 使用code换取openid和session_key
-	// 2. 验证用户信息
-	// 3. 生成JWT token
+	wechatClient := wechat.NewMiniProgramClient(&wechat.MiniProgramConfig{
+		AppID:     os.Getenv("WECHAT_APPID"),
+		AppSecret: os.Getenv("WECHAT_APP_SECRET"),
+	})
+
+	sessionResp, err := wechatClient.Code2Session(req.Code)
+	if err != nil {
+		logrus.WithError(err).Error("微信Code2Session失败")
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "微信登录失败",
+			"code":  "WECHAT_LOGIN_FAILED",
+		})
+		return
+	}
+
+	// 2. 解密用户信息（如果提供了加密数据）
+	var userInfo *wechat.UserInfo
+	if req.EncryptedData != "" && req.IV != "" {
+		userInfo, err = wechatClient.DecryptUserInfo(req.EncryptedData, req.IV, sessionResp.SessionKey)
+		if err != nil {
+			logrus.WithError(err).Error("解密用户信息失败")
+			// 解密失败不影响登录，继续使用基础信息
+		}
+	}
+
+	// 3. 验证签名（如果提供了签名数据）
+	if req.Signature != "" && req.RawData != "" {
+		if !wechatClient.ValidateSignature(req.RawData, req.Signature, sessionResp.SessionKey) {
+			logrus.Error("用户信息签名验证失败")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "用户信息验证失败",
+				"code":  "SIGNATURE_INVALID",
+			})
+			return
+		}
+	}
+
+	// 4. 查询或创建用户
+	user, err := h.findOrCreateWechatUser(sessionResp, userInfo, req.TenantID)
+	if err != nil {
+		logrus.WithError(err).Error("创建微信用户失败")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "用户创建失败",
+			"code":  "USER_CREATE_FAILED",
+		})
+		return
+	}
+
+	// 5. 生成JWT token
+	token, err := h.generateJWTToken(user)
+	if err != nil {
+		logrus.WithError(err).Error("生成JWT token失败")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "令牌生成失败",
+			"code":  "TOKEN_GENERATE_FAILED",
+		})
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"user_id":   user.ID,
+		"openid":    sessionResp.OpenID[:8] + "...",
+		"tenant_id": req.TenantID,
+	}).Info("微信小程序登录成功")
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": "mock_jwt_token",
+		"token": token,
 		"user": gin.H{
-			"id":        "user_123",
-			"openid":    "mock_openid",
-			"tenant_id": req.TenantID,
+			"id":        user.ID,
+			"openid":    sessionResp.OpenID,
+			"nickname":  user.Nickname,
+			"avatar":    user.Avatar,
+			"tenant_id": user.TenantID,
 		},
+		"expires_in": 7200, // 2小时
 	})
 }
 

@@ -16,10 +16,12 @@ CREATE TABLE IF NOT EXISTS tenants (
     config JSONB DEFAULT '{}',
     quota JSONB DEFAULT '{"daily_tokens": 100000, "daily_audio_minutes": 60, "max_concurrent": 3}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_tenants_status (status),
-    INDEX idx_tenants_plan (plan)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 租户表索引
+CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants(status);
+CREATE INDEX IF NOT EXISTS idx_tenants_plan ON tenants(plan);
 
 -- ==================== 用户表 ====================
 CREATE TABLE IF NOT EXISTS users (
@@ -39,11 +41,13 @@ CREATE TABLE IF NOT EXISTS users (
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_users_tenant (tenant_id),
-    INDEX idx_users_openid (openid),
-    INDEX idx_users_status (status),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
 );
+
+-- 用户表索引
+CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_openid ON users(openid);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 
 -- ==================== 会话表 ====================
 CREATE TABLE IF NOT EXISTS conversations (
@@ -61,12 +65,14 @@ CREATE TABLE IF NOT EXISTS conversations (
     ended_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_conversations_tenant_user (tenant_id, user_id),
-    INDEX idx_conversations_status (status),
-    INDEX idx_conversations_started_at (started_at DESC),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+-- 会话表索引
+CREATE INDEX IF NOT EXISTS idx_conversations_tenant_user ON conversations(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
+CREATE INDEX IF NOT EXISTS idx_conversations_started_at ON conversations(started_at DESC);
 
 -- ==================== 消息表 ====================
 CREATE TABLE IF NOT EXISTS messages (
@@ -78,20 +84,22 @@ CREATE TABLE IF NOT EXISTS messages (
     role VARCHAR(20) NOT NULL, -- user, assistant, system, tool
     content TEXT NOT NULL,
     modality VARCHAR(20) DEFAULT 'text', -- text, audio, asr, tts
-    references JSONB DEFAULT '[]', -- RAG引用
+    rag_references JSONB DEFAULT '[]', -- RAG引用
     metadata JSONB DEFAULT '{}', -- 包含token使用、延迟等
     parent_message_id VARCHAR(100), -- 用于消息树结构
     version INT DEFAULT 1,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_messages_conversation (conversation_id),
-    INDEX idx_messages_tenant (tenant_id),
-    INDEX idx_messages_created_at (created_at DESC),
-    INDEX idx_messages_role (role),
     FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE,
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
 );
+
+-- 消息表索引
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_tenant ON messages(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_role ON messages(role);
 
 -- ==================== 审计日志表 ====================
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -108,12 +116,14 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     error_message TEXT,
     metadata JSONB DEFAULT '{}',
     duration_ms INT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_audit_tenant_user (tenant_id, user_id),
-    INDEX idx_audit_action (action),
-    INDEX idx_audit_created_at (created_at DESC),
-    INDEX idx_audit_request_id (request_id)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 审计表索引
+CREATE INDEX IF NOT EXISTS idx_audit_tenant_user ON audit_logs(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_created_at ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_request_id ON audit_logs(request_id);
 
 -- ==================== 文档表 ====================
 CREATE TABLE IF NOT EXISTS documents (
@@ -134,11 +144,13 @@ CREATE TABLE IF NOT EXISTS documents (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     indexed_at TIMESTAMP WITH TIME ZONE,
-    INDEX idx_documents_tenant_dataset (tenant_id, dataset_id),
-    INDEX idx_documents_status (status),
-    INDEX idx_documents_created_at (created_at DESC),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
 );
+
+-- 文档表索引
+CREATE INDEX IF NOT EXISTS idx_documents_tenant_dataset ON documents(tenant_id, dataset_id);
+CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
+CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at DESC);
 
 -- ==================== 工具调用记录表 ====================
 CREATE TABLE IF NOT EXISTS tool_calls (
@@ -156,13 +168,15 @@ CREATE TABLE IF NOT EXISTS tool_calls (
     duration_ms INT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP WITH TIME ZONE,
-    INDEX idx_tool_calls_tenant_user (tenant_id, user_id),
-    INDEX idx_tool_calls_tool (tool_name),
-    INDEX idx_tool_calls_status (status),
-    INDEX idx_tool_calls_created_at (created_at DESC),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
+
+-- 工具调用记录表索引
+CREATE INDEX IF NOT EXISTS idx_tool_calls_tenant_user ON tool_calls(tenant_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_tool_calls_tool ON tool_calls(tool_name);
+CREATE INDEX IF NOT EXISTS idx_tool_calls_status ON tool_calls(status);
+CREATE INDEX IF NOT EXISTS idx_tool_calls_created_at ON tool_calls(created_at DESC);
 
 -- ==================== 使用统计表 ====================
 CREATE TABLE IF NOT EXISTS usage_stats (
@@ -174,11 +188,13 @@ CREATE TABLE IF NOT EXISTS usage_stats (
     metric_value DECIMAL(10, 2) NOT NULL,
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_usage_stats (tenant_id, user_id, date, metric_type),
-    INDEX idx_usage_stats_tenant_date (tenant_id, date),
-    INDEX idx_usage_stats_metric_type (metric_type),
+    UNIQUE (tenant_id, user_id, date, metric_type),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
 );
+
+-- 使用统计表索引
+CREATE INDEX IF NOT EXISTS idx_usage_stats_tenant_date ON usage_stats(tenant_id, date);
+CREATE INDEX IF NOT EXISTS idx_usage_stats_metric_type ON usage_stats(metric_type);
 
 -- ==================== 缓存表 ====================
 CREATE TABLE IF NOT EXISTS cache_entries (
@@ -191,11 +207,13 @@ CREATE TABLE IF NOT EXISTS cache_entries (
     hit_count INT DEFAULT 0,
     last_hit_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_cache_type (cache_type),
-    INDEX idx_cache_tenant (tenant_id),
-    INDEX idx_cache_expires_at (expires_at)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 缓存表索引
+CREATE INDEX IF NOT EXISTS idx_cache_type ON cache_entries(cache_type);
+CREATE INDEX IF NOT EXISTS idx_cache_tenant ON cache_entries(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_cache_expires_at ON cache_entries(expires_at);
 
 -- ==================== 函数和触发器 ====================
 
