@@ -38,7 +38,7 @@ func main() {
 		PrometheusEnabled:            true,
 		PrometheusPath:               "/metrics",
 	}
-	
+
 	monitoringSystem := monitoring.NewMonitoringSystem(monitoringConfig, cfg.Version)
 
 	// 设置日志级别
