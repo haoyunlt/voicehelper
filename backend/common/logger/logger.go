@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"chatbot/common/errors"
+	"voicehelper/backend/common/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"

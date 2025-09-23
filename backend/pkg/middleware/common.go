@@ -54,7 +54,6 @@ func CORS() gin.HandlerFunc {
 	})
 }
 
-
 // RateLimit 限流中间件
 func RateLimit(redisClient *cache.RedisClient) gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {

@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"../errors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/voicehelper/common/errors"
 )
 
 // LogLevel 日志级别
