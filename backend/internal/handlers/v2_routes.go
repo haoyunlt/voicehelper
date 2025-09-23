@@ -20,6 +20,9 @@ func SetupV2Routes(router *gin.Engine) {
 	voiceWSHandler := NewVoiceWSHandler(algoServiceURL)
 	webrtcHandler := NewWebRTCSignalingHandler(algoServiceURL)
 
+	// 启动语音处理器的清理例程
+	voiceHandler.StartCleanupRoutine()
+
 	// V2 API路由组
 	v2 := router.Group("/api/v2")
 	{

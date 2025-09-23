@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,19 +37,19 @@ type ComponentHealth struct {
 
 // SystemHealth 系统整体健康状态
 type SystemHealth struct {
-	Status      HealthStatus               `json:"status"`
-	Timestamp   time.Time                  `json:"timestamp"`
-	Version     string                     `json:"version"`
-	Uptime      time.Duration              `json:"uptime"`
-	Components  map[string]ComponentHealth `json:"components"`
-	Summary     HealthSummary              `json:"summary"`
+	Status     HealthStatus               `json:"status"`
+	Timestamp  time.Time                  `json:"timestamp"`
+	Version    string                     `json:"version"`
+	Uptime     time.Duration              `json:"uptime"`
+	Components map[string]ComponentHealth `json:"components"`
+	Summary    HealthSummary              `json:"summary"`
 }
 
 // HealthSummary 健康状态摘要
 type HealthSummary struct {
-	TotalComponents   int `json:"total_components"`
-	HealthyComponents int `json:"healthy_components"`
-	DegradedComponents int `json:"degraded_components"`
+	TotalComponents     int `json:"total_components"`
+	HealthyComponents   int `json:"healthy_components"`
+	DegradedComponents  int `json:"degraded_components"`
 	UnhealthyComponents int `json:"unhealthy_components"`
 }
 
@@ -61,12 +61,12 @@ type HealthChecker interface {
 
 // HealthManager 健康管理器
 type HealthManager struct {
-	checkers    map[string]HealthChecker
-	cache       map[string]ComponentHealth
-	cacheMutex  sync.RWMutex
-	startTime   time.Time
-	version     string
-	
+	checkers   map[string]HealthChecker
+	cache      map[string]ComponentHealth
+	cacheMutex sync.RWMutex
+	startTime  time.Time
+	version    string
+
 	// Prometheus指标
 	healthCheckDuration *prometheus.HistogramVec
 	healthCheckStatus   *prometheus.GaugeVec
@@ -80,16 +80,16 @@ func NewHealthManager(version string) *HealthManager {
 		cache:     make(map[string]ComponentHealth),
 		startTime: time.Now(),
 		version:   version,
-		
+
 		healthCheckDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name: "voicehelper_health_check_duration_seconds",
-				Help: "Health check duration in seconds",
+				Name:    "voicehelper_health_check_duration_seconds",
+				Help:    "Health check duration in seconds",
 				Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 5},
 			},
 			[]string{"component", "status"},
 		),
-		
+
 		healthCheckStatus: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "voicehelper_health_check_status",
@@ -97,7 +97,7 @@ func NewHealthManager(version string) *HealthManager {
 			},
 			[]string{"component"},
 		),
-		
+
 		healthCheckTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "voicehelper_health_check_total",
@@ -118,11 +118,11 @@ func (hm *HealthManager) RegisterChecker(checker HealthChecker) {
 func (hm *HealthManager) CheckAll(ctx context.Context) SystemHealth {
 	start := time.Now()
 	components := make(map[string]ComponentHealth)
-	
+
 	// 并发检查所有组件
 	var wg sync.WaitGroup
 	resultChan := make(chan ComponentHealth, len(hm.checkers))
-	
+
 	for _, checker := range hm.checkers {
 		wg.Add(1)
 		go func(c HealthChecker) {
@@ -131,23 +131,23 @@ func (hm *HealthManager) CheckAll(ctx context.Context) SystemHealth {
 			resultChan <- health
 		}(checker)
 	}
-	
+
 	// 等待所有检查完成
 	go func() {
 		wg.Wait()
 		close(resultChan)
 	}()
-	
+
 	// 收集结果
 	for health := range resultChan {
 		components[health.Name] = health
 		hm.updateCache(health)
 	}
-	
+
 	// 计算整体状态
 	overallStatus := hm.calculateOverallStatus(components)
 	summary := hm.calculateSummary(components)
-	
+
 	systemHealth := SystemHealth{
 		Status:     overallStatus,
 		Timestamp:  time.Now(),
@@ -156,7 +156,7 @@ func (hm *HealthManager) CheckAll(ctx context.Context) SystemHealth {
 		Components: components,
 		Summary:    summary,
 	}
-	
+
 	logrus.WithFields(logrus.Fields{
 		"status":           overallStatus,
 		"check_duration":   time.Since(start),
@@ -165,28 +165,28 @@ func (hm *HealthManager) CheckAll(ctx context.Context) SystemHealth {
 		"degraded":         summary.DegradedComponents,
 		"unhealthy":        summary.UnhealthyComponents,
 	}).Info("Health check completed")
-	
+
 	return systemHealth
 }
 
 // checkComponent 检查单个组件
 func (hm *HealthManager) checkComponent(ctx context.Context, checker HealthChecker) ComponentHealth {
 	start := time.Now()
-	
+
 	// 设置超时
 	checkCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	
+
 	health := checker.Check(checkCtx)
 	duration := time.Since(start)
 	health.ResponseTime = duration
-	
+
 	// 记录指标
 	statusValue := hm.statusToFloat(health.Status)
 	hm.healthCheckDuration.WithLabelValues(health.Name, string(health.Status)).Observe(duration.Seconds())
 	hm.healthCheckStatus.WithLabelValues(health.Name).Set(statusValue)
 	hm.healthCheckTotal.WithLabelValues(health.Name, string(health.Status)).Inc()
-	
+
 	return health
 }
 
@@ -201,15 +201,15 @@ func (hm *HealthManager) updateCache(health ComponentHealth) {
 func (hm *HealthManager) GetCachedHealth() SystemHealth {
 	hm.cacheMutex.RLock()
 	defer hm.cacheMutex.RUnlock()
-	
+
 	components := make(map[string]ComponentHealth)
 	for name, health := range hm.cache {
 		components[name] = health
 	}
-	
+
 	overallStatus := hm.calculateOverallStatus(components)
 	summary := hm.calculateSummary(components)
-	
+
 	return SystemHealth{
 		Status:     overallStatus,
 		Timestamp:  time.Now(),
@@ -225,10 +225,10 @@ func (hm *HealthManager) calculateOverallStatus(components map[string]ComponentH
 	if len(components) == 0 {
 		return StatusUnknown
 	}
-	
+
 	hasUnhealthy := false
 	hasDegraded := false
-	
+
 	for _, health := range components {
 		switch health.Status {
 		case StatusUnhealthy:
@@ -237,7 +237,7 @@ func (hm *HealthManager) calculateOverallStatus(components map[string]ComponentH
 			hasDegraded = true
 		}
 	}
-	
+
 	if hasUnhealthy {
 		return StatusUnhealthy
 	}
@@ -252,7 +252,7 @@ func (hm *HealthManager) calculateSummary(components map[string]ComponentHealth)
 	summary := HealthSummary{
 		TotalComponents: len(components),
 	}
-	
+
 	for _, health := range components {
 		switch health.Status {
 		case StatusHealthy:
@@ -263,7 +263,7 @@ func (hm *HealthManager) calculateSummary(components map[string]ComponentHealth)
 			summary.UnhealthyComponents++
 		}
 	}
-	
+
 	return summary
 }
 
@@ -285,12 +285,12 @@ func (hm *HealthManager) statusToFloat(status HealthStatus) float64 {
 func (hm *HealthManager) StartPeriodicChecks(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	
+
 	logrus.WithField("interval", interval).Info("Starting periodic health checks")
-	
+
 	// 立即执行一次检查
 	hm.CheckAll(ctx)
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -327,21 +327,21 @@ func (d *DatabaseHealthChecker) Check(ctx context.Context) ComponentHealth {
 		LastChecked: start,
 		Metadata:    make(map[string]interface{}),
 	}
-	
+
 	// 检查数据库连接
 	if err := d.db.PingContext(ctx); err != nil {
 		health.Status = StatusUnhealthy
 		health.Message = fmt.Sprintf("Database ping failed: %v", err)
 		return health
 	}
-	
+
 	// 获取数据库统计信息
 	stats := d.db.Stats()
 	health.Metadata["open_connections"] = stats.OpenConnections
 	health.Metadata["in_use"] = stats.InUse
 	health.Metadata["idle"] = stats.Idle
 	health.Metadata["max_open_connections"] = stats.MaxOpenConnections
-	
+
 	// 检查连接池状态
 	if stats.OpenConnections >= stats.MaxOpenConnections {
 		health.Status = StatusDegraded
@@ -350,7 +350,7 @@ func (d *DatabaseHealthChecker) Check(ctx context.Context) ComponentHealth {
 		health.Status = StatusHealthy
 		health.Message = "Database is healthy"
 	}
-	
+
 	return health
 }
 
@@ -379,14 +379,14 @@ func (r *RedisHealthChecker) Check(ctx context.Context) ComponentHealth {
 		LastChecked: start,
 		Metadata:    make(map[string]interface{}),
 	}
-	
+
 	// 检查Redis连接
 	if err := r.client.Ping(ctx).Err(); err != nil {
 		health.Status = StatusUnhealthy
 		health.Message = fmt.Sprintf("Redis ping failed: %v", err)
 		return health
 	}
-	
+
 	// 获取Redis信息
 	info, err := r.client.Info(ctx, "memory", "clients").Result()
 	if err != nil {
@@ -394,18 +394,18 @@ func (r *RedisHealthChecker) Check(ctx context.Context) ComponentHealth {
 		health.Message = fmt.Sprintf("Failed to get Redis info: %v", err)
 		return health
 	}
-	
+
 	health.Metadata["info"] = info
 	health.Status = StatusHealthy
 	health.Message = "Redis is healthy"
-	
+
 	return health
 }
 
 // HTTPServiceHealthChecker HTTP服务健康检查器
 type HTTPServiceHealthChecker struct {
-	name string
-	url  string
+	name   string
+	url    string
 	client *http.Client
 }
 
@@ -431,14 +431,14 @@ func (h *HTTPServiceHealthChecker) Check(ctx context.Context) ComponentHealth {
 		LastChecked: start,
 		Metadata:    make(map[string]interface{}),
 	}
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", h.url, nil)
 	if err != nil {
 		health.Status = StatusUnhealthy
 		health.Message = fmt.Sprintf("Failed to create request: %v", err)
 		return health
 	}
-	
+
 	resp, err := h.client.Do(req)
 	if err != nil {
 		health.Status = StatusUnhealthy
@@ -446,10 +446,10 @@ func (h *HTTPServiceHealthChecker) Check(ctx context.Context) ComponentHealth {
 		return health
 	}
 	defer resp.Body.Close()
-	
+
 	health.Metadata["status_code"] = resp.StatusCode
 	health.Metadata["url"] = h.url
-	
+
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		health.Status = StatusHealthy
 		health.Message = "HTTP service is healthy"
@@ -460,7 +460,7 @@ func (h *HTTPServiceHealthChecker) Check(ctx context.Context) ComponentHealth {
 		health.Status = StatusDegraded
 		health.Message = fmt.Sprintf("HTTP service returned %d", resp.StatusCode)
 	}
-	
+
 	return health
 }
 
@@ -477,17 +477,17 @@ func NewHealthHandler(manager *HealthManager) *HealthHandler {
 // HandleHealth 处理健康检查请求
 func (h *HealthHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	
+
 	// 检查是否需要强制刷新
 	forceRefresh := r.URL.Query().Get("refresh") == "true"
-	
+
 	var health SystemHealth
 	if forceRefresh {
 		health = h.manager.CheckAll(ctx)
 	} else {
 		health = h.manager.GetCachedHealth()
 	}
-	
+
 	// 设置HTTP状态码
 	statusCode := http.StatusOK
 	switch health.Status {
@@ -496,10 +496,10 @@ func (h *HealthHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 	case StatusDegraded:
 		statusCode = http.StatusPartialContent
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	
+
 	if err := json.NewEncoder(w).Encode(health); err != nil {
 		logrus.WithError(err).Error("Failed to encode health response")
 	}
@@ -510,7 +510,7 @@ func (h *HealthHandler) HandleLiveness(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": "alive",
+		"status":    "alive",
 		"timestamp": time.Now(),
 	})
 }
@@ -518,17 +518,17 @@ func (h *HealthHandler) HandleLiveness(w http.ResponseWriter, r *http.Request) {
 // HandleReadiness 处理就绪性检查
 func (h *HealthHandler) HandleReadiness(w http.ResponseWriter, r *http.Request) {
 	health := h.manager.GetCachedHealth()
-	
+
 	statusCode := http.StatusOK
 	if health.Status == StatusUnhealthy {
 		statusCode = http.StatusServiceUnavailable
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": health.Status,
-		"ready": health.Status != StatusUnhealthy,
+		"status":    health.Status,
+		"ready":     health.Status != StatusUnhealthy,
 		"timestamp": time.Now(),
 	})
 }

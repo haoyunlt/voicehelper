@@ -191,81 +191,112 @@ async def cancel_chat(request: Dict[str, str]):
 @app.websocket("/api/v1/voice/stream")
 async def voice_websocket(websocket: WebSocket):
     """
-    WebSocket语音流接口
+    WebSocket语音流接口 - 增强版
     
     Args:
         websocket: WebSocket连接
     """
     await websocket.accept()
     
-    if not asr_adapter or not tts_adapter:
+    # 检查服务状态
+    if not enhanced_voice_service:
         await websocket.send_json({
-            "event": "error",
-            "data": {"error": "ASR/TTS服务未初始化"}
+            "type": "error",
+            "data": {"error": "语音服务未初始化"}
         })
         await websocket.close()
         return
     
     session_id = None
-    asr_session = None
+    voice_session = None
     
     try:
-        # 设置ASR回调
-        def on_partial(seq: int, text: str):
-            asyncio.create_task(websocket.send_json({
-                "event": "asr_partial",
-                "data": {"text": text, "confidence": 0.8}
-            }))
-        
-        def on_final(seq: int, text: str, confidence: float):
-            asyncio.create_task(websocket.send_json({
-                "event": "asr_final", 
-                "data": {"text": text, "confidence": confidence}
-            }))
-            
-            # 触发Agent处理
-            asyncio.create_task(process_voice_query(websocket, text))
-        
-        asr_adapter.on_partial(on_partial)
-        asr_adapter.on_final(on_final)
+        logger.info("New voice WebSocket connection established")
         
         while True:
             # 接收WebSocket消息
             message = await websocket.receive_json()
             msg_type = message.get("type")
             
-            if msg_type == "start":
+            if msg_type == "voice_start":
                 # 开始语音会话
                 session_id = message.get("session_id")
                 config = message.get("config", {})
                 
-                asr_session = asr_adapter.start(
-                    sr=config.get("sample_rate", 16000),
-                    codec="pcm",
-                    lang=config.get("language", "zh-CN")
-                )
+                logger.info(f"Starting voice session: {session_id}")
+                
+                # 创建语音会话
+                voice_session = {
+                    "session_id": session_id,
+                    "config": config,
+                    "start_time": time.time(),
+                    "audio_buffer": b"",
+                    "transcript_buffer": ""
+                }
                 
                 await websocket.send_json({
-                    "event": "session_started",
-                    "data": {"session_id": session_id, "asr_session": asr_session}
+                    "type": "session_started",
+                    "session_id": session_id,
+                    "status": "started"
                 })
                 
-            elif msg_type == "audio":
+            elif msg_type == "voice_audio":
                 # 处理音频数据
-                if asr_session:
+                if voice_session:
                     import base64
                     audio_data = base64.b64decode(message.get("data", ""))
-                    asr_adapter.feed(0, audio_data)
+                    
+                    # 使用增强语音服务处理
+                    try:
+                        # 模拟ASR处理
+                        from core.voice_request import VoiceRequest
+                        
+                        voice_request = VoiceRequest(
+                            conversation_id=session_id,
+                            audio_chunk=message.get("data", ""),
+                            is_final=False,
+                            config=voice_session.get("config", {})
+                        )
+                        
+                        # 异步处理语音
+                        async for response in enhanced_voice_service.process_voice_request(voice_request):
+                            if response.transcript:
+                                await websocket.send_json({
+                                    "type": "asr_partial",
+                                    "text": response.transcript,
+                                    "confidence": response.confidence or 0.8,
+                                    "session_id": session_id
+                                })
+                            
+                            if response.is_final and response.transcript:
+                                await websocket.send_json({
+                                    "type": "asr_final",
+                                    "text": response.transcript,
+                                    "confidence": response.confidence or 0.8,
+                                    "session_id": session_id
+                                })
+                                
+                                # 触发Agent处理
+                                await process_voice_query_enhanced(websocket, response.transcript, session_id)
+                                
+                    except Exception as e:
+                        logger.error(f"Voice processing error: {e}")
+                        await websocket.send_json({
+                            "type": "error",
+                            "error": str(e),
+                            "session_id": session_id
+                        })
                 
-            elif msg_type == "stop":
+            elif msg_type == "voice_stop":
                 # 停止语音会话
-                if asr_session:
-                    asr_adapter.stop()
-                    asr_session = None
+                if voice_session:
+                    logger.info(f"Stopping voice session: {session_id}")
+                    voice_session = None
                 
                 await websocket.send_json({
-                    "event": "session_stopped",
-                    "data": {"session_id": session_id}
+                    "type": "session_stopped",
+                    "session_id": session_id,
+                    "status": "stopped"
                 })
                 
     except WebSocketDisconnect:
@@ -278,11 +309,82 @@ async def voice_websocket(websocket: WebSocket):
         })
     finally:
         # 清理资源
-        if asr_session:
-            try:
-                asr_adapter.stop()
-            except:
-                pass
+        if voice_session:
+            logger.info(f"Cleaning up voice session: {session_id}")
+
+
+async def process_voice_query_enhanced(websocket: WebSocket, query: str, session_id: str):
+    """
+    增强的语音查询处理
+    """
+    try:
+        logger.info(f"Processing voice query: {query} for session: {session_id}")
+        
+        # 发送处理开始通知
+        await websocket.send_json({
+            "type": "agent_start",
+            "session_id": session_id,
+            "query": query
+        })
+        
+        # 使用Agent处理查询
+        if agent_service:
+            # 构建Agent请求
+            agent_request = {
+                "conversation_id": session_id,
+                "message": query,
+                "tools": ["web_search", "document_search"],
+                "context": [],
+                "max_tokens": 1000,
+                "temperature": 0.7
+            }
+            
+            # 流式处理Agent响应
+            async for chunk in agent_service.stream_chat(agent_request):
+                if chunk.get("type") == "agent_response":
+                    # 发送Agent响应
+                    await websocket.send_json({
+                        "type": "agent_response",
+                        "session_id": session_id,
+                        "text": chunk.get("content", ""),
+                        "is_final": chunk.get("is_final", False)
+                    })
+                    
+                    # 如果是最终响应，进行TTS转换
+                    if chunk.get("is_final") and enhanced_voice_service:
+                        try:
+                            # TTS处理
+                            tts_response = await enhanced_voice_service.text_to_speech(
+                                chunk.get("content", ""),
+                                session_id
+                            )
+                            
+                            if tts_response.get("audio_data"):
+                                await websocket.send_json({
+                                    "type": "tts_audio",
+                                    "session_id": session_id,
+                                    "audio_data": tts_response["audio_data"],
+                                    "format": tts_response.get("format", "wav")
+                                })
+                        except Exception as e:
+                            logger.error(f"TTS processing error: {e}")
+        else:
+            # 模拟响应
+            response_text = f"收到您的语音输入：{query}"
+            await websocket.send_json({
+                "type": "agent_response",
+                "session_id": session_id,
+                "text": response_text,
+                "is_final": True
+            })
+            
+    except Exception as e:
+        logger.error(f"Voice query processing error: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "session_id": session_id,
+            "error": str(e)
+        })
 
 
 async def process_voice_query(websocket: WebSocket, query: str):
