@@ -1,0 +1,428 @@
+# Redis 集群部署
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cluster
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  serviceName: redis-cluster
+  replicas: 6
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: cluster
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/component: cluster
+        app.kubernetes.io/part-of: voicehelper
+    spec:
+      serviceAccountName: voicehelper-app
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsNonRoot: true
+      initContainers:
+      - name: init-redis
+        image: redis:7-alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # 获取Pod IP
+          POD_IP=$(hostname -i)
+          # 创建Redis配置文件
+          cp /tmp/redis/redis.conf /etc/redis/redis.conf
+          sed -i "s/\${POD_IP}/$POD_IP/g" /etc/redis/redis.conf
+          # 设置节点ID
+          echo "cluster-announce-ip $POD_IP" >> /etc/redis/redis.conf
+        volumeMounts:
+        - name: redis-config
+          mountPath: /tmp/redis
+        - name: redis-config-final
+          mountPath: /etc/redis
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        - containerPort: 16379
+          name: cluster-bus
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: redis-config-final
+          mountPath: /etc/redis
+        - name: redis-logs
+          mountPath: /var/log/redis
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-config
+      - name: redis-config-final
+        emptyDir: {}
+      - name: redis-logs
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/component: cluster
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: voicehelper-ssd
+      resources:
+        requests:
+          storage: 50Gi
+---
+# Redis 集群服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cluster
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cluster
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  - port: 16379
+    targetPort: 16379
+    protocol: TCP
+    name: cluster-bus
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cluster
+---
+# Redis 客户端服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: client
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cluster
+---
+# Redis 集群初始化 Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-cluster-init
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: init
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/component: init
+    spec:
+      serviceAccountName: voicehelper-app
+      restartPolicy: OnFailure
+      containers:
+      - name: redis-cluster-init
+        image: redis:7-alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # 等待所有Redis节点启动
+          sleep 60
+          
+          # 获取所有Redis节点IP
+          REDIS_NODES=""
+          for i in $(seq 0 5); do
+            NODE_IP=$(nslookup redis-cluster-$i.redis-cluster.voicehelper-storage.svc.cluster.local | grep Address | tail -1 | awk '{print $2}')
+            REDIS_NODES="$REDIS_NODES $NODE_IP:6379"
+          done
+          
+          # 创建Redis集群
+          echo "Creating Redis cluster with nodes: $REDIS_NODES"
+          redis-cli --cluster create $REDIS_NODES --cluster-replicas 1 --cluster-yes
+          
+          # 验证集群状态
+          redis-cli -h redis-cluster-0.redis-cluster.voicehelper-storage.svc.cluster.local cluster info
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+---
+# Redis Sentinel 部署 (用于高可用)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-sentinel
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: sentinel
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/component: sentinel
+        app.kubernetes.io/part-of: voicehelper
+    spec:
+      serviceAccountName: voicehelper-app
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsNonRoot: true
+      containers:
+      - name: redis-sentinel
+        image: redis:7-alpine
+        ports:
+        - containerPort: 26379
+          name: sentinel
+        command:
+        - redis-sentinel
+        - /etc/redis/sentinel.conf
+        volumeMounts:
+        - name: sentinel-config
+          mountPath: /etc/redis
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "26379"
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -p
+            - "26379"
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: sentinel-config
+        configMap:
+          name: redis-sentinel-config
+---
+# Redis Sentinel 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-sentinel-config
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: sentinel-config
+data:
+  sentinel.conf: |
+    port 26379
+    dir /tmp
+    
+    # 监控Redis主节点
+    sentinel monitor mymaster redis-cluster-0.redis-cluster.voicehelper-storage.svc.cluster.local 6379 2
+    sentinel auth-pass mymaster Redis2025!
+    sentinel down-after-milliseconds mymaster 30000
+    sentinel parallel-syncs mymaster 1
+    sentinel failover-timeout mymaster 180000
+    
+    # 日志配置
+    logfile /var/log/redis/sentinel.log
+    loglevel notice
+    
+    # 安全配置
+    protected-mode no
+---
+# Redis Sentinel 服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-sentinel
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  type: ClusterIP
+  ports:
+  - port: 26379
+    targetPort: 26379
+    protocol: TCP
+    name: sentinel
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: sentinel
+---
+# Redis 监控导出器
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis-exporter
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis-exporter
+      app.kubernetes.io/component: metrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis-exporter
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: voicehelper
+    spec:
+      serviceAccountName: voicehelper-app
+      containers:
+      - name: redis-exporter
+        image: oliver006/redis_exporter:latest
+        ports:
+        - containerPort: 9121
+          name: metrics
+        env:
+        - name: REDIS_ADDR
+          value: "redis://redis.voicehelper-storage.svc.cluster.local:6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9121
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9121
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Redis 监控服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-metrics
+  namespace: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: redis-exporter
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: voicehelper
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9121
+    targetPort: 9121
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: redis-exporter
+    app.kubernetes.io/component: metrics

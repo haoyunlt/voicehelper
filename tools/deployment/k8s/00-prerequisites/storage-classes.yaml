@@ -1,0 +1,324 @@
+# VoiceHelper 存储类配置
+# 高性能 SSD 存储类 - 用于数据库和缓存
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-ssd
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+parameters:
+  type: ssd
+  fsType: ext4
+---
+# 标准存储类 - 用于日志和备份
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-standard
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  type: standard
+  fsType: ext4
+---
+# 快速存储类 - 用于临时数据和缓存
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-fast
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  type: nvme
+  fsType: ext4
+---
+# 网络存储类 - 用于共享存储
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-nfs
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: nfs.csi.k8s.io
+volumeBindingMode: Immediate
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+parameters:
+  server: "nfs-server.voicehelper-storage.svc.cluster.local"
+  share: "/exports"
+  mountPermissions: "0755"
+---
+# 本地存储类 - 用于高性能需求
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-local
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: false
+---
+# 持久化卷 - PostgreSQL 主节点
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-master-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: database
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/postgres/master
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-1
+---
+# 持久化卷 - PostgreSQL 从节点 1
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-replica-1-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: database
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/postgres/replica-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-2
+---
+# 持久化卷 - PostgreSQL 从节点 2
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-replica-2-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: database
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/postgres/replica-2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-3
+---
+# 持久化卷 - Redis 集群节点
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-node-1-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: cache
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/redis/node-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-1
+---
+# 持久化卷 - MinIO 对象存储
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-data-1-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: object-store
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-standard
+  local:
+    path: /data/minio/data-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-1
+---
+# 持久化卷 - FAISS 向量数据
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: faiss-data-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: vector-store
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/faiss
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-1
+---
+# 持久化卷 - BGE 模型缓存
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: bge-models-pv
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+    storage-tier: model-cache
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-nfs
+  nfs:
+    path: /exports/bge-models
+    server: nfs-server.voicehelper-storage.svc.cluster.local
+---
+# 持久化卷 - 监控数据 (Prometheus)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-data-pv
+  labels:
+    app.kubernetes.io/name: voicehelper-monitoring
+    app.kubernetes.io/component: storage
+    storage-tier: monitoring
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/prometheus
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-2
+---
+# 持久化卷 - 日志数据 (Elasticsearch)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elasticsearch-data-pv
+  labels:
+    app.kubernetes.io/name: voicehelper-monitoring
+    app.kubernetes.io/component: storage
+    storage-tier: logging
+spec:
+  capacity:
+    storage: 200Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-ssd
+  local:
+    path: /data/elasticsearch
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - storage-node-3

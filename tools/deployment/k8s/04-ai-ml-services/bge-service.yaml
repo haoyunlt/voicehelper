@@ -1,0 +1,344 @@
+# BGE 向量化服务部署
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bge-service
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bge-service
+      app.kubernetes.io/component: vectorization
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bge-service
+        app.kubernetes.io/component: vectorization
+        app.kubernetes.io/part-of: voicehelper
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: voicehelper-app
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      initContainers:
+      - name: model-downloader
+        image: python:3.9-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install huggingface-hub
+          python -c "
+          from huggingface_hub import snapshot_download
+          import os
+          model_name = os.environ.get('BGE_MODEL_NAME', 'BAAI/bge-large-zh-v1.5')
+          cache_dir = '/models'
+          print(f'Downloading model: {model_name}')
+          snapshot_download(
+              repo_id=model_name,
+              cache_dir=cache_dir,
+              local_dir=f'{cache_dir}/{model_name}',
+              local_dir_use_symlinks=False
+          )
+          print('Model download completed')
+          "
+        env:
+        - name: BGE_MODEL_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_MODEL_NAME
+        - name: HF_HOME
+          value: "/models"
+        volumeMounts:
+        - name: model-cache
+          mountPath: /models
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+      containers:
+      - name: bge-service
+        image: voicehelper/bge-service:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: MODEL_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_MODEL_NAME
+        - name: MODEL_CACHE_DIR
+          value: "/models"
+        - name: DEVICE
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_DEVICE
+        - name: NORMALIZE_EMBEDDINGS
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_NORMALIZE
+        - name: MAX_BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_BATCH_SIZE
+        - name: MAX_SEQUENCE_LENGTH
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_MAX_LENGTH
+        - name: PORT
+          value: "8080"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: LOG_LEVEL
+        - name: PROMETHEUS_ENABLED
+          value: "true"
+        - name: JAEGER_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: JAEGER_ENDPOINT
+        volumeMounts:
+        - name: model-cache
+          mountPath: /models
+        - name: tmp-dir
+          mountPath: /tmp
+        resources:
+          requests:
+            cpu: "1"
+            memory: "4Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 12
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: bge-models-pvc
+      - name: tmp-dir
+        emptyDir: {}
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      tolerations:
+      - key: "ai-workload"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+---
+# BGE 服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: bge-service
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+    app.kubernetes.io/part-of: voicehelper
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+---
+# BGE 模型缓存 PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bge-models-pvc
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: voicehelper-nfs
+  resources:
+    requests:
+      storage: 50Gi
+---
+# BGE 服务 HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bge-service-hpa
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: autoscaling
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bge-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+---
+# BGE 服务监控
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: bge-service-metrics
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bge-service
+      app.kubernetes.io/component: vectorization
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+# BGE 服务网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bge-service-netpol
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: bge-service
+      app.kubernetes.io/component: vectorization
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    ports:
+    - protocol: TCP
+      port: 14268  # Jaeger
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS for model downloads
+    - protocol: TCP
+      port: 80   # HTTP for model downloads
+---
+# BGE 服务 Pod 中断预算
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bge-service-pdb
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bge-service
+      app.kubernetes.io/component: vectorization

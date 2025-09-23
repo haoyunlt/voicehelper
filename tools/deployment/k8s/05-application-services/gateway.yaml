@@ -1,0 +1,482 @@
+# Gateway API 网关服务部署
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: api-gateway
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+      app.kubernetes.io/component: api-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gateway
+        app.kubernetes.io/component: api-gateway
+        app.kubernetes.io/part-of: voicehelper
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: voicehelper-app
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: gateway
+        image: voicehelper/gateway:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: grpc
+        env:
+        - name: PORT
+          value: "8080"
+        - name: GRPC_PORT
+          value: "8081"
+        - name: GIN_MODE
+          value: "release"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: LOG_LEVEL
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: CORS_ORIGINS
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret
+        - name: ADMIN_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: admin-secret
+        # 数据库连接
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: POSTGRES_HOST
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: POSTGRES_PORT
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        # Redis连接
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        # 服务发现
+        - name: ALGO_SERVICE_URL
+          value: "http://algo-service.voicehelper.svc.cluster.local:8000"
+        - name: VOICE_SERVICE_URL
+          value: "http://voice-service.voicehelper.svc.cluster.local:8001"
+        - name: BGE_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: BGE_SERVICE_URL
+        - name: FAISS_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: FAISS_SERVICE_URL
+        # 监控配置
+        - name: PROMETHEUS_ENABLED
+          value: "true"
+        - name: JAEGER_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: voicehelper-config
+              key: JAEGER_ENDPOINT
+        - name: OTEL_SERVICE_NAME
+          value: "gateway"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.name=gateway,service.version=2.0.0"
+        # 限流配置
+        - name: RATE_LIMIT_ENABLED
+          value: "true"
+        - name: RATE_LIMIT_RPS
+          value: "1000"
+        - name: RATE_LIMIT_BURST
+          value: "2000"
+        # 熔断配置
+        - name: CIRCUIT_BREAKER_ENABLED
+          value: "true"
+        - name: CIRCUIT_BREAKER_THRESHOLD
+          value: "10"
+        - name: CIRCUIT_BREAKER_TIMEOUT
+          value: "30s"
+        volumeMounts:
+        - name: tmp-dir
+          mountPath: /tmp
+        - name: config-dir
+          mountPath: /app/config
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12
+      volumes:
+      - name: tmp-dir
+        emptyDir: {}
+      - name: config-dir
+        configMap:
+          name: gateway-config
+      nodeSelector:
+        kubernetes.io/arch: amd64
+---
+# Gateway 服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: api-gateway
+    app.kubernetes.io/part-of: voicehelper
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: grpc
+  selector:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: api-gateway
+---
+# Gateway 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: config
+data:
+  app.yaml: |
+    server:
+      port: 8080
+      grpc_port: 8081
+      read_timeout: 30s
+      write_timeout: 30s
+      idle_timeout: 120s
+      max_header_bytes: 1048576
+    
+    database:
+      max_open_conns: 100
+      max_idle_conns: 10
+      conn_max_lifetime: 3600s
+      conn_max_idle_time: 600s
+    
+    redis:
+      pool_size: 100
+      min_idle_conns: 10
+      dial_timeout: 5s
+      read_timeout: 3s
+      write_timeout: 3s
+      pool_timeout: 4s
+      idle_timeout: 300s
+      idle_check_frequency: 60s
+    
+    rate_limit:
+      enabled: true
+      global_rps: 10000
+      per_ip_rps: 100
+      burst_multiplier: 2
+    
+    circuit_breaker:
+      enabled: true
+      max_requests: 100
+      interval: 60s
+      timeout: 30s
+      failure_threshold: 10
+    
+    tracing:
+      enabled: true
+      sample_rate: 0.1
+      
+    metrics:
+      enabled: true
+      path: "/metrics"
+      
+    logging:
+      format: "json"
+      output: "stdout"
+      
+  routes.yaml: |
+    routes:
+      - path: "/api/v1/health"
+        method: "GET"
+        handler: "health"
+        auth_required: false
+        rate_limit: 1000
+        
+      - path: "/api/v1/auth/*"
+        method: "*"
+        handler: "auth"
+        auth_required: false
+        rate_limit: 100
+        
+      - path: "/api/v1/chat/*"
+        method: "*"
+        handler: "chat"
+        auth_required: true
+        rate_limit: 50
+        upstream: "algo-service"
+        
+      - path: "/api/v1/voice/*"
+        method: "*"
+        handler: "voice"
+        auth_required: true
+        rate_limit: 30
+        upstream: "voice-service"
+        
+      - path: "/api/v1/vector/*"
+        method: "*"
+        handler: "vector"
+        auth_required: true
+        rate_limit: 100
+        upstream: "bge-service"
+        
+      - path: "/api/v1/search/*"
+        method: "*"
+        handler: "search"
+        auth_required: true
+        rate_limit: 200
+        upstream: "faiss-service"
+---
+# Gateway HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gateway-hpa
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: autoscaling
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+---
+# Gateway 服务监控
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: gateway-metrics
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+      app.kubernetes.io/component: api-gateway
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+# Gateway 网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-netpol
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+      app.kubernetes.io/component: api-gateway
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-storage
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+    ports:
+    - protocol: TCP
+      port: 8000  # Algo Service
+    - protocol: TCP
+      port: 8001  # Voice Service
+    - protocol: TCP
+      port: 8080  # BGE Service
+    - protocol: TCP
+      port: 8081  # FAISS Service
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    ports:
+    - protocol: TCP
+      port: 14268  # Jaeger
+---
+# Gateway Pod 中断预算
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-pdb
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gateway
+      app.kubernetes.io/component: api-gateway
