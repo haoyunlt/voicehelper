@@ -389,11 +389,30 @@ venv/
 env/
 .venv/
 .env_*/
+algo_venv/
+algo_venv_new/
+**/venv/
+**/.venv/
 
 # 新增构建产物和临时文件
 backend/tmp/
+backend/bin/
+backend/cmd/*/main
+backend/cmd/*/*
 *.test
 algo/start.sh.bak
+
+# BGE和FAISS服务相关
+algo/data/
+algo/storage/
+algo/vectors/
+algo/embeddings/
+services/bge-service/data/
+services/faiss-service/data/
+
+# K8s部署相关临时文件
+tools/deployment/k8s/*.log
+tools/deployment/k8s/temp_*
 tools/reports/*.md.bak
 
 # 平台特定忽略
