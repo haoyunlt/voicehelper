@@ -1,0 +1,302 @@
+# VoiceHelper 监控栈 Docker Compose 配置
+version: '3.8'
+
+services:
+  # Prometheus - 指标收集
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: voicehelper-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--alertmanager.notification-queue-capacity=10000'
+      - '--query.max-concurrency=50'
+      - '--storage.tsdb.wal-compression'
+      - '--web.enable-remote-write-receiver'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    networks:
+      - voicehelper-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - 数据可视化
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: voicehelper-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - voicehelper-network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # AlertManager - 告警管理
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: voicehelper-alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    networks:
+      - voicehelper-network
+
+  # Node Exporter - 系统指标
+  node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: voicehelper-node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - voicehelper-network
+
+  # cAdvisor - 容器指标
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: voicehelper-cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - voicehelper-network
+
+  # PostgreSQL Exporter - 数据库指标
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.12.0
+    container_name: voicehelper-postgres-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://voicehelper:voicehelper123@postgres:5432/voicehelper?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - voicehelper-network
+    depends_on:
+      - postgres
+
+  # Redis Exporter - Redis指标
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.51.0
+    container_name: voicehelper-redis-exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=redis123
+    ports:
+      - "9121:9121"
+    networks:
+      - voicehelper-network
+    depends_on:
+      - redis
+
+  # Jaeger - 分布式追踪
+  jaeger:
+    image: jaegertracing/all-in-one:1.46
+    container_name: voicehelper-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # HTTP collector
+      - "14250:14250"  # gRPC collector
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+    networks:
+      - voicehelper-network
+
+  # Loki - 日志聚合
+  loki:
+    image: grafana/loki:2.8.0
+    container_name: voicehelper-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    networks:
+      - voicehelper-network
+
+  # Promtail - 日志收集
+  promtail:
+    image: grafana/promtail:2.8.0
+    container_name: voicehelper-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - voicehelper-network
+    depends_on:
+      - loki
+
+  # Elasticsearch - 日志存储 (可选)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: voicehelper-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - voicehelper-network
+
+  # Kibana - 日志可视化 (可选)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: voicehelper-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - voicehelper-network
+    depends_on:
+      - elasticsearch
+
+  # Nginx Exporter - Web服务器指标 (如果使用Nginx)
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:0.10.0
+    container_name: voicehelper-nginx-exporter
+    restart: unless-stopped
+    command:
+      - '-nginx.scrape-uri=http://nginx:80/nginx_status'
+    ports:
+      - "9113:9113"
+    networks:
+      - voicehelper-network
+    depends_on:
+      - nginx
+
+  # VictoriaMetrics - 长期存储和高性能查询
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.93.0
+    container_name: voicehelper-victoriametrics
+    restart: unless-stopped
+    command:
+      - '--storageDataPath=/victoria-metrics-data'
+      - '--retentionPeriod=12'  # 12个月
+      - '--httpListenAddr=:8428'
+      - '--influxListenAddr=:8089'
+      - '--opentsdbListenAddr=:4242'
+      - '--search.maxConcurrentRequests=50'
+      - '--search.maxMemoryPerQuery=1GB'
+    ports:
+      - "8428:8428"
+    volumes:
+      - victoriametrics_data:/victoria-metrics-data
+    networks:
+      - voicehelper-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8428/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Blackbox Exporter - 端点监控
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    container_name: voicehelper-blackbox-exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
+    networks:
+      - voicehelper-network
+
+  # Pushgateway - 批处理作业指标
+  pushgateway:
+    image: prom/pushgateway:v1.6.0
+    container_name: voicehelper-pushgateway
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    networks:
+      - voicehelper-network
+
+# 网络配置
+networks:
+  voicehelper-network:
+    external: true
+
+# 数据卷配置
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  loki_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  victoriametrics_data:
+    driver: local

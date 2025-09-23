@@ -1,0 +1,222 @@
+# VoiceHelper Pre-commit 配置
+# 安装: pip install pre-commit && pre-commit install
+
+repos:
+  # 通用检查
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+        exclude: '\.md$'
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: detect-aws-credentials
+
+  # Python 代码格式化和检查
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        files: ^algo/.*\.py$
+        args: [--line-length=88]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: ^algo/.*\.py$
+        args: [--profile=black]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        files: ^algo/.*\.py$
+        args: [--max-line-length=88, --extend-ignore=E203,W503]
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        files: ^algo/.*\.py$
+        args: [-r, -f, json, -o, bandit-report.json]
+        exclude: ^algo/tests/.*
+
+  # JavaScript/TypeScript 格式化和检查
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0
+    hooks:
+      - id: prettier
+        files: \.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$
+        exclude: |
+          (?x)^(
+            node_modules/.*|
+            .*\.min\.(js|css)$|
+            package-lock\.json$|
+            yarn\.lock$
+          )$
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.44.0
+    hooks:
+      - id: eslint
+        files: \.(js|jsx|ts|tsx)$
+        exclude: node_modules/
+        additional_dependencies:
+          - eslint@8.44.0
+          - '@typescript-eslint/eslint-plugin@5.60.0'
+          - '@typescript-eslint/parser@5.60.0'
+          - eslint-config-prettier@8.8.0
+          - eslint-plugin-react@7.32.2
+          - eslint-plugin-react-hooks@4.6.0
+
+  # Go 代码格式化和检查
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+        files: ^backend/.*\.go$
+      - id: go-vet-mod
+        files: ^backend/.*\.go$
+      - id: go-imports
+        files: ^backend/.*\.go$
+      - id: go-cyclo
+        files: ^backend/.*\.go$
+        args: [-over=15]
+      - id: go-mod-tidy
+        files: ^backend/go\.(mod|sum)$
+      - id: go-unit-tests
+        files: ^backend/.*\.go$
+        args: [-timeout=5m]
+      - id: golangci-lint
+        files: ^backend/.*\.go$
+
+  # Docker 检查
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        files: Dockerfile.*
+
+  # Shell 脚本检查
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.5
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash)$
+
+  # 安全检查
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            .*\.lock$|
+            .*\.log$|
+            .*\.min\.(js|css)$|
+            node_modules/.*|
+            \.git/.*
+          )$
+
+  # 提交消息检查
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: 3.5.2
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # 自定义检查
+  - repo: local
+    hooks:
+      # 检查敏感信息
+      - id: check-sensitive-files
+        name: Check for sensitive files
+        entry: bash -c 'if find . -name "*.key" -o -name "*.pem" -o -name "*.p12" -o -name ".env.production" | grep -q .; then echo "Sensitive files found!"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+      # 检查大文件
+      - id: check-large-files
+        name: Check for large files
+        entry: bash -c 'find . -type f -size +10M | grep -v node_modules | grep -v .git && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+
+      # 检查TODO/FIXME注释
+      - id: check-todos
+        name: Check for TODO/FIXME comments
+        entry: bash -c 'if grep -r "TODO\|FIXME\|XXX\|HACK" --include="*.py" --include="*.go" --include="*.js" --include="*.ts" .; then echo "Found TODO/FIXME comments. Please address them before committing."; exit 1; fi'
+        language: system
+        pass_filenames: false
+        stages: [push]
+
+      # Python 测试覆盖率检查
+      - id: python-coverage
+        name: Python test coverage
+        entry: bash -c 'cd algo && python -m pytest --cov=. --cov-report=term-missing --cov-fail-under=70'
+        language: system
+        files: ^algo/.*\.py$
+        pass_filenames: false
+
+      # Go 测试覆盖率检查
+      - id: go-coverage
+        name: Go test coverage
+        entry: bash -c 'cd backend && go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out | tail -1 | awk "{print \$3}" | sed "s/%//" | awk "{if(\$1<70) exit 1}"'
+        language: system
+        files: ^backend/.*\.go$
+        pass_filenames: false
+
+      # 前端测试检查
+      - id: frontend-tests
+        name: Frontend tests
+        entry: bash -c 'cd frontend && npm test -- --coverage --watchAll=false'
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+
+      # API 文档同步检查
+      - id: api-docs-sync
+        name: API docs synchronization
+        entry: bash -c 'if [ -f docs/api/openapi.yaml ] && [ -f backend/api/openapi.yaml ]; then diff docs/api/openapi.yaml backend/api/openapi.yaml > /dev/null || (echo "API docs out of sync!"; exit 1); fi'
+        language: system
+        files: ^(docs/api/|backend/api/).*\.yaml$
+        pass_filenames: false
+
+      # 环境配置检查
+      - id: env-config-check
+        name: Environment configuration check
+        entry: bash -c 'python scripts/validate_env_config.py'
+        language: system
+        files: ^env\..*$
+        pass_filenames: false
+
+# 全局配置
+default_stages: [commit, push]
+fail_fast: false
+minimum_pre_commit_version: 3.0.0
+
+# CI 配置
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

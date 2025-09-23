@@ -1,0 +1,252 @@
+# VoiceHelper Kubernetes 存储配置
+# 适用于Docker Desktop Kubernetes
+
+# 存储类配置
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-storage
+  namespace: voicehelper
+provisioner: docker.io/hostpath
+parameters:
+  type: DirectoryOrCreate
+volumeBindingMode: Immediate
+reclaimPolicy: Retain
+---
+# PostgreSQL 持久卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: voicehelper
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/postgres
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: voicehelper-storage
+---
+# Redis 持久卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+  namespace: voicehelper
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/redis
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: voicehelper-storage
+---
+# Milvus 持久卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: milvus-pv
+  namespace: voicehelper
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/milvus
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: milvus-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: voicehelper-storage
+---
+# Neo4j 持久卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: neo4j-pv
+  namespace: voicehelper
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/neo4j
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: neo4j-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: voicehelper-storage
+---
+# 应用数据持久卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-data-pv
+  namespace: voicehelper
+spec:
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/app-data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data-pvc
+  namespace: voicehelper
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 15Gi
+  storageClassName: voicehelper-storage
+---
+# Dify 存储配置
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dify-postgres-pv
+  namespace: voicehelper-dify
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/dify/postgres
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dify-postgres-pvc
+  namespace: voicehelper-dify
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: voicehelper-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dify-redis-pv
+  namespace: voicehelper-dify
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/dify/redis
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dify-redis-pvc
+  namespace: voicehelper-dify
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: voicehelper-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dify-weaviate-pv
+  namespace: voicehelper-dify
+spec:
+  capacity:
+    storage: 15Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /tmp/voicehelper/dify/weaviate
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dify-weaviate-pvc
+  namespace: voicehelper-dify
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 15Gi
+  storageClassName: voicehelper-storage

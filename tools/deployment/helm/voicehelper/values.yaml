@@ -1,0 +1,501 @@
+# VoiceHelper Helm Chart 默认配置值
+
+# 全局配置
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: "voicehelper-storage"
+  
+# 镜像配置
+image:
+  registry: docker.io
+  repository: voicehelper
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# 服务配置
+services:
+  # API 网关
+  gateway:
+    enabled: true
+    replicaCount: 3
+    image:
+      repository: voicehelper/gateway
+      tag: "latest"
+    service:
+      type: ClusterIP
+      port: 8080
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+    
+  # 算法服务
+  algoService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: voicehelper/algo-service
+      tag: "latest"
+    service:
+      type: ClusterIP
+      port: 8000
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "500m"
+      limits:
+        memory: "8Gi"
+        cpu: "4000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 85
+    
+  # 语音服务
+  voiceService:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: voicehelper/voice-service
+      tag: "latest"
+    service:
+      type: ClusterIP
+      port: 8001
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "250m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+    
+  # 前端服务
+  frontend:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: voicehelper/frontend
+      tag: "latest"
+    service:
+      type: ClusterIP
+      port: 3000
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 8
+      targetCPUUtilizationPercentage: 60
+
+# 数据库配置
+databases:
+  # PostgreSQL
+  postgresql:
+    enabled: true
+    auth:
+      postgresPassword: "voicehelper123"
+      username: "voicehelper"
+      password: "voicehelper123"
+      database: "voicehelper"
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: "voicehelper-storage"
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "250m"
+        limits:
+          memory: "2Gi"
+          cpu: "1000m"
+  
+  # Redis
+  redis:
+    enabled: true
+    auth:
+      enabled: true
+      password: "redis123"
+    master:
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClass: "voicehelper-storage"
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+        limits:
+          memory: "1Gi"
+          cpu: "500m"
+  
+  # Neo4j
+  neo4j:
+    enabled: true
+    auth:
+      password: "neo4j123"
+    persistence:
+      size: 10Gi
+      storageClass: "voicehelper-storage"
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "250m"
+      limits:
+        memory: "3Gi"
+        cpu: "1000m"
+  
+  # Milvus 向量数据库
+  milvus:
+    enabled: true
+    cluster:
+      enabled: false  # 单机模式
+    etcd:
+      replicaCount: 1
+      persistence:
+        storageClass: "voicehelper-storage"
+    minio:
+      mode: standalone
+      persistence:
+        storageClass: "voicehelper-storage"
+    pulsar:
+      enabled: false
+    persistence:
+      persistentVolumeClaim:
+        storageClass: "voicehelper-storage"
+        size: 20Gi
+
+# 消息队列
+messageQueue:
+  nats:
+    enabled: true
+    nats:
+      jetstream:
+        enabled: true
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClass: "voicehelper-storage"
+
+# Dify AI 平台
+dify:
+  enabled: true
+  namespace: "voicehelper-dify"
+  
+  # Dify 数据库
+  postgresql:
+    enabled: true
+    auth:
+      postgresPassword: "dify123"
+      username: "dify"
+      password: "dify123"
+      database: "dify"
+    primary:
+      persistence:
+        enabled: true
+        size: 10Gi
+        storageClass: "voicehelper-storage"
+  
+  # Dify Redis
+  redis:
+    enabled: true
+    auth:
+      enabled: true
+      password: "dify123"
+    master:
+      persistence:
+        enabled: true
+        size: 5Gi
+        storageClass: "voicehelper-storage"
+  
+  # Weaviate 向量数据库
+  weaviate:
+    enabled: true
+    persistence:
+      size: 15Gi
+      storageClass: "voicehelper-storage"
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+  
+  # Dify API 服务
+  api:
+    replicaCount: 2
+    image:
+      repository: langgenius/dify-api
+      tag: "0.6.16"
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 4
+      targetCPUUtilizationPercentage: 70
+  
+  # Dify Worker
+  worker:
+    replicaCount: 2
+    image:
+      repository: langgenius/dify-api
+      tag: "0.6.16"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+  
+  # Dify Web Console
+  web:
+    replicaCount: 1
+    image:
+      repository: langgenius/dify-web
+      tag: "0.6.16"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+  
+  # Dify Sandbox
+  sandbox:
+    enabled: true
+    image:
+      repository: langgenius/dify-sandbox
+      tag: "0.2.1"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+# 监控配置
+monitoring:
+  enabled: true
+  namespace: "voicehelper-monitoring"
+  
+  # Prometheus
+  prometheus:
+    enabled: true
+    server:
+      persistentVolume:
+        enabled: true
+        size: 10Gi
+        storageClass: "voicehelper-storage"
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "500m"
+        limits:
+          memory: "4Gi"
+          cpu: "2000m"
+  
+  # Grafana
+  grafana:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: "voicehelper-storage"
+    adminPassword: "admin123"
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+  
+  # Jaeger
+  jaeger:
+    enabled: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+
+# 管理工具
+adminTools:
+  enabled: true
+  
+  # pgAdmin
+  pgadmin:
+    enabled: true
+    env:
+      email: "admin@voicehelper.ai"
+      password: "admin123"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+  
+  # Redis Commander
+  redisCommander:
+    enabled: true
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "250m"
+  
+  # Attu (Milvus 管理)
+  attu:
+    enabled: true
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+# Ingress 配置
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: voicehelper.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: gateway
+        - path: /ws
+          pathType: Prefix
+          service: gateway
+        - path: /voice
+          pathType: Prefix
+          service: voiceService
+        - path: /dify
+          pathType: Prefix
+          service: dify-web
+          namespace: voicehelper-dify
+  tls: []
+
+# 网络策略
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+
+# 服务账户
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod 安全策略
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# 节点选择器
+nodeSelector: {}
+
+# 容忍度
+tolerations: []
+
+# 亲和性
+affinity: {}
+
+# 配置和密钥
+config:
+  # 环境变量
+  env: "production"
+  logLevel: "info"
+  
+  # AI 模型配置
+  models:
+    primary: "doubao-pro-4k"
+    arkApiKey: ""  # 需要用户设置
+    glmApiKey: ""  # 需要用户设置
+    openaiApiKey: ""  # 可选
+    anthropicApiKey: ""  # 可选
+  
+  # 微信配置
+  wechat:
+    appId: ""  # 需要用户设置
+    appSecret: ""  # 需要用户设置
+  
+  # JWT 配置
+  jwt:
+    secret: "voicehelper-jwt-secret-key-2025"
+  
+  # 邮件配置
+  smtp:
+    server: ""
+    port: 587
+    username: ""
+    password: ""
+    useTLS: true
+
+# 存储配置
+persistence:
+  enabled: true
+  storageClass: "voicehelper-storage"
+  accessMode: ReadWriteOnce
+  size: 15Gi
+
+# 备份配置
+backup:
+  enabled: false
+  schedule: "0 2 * * *"
+  retention: "30d"
+  storageClass: "voicehelper-storage"
+  size: 50Gi

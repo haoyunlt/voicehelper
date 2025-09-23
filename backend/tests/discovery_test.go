@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"chatbot/pkg/discovery"
+	"voicehelper/backend/pkg/discovery"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

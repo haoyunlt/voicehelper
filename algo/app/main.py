@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from core.ingest import IngestService
 from core.retrieve import RetrieveService
 from core.voice import VoiceService
+from core.enhanced_voice_services import EnhancedVoiceService
+from core.websocket_voice import WebSocketVoiceHandler
 from core.models import QueryRequest, IngestRequest, IngestResponse, VoiceQueryRequest, VoiceQueryResponse
 from common.logger import init_logger, get_logger, LoggingMiddleware, get_uvicorn_log_config
 from common.errors import ErrorCode, VoiceHelperError, get_error_info
@@ -60,6 +62,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 记录启动时间
+start_time = time.time()
+
 # 初始化服务
 try:
     logger.startup("初始化算法服务组件", context={
@@ -74,6 +79,13 @@ try:
     ingest_service = IngestService()
     retrieve_service = RetrieveService()
     voice_service = VoiceService(retrieve_service)
+    # 创建默认语音配置
+    from core.enhanced_voice_services import VoiceConfig, VoiceProvider
+    voice_config = VoiceConfig()
+    voice_config.primary_asr_provider = VoiceProvider.LOCAL
+    voice_config.primary_tts_provider = VoiceProvider.EDGE_TTS
+    enhanced_voice_service = EnhancedVoiceService(voice_config, retrieve_service)
+    websocket_handler = WebSocketVoiceHandler(enhanced_voice_service)
     
     logger.startup("算法服务组件初始化完成", context={
         "components": ["IngestService", "RetrieveService", "VoiceService"],
@@ -333,6 +345,23 @@ async def voice_query(request: VoiceQueryRequest, http_request: Request):
         })
         raise VoiceHelperError(ErrorCode.VOICE_PROCESSING_FAILED, f"语音查询失败: {str(e)}")
 
+@app.websocket("/voice/stream")
+async def websocket_voice_stream(websocket):
+    """WebSocket语音流接口"""
+    try:
+        await websocket.accept()
+        logger.info("WebSocket语音连接建立")
+        
+        # 委托给WebSocket处理器
+        await websocket_handler.handle_websocket_connection(websocket)
+        
+    except Exception as e:
+        logger.exception("WebSocket语音流处理失败", e)
+        try:
+            await websocket.close(code=1011, reason="Internal server error")
+        except:
+            pass
+
 @app.post("/cancel")
 async def cancel_request(request: Request):
     """取消请求"""
@@ -358,6 +387,75 @@ async def cancel_request(request: Request):
     except Exception as e:
         logger.exception("取消请求失败", e)
         raise VoiceHelperError(ErrorCode.SYSTEM_INTERNAL_ERROR, f"取消请求失败: {str(e)}")
+
+@app.post("/reload")
+async def reload_index(request: Request):
+    """热重载索引"""
+    try:
+        dataset_id = request.query_params.get("dataset_id", "default")
+        
+        logger.info(f"开始热重载索引: {dataset_id}", context={
+            "dataset_id": dataset_id,
+            "client_ip": request.client.host if request.client else "unknown",
+        })
+        
+        # 重载BGE+FAISS索引
+        if hasattr(retrieve_service, 'rag_service') and retrieve_service.rag_service:
+            result = await retrieve_service.rag_service.reload_index(dataset_id)
+            
+            logger.business("索引热重载完成", context={
+                "dataset_id": dataset_id,
+                "result": result
+            })
+            
+            return {
+                "status": "success",
+                "message": f"索引 {dataset_id} 重载完成",
+                "dataset_id": dataset_id,
+                "timestamp": int(time.time() * 1000),
+                **result
+            }
+        else:
+            raise VoiceHelperError(ErrorCode.RAG_SERVICE_UNAVAILABLE, "RAG服务不可用")
+            
+    except VoiceHelperError:
+        raise
+    except Exception as e:
+        logger.exception("索引热重载失败", e, context={"dataset_id": dataset_id})
+        raise VoiceHelperError(ErrorCode.RAG_INTERNAL_ERROR, f"索引热重载失败: {str(e)}")
+
+@app.get("/stats")
+async def get_service_stats(request: Request):
+    """获取服务统计信息"""
+    try:
+        logger.debug("获取服务统计信息", context={
+            "client_ip": request.client.host if request.client else "unknown",
+        })
+        
+        stats = {
+            "service": SERVICE_NAME,
+            "version": "1.9.0",
+            "uptime": time.time() - start_time if 'start_time' in globals() else 0,
+            "timestamp": int(time.time() * 1000),
+            "components": {}
+        }
+        
+        # 获取各组件统计
+        if hasattr(retrieve_service, 'rag_service') and retrieve_service.rag_service:
+            stats["components"]["rag"] = retrieve_service.rag_service.get_stats()
+        
+        if hasattr(enhanced_voice_service, 'get_stats'):
+            stats["components"]["voice"] = enhanced_voice_service.get_stats()
+        
+        if hasattr(websocket_handler, 'get_session_stats'):
+            stats["components"]["websocket"] = websocket_handler.get_session_stats()
+        
+        logger.business("服务统计信息查询", context=stats)
+        return stats
+        
+    except Exception as e:
+        logger.exception("获取服务统计失败", e)
+        raise VoiceHelperError(ErrorCode.SYSTEM_INTERNAL_ERROR, f"获取统计信息失败: {str(e)}")
 
 # 错误测试端点
 @app.get("/error-test")

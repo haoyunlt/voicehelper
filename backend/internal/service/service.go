@@ -21,7 +21,7 @@ type Services struct {
 func NewServices() *Services {
 	algoService := NewAlgoService()
 	chatService := NewChatService(algoService)
-	
+
 	return &Services{
 		AlgoService: algoService,
 		ChatService: chatService,
@@ -102,7 +102,7 @@ func (s *AlgoService) Query(ctx context.Context, req *QueryRequest) (<-chan *Que
 	}
 
 	ch := make(chan *QueryResponse, 10)
-	
+
 	go func() {
 		defer resp.Body.Close()
 		defer close(ch)
@@ -117,7 +117,7 @@ func (s *AlgoService) Query(ctx context.Context, req *QueryRequest) (<-chan *Que
 				logrus.WithError(err).Error("Failed to decode response")
 				break
 			}
-			
+
 			select {
 			case ch <- &response:
 			case <-ctx.Done():
@@ -219,7 +219,7 @@ func (s *AlgoService) VoiceQuery(ctx context.Context, req *VoiceQueryRequest) (<
 	}
 
 	ch := make(chan *VoiceQueryResponse, 10)
-	
+
 	go func() {
 		defer resp.Body.Close()
 		defer close(ch)
@@ -234,7 +234,7 @@ func (s *AlgoService) VoiceQuery(ctx context.Context, req *VoiceQueryRequest) (<
 				logrus.WithError(err).Error("Failed to decode voice response")
 				break
 			}
-			
+
 			select {
 			case ch <- &response:
 			case <-ctx.Done():

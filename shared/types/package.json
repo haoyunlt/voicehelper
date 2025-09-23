@@ -1,0 +1,41 @@
+{
+  "name": "@voicehelper/types",
+  "version": "1.0.0",
+  "description": "VoiceHelper 统一类型定义",
+  "main": "index.d.ts",
+  "types": "index.d.ts",
+  "files": [
+    "*.d.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "voicehelper",
+    "types",
+    "typescript",
+    "api",
+    "events"
+  ],
+  "author": "VoiceHelper Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haoyunlt/voicehelper.git",
+    "directory": "shared/types"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "echo \"No tests for type definitions\" && exit 0",
+    "lint": "tslint *.d.ts",
+    "validate": "node validate-types.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tslint": "^6.1.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.5.0"
+  }
+}

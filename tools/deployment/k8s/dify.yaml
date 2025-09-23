@@ -1,0 +1,807 @@
+# Dify AI 平台 Kubernetes 部署配置
+
+# Dify PostgreSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-postgres
+  namespace: voicehelper-dify
+  labels:
+    app: dify-postgres
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-postgres
+  template:
+    metadata:
+      labels:
+        app: dify-postgres
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: dify-postgres-config
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: dify-postgres-config
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: DB_PASSWORD
+        - name: POSTGRES_INITDB_ARGS
+          valueFrom:
+            configMapKeyRef:
+              name: dify-postgres-config
+              key: POSTGRES_INITDB_ARGS
+        volumeMounts:
+        - name: dify-postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - dify
+            - -d
+            - dify
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: dify-postgres-storage
+        persistentVolumeClaim:
+          claimName: dify-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-postgres-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-postgres
+spec:
+  selector:
+    app: dify-postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  type: ClusterIP
+---
+# Dify Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-redis
+  namespace: voicehelper-dify
+  labels:
+    app: dify-redis
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-redis
+  template:
+    metadata:
+      labels:
+        app: dify-redis
+        component: cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        command:
+        - redis-server
+        - /usr/local/etc/redis/redis.conf
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: REDIS_PASSWORD
+        volumeMounts:
+        - name: dify-redis-storage
+          mountPath: /data
+        - name: dify-redis-config
+          mountPath: /usr/local/etc/redis
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: dify-redis-storage
+        persistentVolumeClaim:
+          claimName: dify-redis-pvc
+      - name: dify-redis-config
+        configMap:
+          name: dify-redis-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-redis-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-redis
+spec:
+  selector:
+    app: dify-redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  type: ClusterIP
+---
+# Dify Weaviate
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-weaviate
+  namespace: voicehelper-dify
+  labels:
+    app: dify-weaviate
+    component: vector-database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-weaviate
+  template:
+    metadata:
+      labels:
+        app: dify-weaviate
+        component: vector-database
+    spec:
+      containers:
+      - name: weaviate
+        image: semitechnologies/weaviate:1.21.8
+        ports:
+        - containerPort: 8080
+        env:
+        - name: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+          value: "false"
+        - name: AUTHENTICATION_APIKEY_ENABLED
+          value: "true"
+        - name: AUTHENTICATION_APIKEY_ALLOWED_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: WEAVIATE_API_KEY
+        - name: AUTHENTICATION_APIKEY_USERS
+          value: "hello@dify.ai"
+        - name: AUTHORIZATION_ADMINLIST_ENABLED
+          value: "true"
+        - name: AUTHORIZATION_ADMINLIST_USERS
+          value: "hello@dify.ai"
+        - name: PERSISTENCE_DATA_PATH
+          value: "/var/lib/weaviate"
+        - name: DEFAULT_VECTORIZER_MODULE
+          value: "none"
+        - name: CLUSTER_HOSTNAME
+          value: "node1"
+        volumeMounts:
+        - name: dify-weaviate-storage
+          mountPath: /var/lib/weaviate
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /v1/.well-known/ready
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /v1/.well-known/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: dify-weaviate-storage
+        persistentVolumeClaim:
+          claimName: dify-weaviate-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-weaviate-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-weaviate
+spec:
+  selector:
+    app: dify-weaviate
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+---
+# Dify Sandbox
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-sandbox
+  namespace: voicehelper-dify
+  labels:
+    app: dify-sandbox
+    component: code-execution
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-sandbox
+  template:
+    metadata:
+      labels:
+        app: dify-sandbox
+        component: code-execution
+    spec:
+      containers:
+      - name: sandbox
+        image: langgenius/dify-sandbox:0.2.1
+        ports:
+        - containerPort: 8194
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: CODE_EXECUTION_API_KEY
+        - name: GIN_MODE
+          value: "release"
+        - name: WORKER_TIMEOUT
+          value: "15"
+        volumeMounts:
+        - name: sandbox-storage
+          mountPath: /dependencies
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8194
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8194
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: sandbox-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-sandbox-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-sandbox
+spec:
+  selector:
+    app: dify-sandbox
+  ports:
+  - port: 8194
+    targetPort: 8194
+    protocol: TCP
+  type: ClusterIP
+---
+# Dify API 服务
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-api
+  namespace: voicehelper-dify
+  labels:
+    app: dify-api
+    component: api-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dify-api
+  template:
+    metadata:
+      labels:
+        app: dify-api
+        component: api-service
+    spec:
+      containers:
+      - name: dify-api
+        image: langgenius/dify-api:0.6.16
+        ports:
+        - containerPort: 5001
+        env:
+        - name: MODE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: MODE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: LOG_LEVEL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: SECRET_KEY
+        - name: INIT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: INIT_PASSWORD
+        - name: CONSOLE_WEB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CONSOLE_WEB_URL
+        - name: CONSOLE_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CONSOLE_API_URL
+        - name: SERVICE_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SERVICE_API_URL
+        - name: APP_WEB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: APP_WEB_URL
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: DB_PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_PORT
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_DATABASE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_DB
+        - name: CELERY_BROKER_URL
+          value: "redis://:$(REDIS_PASSWORD)@dify-redis-service:6379/1"
+        - name: VECTOR_STORE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: VECTOR_STORE
+        - name: WEAVIATE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: WEAVIATE_ENDPOINT
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: WEAVIATE_API_KEY
+        - name: STORAGE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: STORAGE_TYPE
+        - name: STORAGE_LOCAL_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: STORAGE_LOCAL_PATH
+        - name: CODE_EXECUTION_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CODE_EXECUTION_ENDPOINT
+        - name: CODE_EXECUTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: CODE_EXECUTION_API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: OPENAI_API_KEY
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: ANTHROPIC_API_KEY
+        - name: WEB_API_CORS_ALLOW_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: WEB_API_CORS_ALLOW_ORIGINS
+        - name: CONSOLE_CORS_ALLOW_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CONSOLE_CORS_ALLOW_ORIGINS
+        volumeMounts:
+        - name: dify-storage
+          mountPath: /app/api/storage
+        - name: dify-logs
+          mountPath: /app/api/logs
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: dify-storage
+        emptyDir: {}
+      - name: dify-logs
+        emptyDir: {}
+      initContainers:
+      - name: wait-for-dependencies
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for dependencies..."
+          until nc -z dify-postgres-service 5432; do sleep 2; done
+          until nc -z dify-redis-service 6379; do sleep 2; done
+          until nc -z dify-weaviate-service 8080; do sleep 2; done
+          until nc -z dify-sandbox-service 8194; do sleep 2; done
+          echo "All dependencies ready"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-api-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-api
+spec:
+  selector:
+    app: dify-api
+  ports:
+  - port: 5001
+    targetPort: 5001
+    protocol: TCP
+  type: ClusterIP
+---
+# Dify Worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-worker
+  namespace: voicehelper-dify
+  labels:
+    app: dify-worker
+    component: background-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dify-worker
+  template:
+    metadata:
+      labels:
+        app: dify-worker
+        component: background-worker
+    spec:
+      containers:
+      - name: dify-worker
+        image: langgenius/dify-api:0.6.16
+        env:
+        - name: MODE
+          value: "worker"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: LOG_LEVEL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: SECRET_KEY
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: DB_PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_PORT
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_DATABASE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: REDIS_PASSWORD
+        - name: REDIS_DB
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: REDIS_DB
+        - name: CELERY_BROKER_URL
+          value: "redis://:$(REDIS_PASSWORD)@dify-redis-service:6379/1"
+        - name: VECTOR_STORE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: VECTOR_STORE
+        - name: WEAVIATE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: WEAVIATE_ENDPOINT
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: WEAVIATE_API_KEY
+        - name: STORAGE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: STORAGE_TYPE
+        - name: STORAGE_LOCAL_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: STORAGE_LOCAL_PATH
+        - name: CODE_EXECUTION_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CODE_EXECUTION_ENDPOINT
+        - name: CODE_EXECUTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: CODE_EXECUTION_API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: OPENAI_API_KEY
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: ANTHROPIC_API_KEY
+        command:
+        - celery
+        - -A
+        - app.celery
+        - worker
+        - -P
+        - gevent
+        - -c
+        - "1"
+        - --loglevel=INFO
+        - -Q
+        - dataset,generation,mail
+        volumeMounts:
+        - name: dify-storage
+          mountPath: /app/api/storage
+        - name: dify-worker-logs
+          mountPath: /app/api/logs
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: dify-storage
+        emptyDir: {}
+      - name: dify-worker-logs
+        emptyDir: {}
+      initContainers:
+      - name: wait-for-dependencies
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z dify-postgres-service 5432; do sleep 2; done
+          until nc -z dify-redis-service 6379; do sleep 2; done
+          until nc -z dify-weaviate-service 8080; do sleep 2; done
+---
+# Dify Web Console
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-web
+  namespace: voicehelper-dify
+  labels:
+    app: dify-web
+    component: web-console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-web
+  template:
+    metadata:
+      labels:
+        app: dify-web
+        component: web-console
+    spec:
+      containers:
+      - name: dify-web
+        image: langgenius/dify-web:0.6.16
+        ports:
+        - containerPort: 3000
+        env:
+        - name: CONSOLE_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CONSOLE_API_URL
+        - name: APP_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SERVICE_API_URL
+        - name: NEXT_TELEMETRY_DISABLED
+          value: "1"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      initContainers:
+      - name: wait-for-api
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z dify-api-service 5001; do
+            echo "Waiting for Dify API..."
+            sleep 2
+          done
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-web-service
+  namespace: voicehelper-dify
+  labels:
+    app: dify-web
+spec:
+  selector:
+    app: dify-web
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP

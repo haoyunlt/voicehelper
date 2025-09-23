@@ -1,0 +1,562 @@
+# VoiceHelper 监控和管理工具 Kubernetes 部署配置
+
+# Prometheus 监控
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: voicehelper-monitoring
+  labels:
+    app: prometheus
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+        component: monitoring
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--web.console.libraries=/etc/prometheus/console_libraries'
+        - '--web.console.templates=/etc/prometheus/consoles'
+        - '--storage.tsdb.retention.time=200h'
+        - '--web.enable-lifecycle'
+        - '--web.enable-admin-api'
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: voicehelper-monitoring
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+  type: ClusterIP
+---
+# Grafana 可视化
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: voicehelper-monitoring
+  labels:
+    app: grafana
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+        component: monitoring
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: "admin"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: monitoring-secrets
+              key: GF_SECURITY_ADMIN_PASSWORD
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_INSTALL_PLUGINS
+          value: "grafana-piechart-panel"
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        - name: grafana-provisioning
+          mountPath: /etc/grafana/provisioning
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: grafana-storage
+        emptyDir: {}
+      - name: grafana-provisioning
+        configMap:
+          name: grafana-provisioning
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: voicehelper-monitoring
+  labels:
+    app: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+# Jaeger 分布式追踪
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: voicehelper-monitoring
+  labels:
+    app: jaeger
+    component: tracing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+        component: tracing
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:latest
+        ports:
+        - containerPort: 16686
+        - containerPort: 14268
+        - containerPort: 14250
+        env:
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: jaeger-storage
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: jaeger-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-service
+  namespace: voicehelper-monitoring
+  labels:
+    app: jaeger
+spec:
+  selector:
+    app: jaeger
+  ports:
+  - name: ui
+    port: 16686
+    targetPort: 16686
+    protocol: TCP
+  - name: collector-http
+    port: 14268
+    targetPort: 14268
+    protocol: TCP
+  - name: collector-grpc
+    port: 14250
+    targetPort: 14250
+    protocol: TCP
+  type: ClusterIP
+---
+# pgAdmin 数据库管理
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: voicehelper
+  labels:
+    app: pgadmin
+    component: database-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+        component: database-admin
+    spec:
+      containers:
+      - name: pgadmin
+        image: dpage/pgadmin4:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          value: "admin@voicehelper.ai"
+        - name: PGADMIN_DEFAULT_PASSWORD
+          value: "admin123"
+        - name: PGADMIN_CONFIG_SERVER_MODE
+          value: "False"
+        volumeMounts:
+        - name: pgadmin-storage
+          mountPath: /var/lib/pgadmin
+        - name: pgadmin-servers
+          mountPath: /pgadmin4/servers.json
+          subPath: servers.json
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: pgadmin-storage
+        emptyDir: {}
+      - name: pgadmin-servers
+        configMap:
+          name: pgadmin-servers-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-service
+  namespace: voicehelper
+  labels:
+    app: pgadmin
+spec:
+  selector:
+    app: pgadmin
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+# Redis Commander
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-commander
+  namespace: voicehelper
+  labels:
+    app: redis-commander
+    component: cache-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-commander
+  template:
+    metadata:
+      labels:
+        app: redis-commander
+        component: cache-admin
+    spec:
+      containers:
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: REDIS_HOSTS
+          value: "voicehelper:redis-service:6379:0:redis123,dify:dify-redis-service.voicehelper-dify.svc.cluster.local:6379:0:dify123"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-commander-service
+  namespace: voicehelper
+  labels:
+    app: redis-commander
+spec:
+  selector:
+    app: redis-commander
+  ports:
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+  type: ClusterIP
+---
+# Attu (Milvus 管理界面)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attu
+  namespace: voicehelper
+  labels:
+    app: attu
+    component: vector-db-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: attu
+  template:
+    metadata:
+      labels:
+        app: attu
+        component: vector-db-admin
+    spec:
+      containers:
+      - name: attu
+        image: zilliz/attu:v2.3.3
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MILVUS_URL
+          value: "milvus-service:19530"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      initContainers:
+      - name: wait-for-milvus
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z milvus-service 19530; do
+            echo "Waiting for Milvus..."
+            sleep 2
+          done
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: attu-service
+  namespace: voicehelper
+  labels:
+    app: attu
+spec:
+  selector:
+    app: attu
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+# Prometheus 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: voicehelper-monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "rules/*.yml"
+    
+    scrape_configs:
+      # VoiceHelper 服务监控
+      - job_name: 'voicehelper-gateway'
+        static_configs:
+          - targets: ['gateway-service.voicehelper.svc.cluster.local:8080']
+        metrics_path: /metrics
+        scrape_interval: 30s
+      
+      - job_name: 'voicehelper-algo'
+        static_configs:
+          - targets: ['algo-service.voicehelper.svc.cluster.local:8000']
+        metrics_path: /metrics
+        scrape_interval: 30s
+      
+      - job_name: 'voicehelper-voice'
+        static_configs:
+          - targets: ['voice-service.voicehelper.svc.cluster.local:8001']
+        metrics_path: /metrics
+        scrape_interval: 30s
+      
+      # 数据库监控
+      - job_name: 'postgres'
+        static_configs:
+          - targets: ['postgres-service.voicehelper.svc.cluster.local:5432']
+        scrape_interval: 60s
+      
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis-service.voicehelper.svc.cluster.local:6379']
+        scrape_interval: 60s
+      
+      - job_name: 'milvus'
+        static_configs:
+          - targets: ['milvus-service.voicehelper.svc.cluster.local:9091']
+        metrics_path: /metrics
+        scrape_interval: 60s
+      
+      # Dify 服务监控
+      - job_name: 'dify-api'
+        static_configs:
+          - targets: ['dify-api-service.voicehelper-dify.svc.cluster.local:5001']
+        metrics_path: /metrics
+        scrape_interval: 30s
+      
+      # Kubernetes 集群监控
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - source_labels: [__address__]
+            regex: '(.*):10250'
+            target_label: __address__
+            replacement: '${1}:9100'
+      
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+---
+# Grafana 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: voicehelper-monitoring
+data:
+  datasources.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-service:9090
+        isDefault: true
+      - name: Jaeger
+        type: jaeger
+        access: proxy
+        url: http://jaeger-service:16686
+  
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+# pgAdmin 服务器配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgadmin-servers-config
+  namespace: voicehelper
+data:
+  servers.json: |
+    {
+      "Servers": {
+        "1": {
+          "Name": "VoiceHelper PostgreSQL",
+          "Group": "VoiceHelper",
+          "Host": "postgres-service",
+          "Port": 5432,
+          "MaintenanceDB": "voicehelper",
+          "Username": "voicehelper",
+          "SSLMode": "prefer"
+        },
+        "2": {
+          "Name": "Dify PostgreSQL",
+          "Group": "Dify",
+          "Host": "dify-postgres-service.voicehelper-dify.svc.cluster.local",
+          "Port": 5432,
+          "MaintenanceDB": "dify",
+          "Username": "dify",
+          "SSLMode": "prefer"
+        }
+      }
+    }

@@ -27,7 +27,7 @@ func NewErrorHandler(logger *logrus.Logger) *ErrorHandler {
 }
 
 // HandleError 统一错误处理
-func (eh *ErrorHandler) HandleError(err error, context string, fields ...logrus.Fields) error {
+func (eh *ErrorHandler) HandleError(err error, contextMsg string, fields ...logrus.Fields) error {
 	if err == nil {
 		return nil
 	}
@@ -42,7 +42,7 @@ func (eh *ErrorHandler) HandleError(err error, context string, fields ...logrus.
 
 	// 合并字段
 	logFields := logrus.Fields{
-		"context": context,
+		"context": contextMsg,
 		"caller":  caller,
 	}
 	for _, field := range fields {

@@ -1,0 +1,140 @@
+# VoiceHelper 完整 Kubernetes 命名空间配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper
+  labels:
+    name: voicehelper
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/version: "2.0"
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-monitoring
+  labels:
+    name: voicehelper-monitoring
+    app.kubernetes.io/name: monitoring
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-storage
+  labels:
+    name: voicehelper-storage
+    app.kubernetes.io/name: storage
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
+---
+# 服务账户
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: voicehelper-sa
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: voicehelper-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: voicehelper-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: voicehelper-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: voicehelper-sa
+  namespace: voicehelper
+---
+# 存储类
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-storage
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+---
+# 网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: voicehelper-network-policy
+  namespace: voicehelper
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    - podSelector: {}
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8080  # Gateway
+    - protocol: TCP
+      port: 8000  # Algo Service
+    - protocol: TCP
+      port: 3000  # Frontend
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper-monitoring
+    - podSelector: {}
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53   # DNS
+    - protocol: UDP
+      port: 53   # DNS
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 80   # HTTP
+    - protocol: TCP
+      port: 5432 # PostgreSQL
+    - protocol: TCP
+      port: 6379 # Redis
+    - protocol: TCP
+      port: 19530 # Milvus
+    - protocol: TCP
+      port: 2379  # etcd
+    - protocol: TCP
+      port: 4222  # NATS

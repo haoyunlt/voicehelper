@@ -1,0 +1,161 @@
+VoiceHelper Kubernetes 部署测试报告
+=====================================
+
+测试时间: Tue Sep 23 18:23:33 CST 2025
+测试环境: Kubernetes 
+
+测试结果统计:
+- 总测试数: 14
+- 通过测试: 3
+- 失败测试: 11
+- 成功率: 21%
+
+集群信息:
+Kubernetes control plane is running at https://127.0.0.1:6443
+CoreDNS is running at https://127.0.0.1:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+节点信息:
+NAME             STATUS   ROLES           AGE    VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION     CONTAINER-RUNTIME
+docker-desktop   Ready    control-plane   179m   v1.32.2   192.168.65.3   <none>        Docker Desktop   6.10.14-linuxkit   docker://28.4.0
+
+命名空间资源:
+NAME                                 READY   STATUS             RESTARTS         AGE
+pod/attu-6bcc5c954c-27bxn            1/1     Running            0                74m
+pod/bge-service-6797b6978-f7tmw      0/1     Pending            0                6m30s
+pod/bge-service-6797b6978-g8thp      0/1     Pending            0                6m30s
+pod/etcd-0                           1/1     Running            0                74m
+pod/faiss-data-sync-pph4c            1/1     Running            4 (102s ago)     6m26s
+pod/faiss-service-0                  0/1     Pending            0                6m26s
+pod/gateway-78677d7ff7-6pjp2         0/1     CrashLoopBackOff   5 (2m34s ago)    5m30s
+pod/gateway-78677d7ff7-crw7d         0/1     CrashLoopBackOff   5 (2m31s ago)    5m30s
+pod/gateway-78677d7ff7-lpvz8         0/1     CrashLoopBackOff   5 (2m30s ago)    5m30s
+pod/minio-0                          1/1     Running            0                77m
+pod/nats-0                           1/2     CrashLoopBackOff   17 (4m36s ago)   66m
+pod/nginx-ingress-6cb54cd557-4fvbh   0/1     CrashLoopBackOff   6 (3m5s ago)     8m46s
+pod/nginx-ingress-6cb54cd557-8brgl   0/1     CrashLoopBackOff   6 (2m53s ago)    8m46s
+pod/postgresql-0                     2/2     Running            0                77m
+pod/redis-0                          2/2     Running            0                77m
+
+NAME                            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                               AGE
+service/attu-service            ClusterIP   10.104.163.166   <none>        3000/TCP                              74m
+service/bge-service             ClusterIP   10.105.203.38    <none>        8080/TCP                              9m55s
+service/etcd-service            ClusterIP   10.102.9.220     <none>        2379/TCP,2380/TCP                     74m
+service/faiss-client            ClusterIP   10.103.23.99     <none>        8081/TCP                              9m39s
+service/faiss-service           ClusterIP   None             <none>        8081/TCP                              9m39s
+service/gateway                 ClusterIP   10.99.118.210    <none>        8080/TCP,8081/TCP                     9m23s
+service/minio-service           ClusterIP   10.107.149.41    <none>        9000/TCP,9001/TCP                     77m
+service/nats-service            ClusterIP   10.100.109.100   <none>        4222/TCP,6222/TCP,8222/TCP,7777/TCP   74m
+service/nginx-ingress-service   NodePort    10.101.117.191   <none>        80:30080/TCP,443:30443/TCP            8m46s
+service/postgresql-service      ClusterIP   10.103.196.101   <none>        5432/TCP,9187/TCP                     77m
+service/redis-service           ClusterIP   10.97.59.120     <none>        6379/TCP,9121/TCP                     77m
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/attu            1/1     1            1           74m
+deployment.apps/bge-service     0/2     2            0           6m30s
+deployment.apps/gateway         0/3     3            0           5m30s
+deployment.apps/nginx-ingress   0/2     2            0           8m46s
+
+NAME                                       DESIRED   CURRENT   READY   AGE
+replicaset.apps/attu-6bcc5c954c            1         1         1       74m
+replicaset.apps/bge-service-6797b6978      2         2         0       6m30s
+replicaset.apps/gateway-78677d7ff7         3         3         0       5m30s
+replicaset.apps/nginx-ingress-6cb54cd557   2         2         0       8m46s
+
+NAME                             READY   AGE
+statefulset.apps/etcd            1/1     74m
+statefulset.apps/faiss-service   0/2     6m26s
+statefulset.apps/minio           1/1     77m
+statefulset.apps/nats            0/1     74m
+statefulset.apps/postgresql      1/1     77m
+statefulset.apps/redis           1/1     77m
+
+NAME                                                   REFERENCE                 TARGETS                                                 MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/algo-service-hpa   Deployment/algo-service   cpu: <unknown>/75%, memory: <unknown>/85%               1         5         0          8m46s
+horizontalpodautoscaler.autoscaling/bge-service-hpa    Deployment/bge-service    cpu: <unknown>/70%, memory: <unknown>/80%               2         6         2          9m55s
+horizontalpodautoscaler.autoscaling/frontend-hpa       Deployment/frontend       cpu: <unknown>/60%                                      1         8         0          8m46s
+horizontalpodautoscaler.autoscaling/gateway-hpa        Deployment/gateway        cpu: <unknown>/70%, memory: <unknown>/80% + 1 more...   3         10        3          9m23s
+
+NAME                         SCHEDULE    TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+cronjob.batch/faiss-backup   0 3 * * *   <none>     False     0        <none>          9m39s
+
+NAME                        STATUS    COMPLETIONS   DURATION   AGE
+job.batch/faiss-data-sync   Running   0/1           6m26s      6m26s
+
+存储命名空间资源:
+NAME                       TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                         AGE
+service/minio              ClusterIP      None             <none>        9000/TCP                        10m
+service/minio-client       ClusterIP      10.97.58.10      <none>        9000/TCP                        10m
+service/minio-console      ClusterIP      10.106.153.119   <none>        9001/TCP                        10m
+service/minio-lb           LoadBalancer   10.97.215.63     localhost     9000:32037/TCP,9001:30393/TCP   10m
+service/postgres-master    ClusterIP      10.99.175.185    <none>        5432/TCP                        10m
+service/postgres-metrics   ClusterIP      10.103.88.255    <none>        9187/TCP                        10m
+service/postgres-read      ClusterIP      10.111.228.152   <none>        5432/TCP                        10m
+service/postgres-replica   ClusterIP      10.104.78.120    <none>        5432/TCP                        10m
+service/redis              ClusterIP      10.104.72.250    <none>        6379/TCP                        10m
+service/redis-cluster      ClusterIP      None             <none>        6379/TCP,16379/TCP              10m
+service/redis-metrics      ClusterIP      10.108.76.138    <none>        9121/TCP                        10m
+service/redis-sentinel     ClusterIP      10.103.88.164    <none>        26379/TCP                       10m
+
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/redis-exporter   0/1     0            0           10m
+deployment.apps/redis-sentinel   0/3     0            0           10m
+
+NAME                                        DESIRED   CURRENT   READY   AGE
+replicaset.apps/redis-exporter-df986c56f    1         0         0       10m
+replicaset.apps/redis-sentinel-6466895bc6   3         0         0       10m
+
+NAME                                READY   AGE
+statefulset.apps/minio              0/4     10m
+statefulset.apps/postgres-master    0/1     10m
+statefulset.apps/postgres-replica   0/2     10m
+statefulset.apps/redis-cluster      0/6     10m
+
+NAME                         SCHEDULE    TIMEZONE   SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+cronjob.batch/minio-backup   0 2 * * *   <none>     False     0        <none>          10m
+
+NAME                           STATUS    COMPLETIONS   DURATION   AGE
+job.batch/minio-init           Running   0/1           10m        10m
+job.batch/redis-cluster-init   Running   0/1           10m        10m
+
+监控命名空间资源:
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/prometheus-7f76499858-687q4   0/1     Pending   0          9m8s
+pod/prometheus-7f76499858-fgr5c   0/1     Pending   0          9m8s
+
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/prometheus   ClusterIP   10.101.239.174   <none>        9090/TCP   9m8s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/prometheus   0/2     2            0           9m8s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/prometheus-7f76499858   2         2         0       9m8s
+
+PVC状态:
+NAMESPACE                NAME                               STATUS    VOLUME          CAPACITY   ACCESS MODES   STORAGECLASS           VOLUMEATTRIBUTESCLASS   AGE
+voicehelper-monitoring   prometheus-data-pvc                Pending                                             voicehelper-ssd        <unset>                 9m8s
+voicehelper-storage      minio-data-minio-0                 Pending                                             voicehelper-standard   <unset>                 10m
+voicehelper-storage      postgres-data-postgres-master-0    Pending                                             voicehelper-ssd        <unset>                 10m
+voicehelper-storage      postgres-data-postgres-replica-0   Pending                                             voicehelper-ssd        <unset>                 10m
+voicehelper-storage      redis-data-redis-cluster-0         Pending                                             voicehelper-ssd        <unset>                 10m
+voicehelper              bge-models-pvc                     Bound     bge-models-pv   50Gi       RWX            voicehelper-nfs        <unset>                 9m55s
+voicehelper              etcd-data-etcd-0                   Bound     redis-pv        10Gi       RWO            voicehelper-storage    <unset>                 74m
+voicehelper              faiss-data-faiss-service-0         Pending                                             voicehelper-ssd        <unset>                 9m39s
+voicehelper              milvus-data-milvus-0               Bound     minio-pv        50Gi       RWO            voicehelper-storage    <unset>                 74m
+voicehelper              minio-data-minio-0                 Bound     milvus-pv       50Gi       RWO            voicehelper-storage    <unset>                 77m
+voicehelper              nats-data-nats-0                   Bound     etcd-pv         10Gi       RWO            voicehelper-storage    <unset>                 74m
+voicehelper              postgresql-data-postgresql-0       Bound     postgresql-pv   20Gi       RWO            voicehelper-storage    <unset>                 77m
+voicehelper              redis-data-redis-0                 Bound     grafana-pv      10Gi       RWO            voicehelper-storage    <unset>                 77m
+
+存储类:
+NAME                             PROVISIONER                    RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+hostpath (default)               docker.io/hostpath             Delete          Immediate              false                  179m
+voicehelper-fast                 kubernetes.io/no-provisioner   Delete          Immediate              true                   11m
+voicehelper-local                kubernetes.io/no-provisioner   Delete          WaitForFirstConsumer   false                  11m
+voicehelper-nfs                  nfs.csi.k8s.io                 Retain          Immediate              true                   11m
+voicehelper-ssd                  kubernetes.io/no-provisioner   Retain          WaitForFirstConsumer   true                   11m
+voicehelper-standard (default)   kubernetes.io/no-provisioner   Delete          WaitForFirstConsumer   true                   11m
+voicehelper-storage              kubernetes.io/no-provisioner   Retain          WaitForFirstConsumer   true                   77m
+

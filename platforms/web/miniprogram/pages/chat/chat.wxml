@@ -1,0 +1,183 @@
+<!-- 语音增强聊天页面模板 -->
+<view class="chat-container">
+  <!-- 顶部状态栏 -->
+  <view class="status-bar">
+    <view class="connection-status">
+      <view class="status-dot {{wsConnected ? 'connected' : 'disconnected'}}"></view>
+      <text class="status-text">{{wsConnected ? '已连接' : '连接中...'}}</text>
+      
+      <!-- 连接质量指示器 -->
+      <view class="quality-indicator">
+        <view class="signal-bar {{connectionQuality === 'good' ? 'active' : ''}}"></view>
+        <view class="signal-bar {{connectionQuality !== 'poor' ? 'active' : ''}}"></view>
+        <view class="signal-bar {{connectionQuality === 'good' ? 'active' : ''}}"></view>
+      </view>
+    </view>
+    
+    <!-- 延迟统计 -->
+    <view class="latency-stats">
+      <text class="stat-item">ASR: {{latencyStats.asr}}ms</text>
+      <text class="stat-item">LLM: {{latencyStats.llm}}ms</text>
+      <text class="stat-item">TTS: {{latencyStats.tts}}ms</text>
+    </view>
+  </view>
+
+  <!-- Agent状态显示 -->
+  <view class="agent-status" wx:if="{{showAgentStatus}}">
+    <view class="loading-spinner"></view>
+    <text class="status-text">{{agentStatus}}</text>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view 
+    class="message-list" 
+    scroll-y="true" 
+    scroll-into-view="{{scrollToView}}"
+    scroll-with-animation="true"
+  >
+    <!-- 历史消息 -->
+    <view 
+      class="message-item {{message.type}}" 
+      wx:for="{{messages}}" 
+      wx:key="id"
+      id="msg-{{message.id}}"
+    >
+      <view class="message-content">
+        <view class="message-text">{{message.content}}</view>
+        
+        <!-- 消息元信息 -->
+        <view class="message-meta">
+          <text class="timestamp">{{message.timestamp}}</text>
+          <text class="modality">{{message.modality}}</text>
+          <text class="confidence" wx:if="{{message.confidence}}">
+            {{(message.confidence * 100).toFixed(0)}}%
+          </text>
+          
+          <!-- 流式指示器 -->
+          <view class="streaming-indicator" wx:if="{{message.isStreaming}}">
+            <view class="dot"></view>
+            <text>生成中...</text>
+          </view>
+        </view>
+        
+        <!-- 操作按钮 -->
+        <view class="message-actions">
+          <button 
+            class="action-btn copy-btn" 
+            data-content="{{message.content}}"
+            bindtap="copyMessage"
+          >
+            复制
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 实时转写显示 -->
+    <view class="transcript-display" wx:if="{{currentTranscript}}">
+      <view class="transcript-content">
+        <view class="recording-indicator">
+          <view class="pulse-dot"></view>
+          <text>识别中...</text>
+        </view>
+        <text class="transcript-text">{{currentTranscript}}</text>
+      </view>
+    </view>
+
+    <!-- 参考资料 -->
+    <view class="references-section" wx:if="{{references.length > 0}}">
+      <view class="section-title">参考资料</view>
+      <view class="references-list">
+        <view 
+          class="reference-item" 
+          wx:for="{{references}}" 
+          wx:key="id"
+          data-reference="{{item}}"
+          bindtap="viewReference"
+        >
+          <view class="reference-header">
+            <text class="reference-index">{{index + 1}}</text>
+            <text class="reference-title">{{item.title || '文档'}}</text>
+            <text class="reference-score">{{(item.score * 100).toFixed(0)}}%</text>
+          </view>
+          <text class="reference-source">{{item.source}}</text>
+          <text class="reference-content">{{item.content}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <!-- 文本输入 -->
+    <view class="text-input-section" wx:if="{{!showVoiceInput}}">
+      <input 
+        class="text-input" 
+        placeholder="输入消息..."
+        value="{{inputValue}}"
+        bindinput="onInputChange"
+        confirm-type="send"
+        bindconfirm="sendTextMessage"
+      />
+      <button class="send-btn" bindtap="sendTextMessage">发送</button>
+    </view>
+
+    <!-- 语音控制 -->
+    <view class="voice-controls">
+      <!-- 录音按钮 -->
+      <view class="record-button-container">
+        <button 
+          class="record-button {{isRecording ? 'recording' : ''}}"
+          bindtouchstart="startRecording"
+          bindtouchend="stopRecording"
+          disabled="{{!wsConnected}}"
+        >
+          <view class="record-icon">
+            <view class="mic-icon" wx:if="{{!isRecording}}"></view>
+            <view class="recording-animation" wx:else>
+              <view class="wave wave1"></view>
+              <view class="wave wave2"></view>
+              <view class="wave wave3"></view>
+            </view>
+          </view>
+        </button>
+        
+        <!-- 录音状态文字 -->
+        <text class="record-status">
+          {{isRecording ? '正在录音...' : '按住说话'}}
+        </text>
+      </view>
+
+      <!-- 播放控制 -->
+      <view class="playback-controls" wx:if="{{isPlaying}}">
+        <button class="stop-playback-btn" bindtap="stopPlayback">
+          停止播放
+        </button>
+        <view class="playback-indicator">
+          <view class="sound-wave">
+            <view class="bar bar1"></view>
+            <view class="bar bar2"></view>
+            <view class="bar bar3"></view>
+            <view class="bar bar4"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 模式切换 -->
+    <view class="mode-switch">
+      <button 
+        class="mode-btn {{showVoiceInput ? 'active' : ''}}"
+        bindtap="toggleInputMode"
+      >
+        语音
+      </button>
+      <button 
+        class="mode-btn {{!showVoiceInput ? 'active' : ''}}"
+        bindtap="toggleInputMode"
+      >
+        文本
+      </button>
+    </view>
+  </view>
+</view>

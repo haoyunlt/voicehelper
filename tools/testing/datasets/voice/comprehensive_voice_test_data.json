@@ -1,0 +1,654 @@
+{
+  "metadata": {
+    "name": "综合语音测试数据集",
+    "version": "2.0.0",
+    "description": "包含ASR、TTS、情感分析、多语言支持的综合语音测试数据",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_samples": 200,
+    "categories": [
+      "asr_accuracy",
+      "tts_quality", 
+      "emotion_recognition",
+      "noise_robustness",
+      "multilingual_support",
+      "real_time_processing",
+      "voice_biometrics",
+      "prosody_analysis"
+    ],
+    "languages": ["zh-CN", "en-US", "ja-JP", "ko-KR", "fr-FR", "de-DE"],
+    "audio_formats": ["wav", "mp3", "webm", "m4a"],
+    "quality_levels": ["studio", "broadcast", "telephone", "mobile", "noisy"]
+  },
+  "asr_test_cases": {
+    "clear_speech": {
+      "description": "清晰标准语音识别测试",
+      "sample_count": 40,
+      "expected_accuracy": ">95%",
+      "test_scenarios": [
+        {
+          "id": "asr_clear_001",
+          "language": "zh-CN",
+          "speaker_profile": {
+            "gender": "female",
+            "age_group": "25-35",
+            "accent": "standard_mandarin",
+            "speaking_rate": "normal"
+          },
+          "audio_properties": {
+            "duration": 5.2,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "studio"
+          },
+          "transcript": "欢迎使用VoiceHelper智能语音助手，我们提供专业的语音识别和合成服务",
+          "expected_confidence": 0.96,
+          "key_challenges": ["专业术语", "品牌名称"],
+          "evaluation_criteria": {
+            "word_accuracy": ">98%",
+            "character_accuracy": ">99%",
+            "processing_time": "<200ms"
+          }
+        },
+        {
+          "id": "asr_clear_002", 
+          "language": "en-US",
+          "speaker_profile": {
+            "gender": "male",
+            "age_group": "30-40",
+            "accent": "general_american",
+            "speaking_rate": "normal"
+          },
+          "audio_properties": {
+            "duration": 4.8,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "studio"
+          },
+          "transcript": "VoiceHelper provides advanced speech recognition and synthesis capabilities for enterprise applications",
+          "expected_confidence": 0.94,
+          "key_challenges": ["technical_terminology", "proper_nouns"],
+          "evaluation_criteria": {
+            "word_accuracy": ">97%",
+            "processing_time": "<180ms"
+          }
+        }
+      ]
+    },
+    "noisy_environment": {
+      "description": "噪音环境下的语音识别测试",
+      "sample_count": 30,
+      "expected_accuracy": ">80%",
+      "noise_types": ["office_chatter", "traffic", "construction", "cafe", "wind"],
+      "test_scenarios": [
+        {
+          "id": "asr_noisy_001",
+          "language": "zh-CN",
+          "noise_profile": {
+            "type": "office_chatter",
+            "snr_db": 10,
+            "noise_characteristics": "multiple_speakers_background"
+          },
+          "speaker_profile": {
+            "gender": "female",
+            "age_group": "25-35",
+            "accent": "standard_mandarin",
+            "speaking_rate": "slightly_slower"
+          },
+          "audio_properties": {
+            "duration": 6.1,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "mobile"
+          },
+          "transcript": "请帮我查询一下今天的会议安排，特别是下午三点的项目讨论会",
+          "expected_confidence": 0.82,
+          "key_challenges": ["背景噪音", "时间表达", "专业词汇"],
+          "evaluation_criteria": {
+            "word_accuracy": ">85%",
+            "noise_robustness": "maintains_accuracy",
+            "processing_time": "<300ms"
+          }
+        },
+        {
+          "id": "asr_noisy_002",
+          "language": "en-US", 
+          "noise_profile": {
+            "type": "traffic",
+            "snr_db": 8,
+            "noise_characteristics": "continuous_low_frequency"
+          },
+          "speaker_profile": {
+            "gender": "male",
+            "age_group": "40-50",
+            "accent": "general_american",
+            "speaking_rate": "fast"
+          },
+          "audio_properties": {
+            "duration": 5.5,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "mobile"
+          },
+          "transcript": "I need to schedule a conference call with the development team for tomorrow morning at nine thirty",
+          "expected_confidence": 0.78,
+          "key_challenges": ["traffic_noise", "fast_speech", "time_expressions"],
+          "evaluation_criteria": {
+            "word_accuracy": ">80%",
+            "time_entity_recognition": ">90%",
+            "processing_time": "<350ms"
+          }
+        }
+      ]
+    },
+    "emotional_speech": {
+      "description": "带情感的语音识别测试",
+      "sample_count": 25,
+      "expected_accuracy": ">85%",
+      "emotions": ["happy", "sad", "angry", "surprised", "neutral"],
+      "test_scenarios": [
+        {
+          "id": "asr_emotion_001",
+          "language": "zh-CN",
+          "emotion_profile": {
+            "primary_emotion": "happy",
+            "intensity": 0.8,
+            "acoustic_features": {
+              "pitch_variation": "high",
+              "speaking_rate": "faster",
+              "energy": "high"
+            }
+          },
+          "speaker_profile": {
+            "gender": "female",
+            "age_group": "20-30",
+            "accent": "standard_mandarin"
+          },
+          "audio_properties": {
+            "duration": 4.2,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "broadcast"
+          },
+          "transcript": "太好了！我们的项目终于成功了，团队的努力没有白费！",
+          "expected_confidence": 0.88,
+          "emotion_recognition": {
+            "expected_emotion": "happy",
+            "expected_intensity": 0.8,
+            "confidence_threshold": 0.75
+          },
+          "key_challenges": ["情感语调", "语速变化", "感叹词"],
+          "evaluation_criteria": {
+            "word_accuracy": ">90%",
+            "emotion_accuracy": ">85%",
+            "prosody_preservation": "maintained"
+          }
+        },
+        {
+          "id": "asr_emotion_002",
+          "language": "zh-CN",
+          "emotion_profile": {
+            "primary_emotion": "frustrated",
+            "intensity": 0.7,
+            "acoustic_features": {
+              "pitch_variation": "irregular",
+              "speaking_rate": "variable",
+              "energy": "medium_high"
+            }
+          },
+          "speaker_profile": {
+            "gender": "male",
+            "age_group": "30-40",
+            "accent": "standard_mandarin"
+          },
+          "audio_properties": {
+            "duration": 5.8,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "broadcast"
+          },
+          "transcript": "这个系统怎么又出问题了，我已经重试了好几次都不行",
+          "expected_confidence": 0.83,
+          "emotion_recognition": {
+            "expected_emotion": "frustrated",
+            "expected_intensity": 0.7,
+            "confidence_threshold": 0.7
+          },
+          "key_challenges": ["负面情绪", "重复词汇", "语调变化"],
+          "evaluation_criteria": {
+            "word_accuracy": ">88%",
+            "emotion_accuracy": ">80%",
+            "frustration_detection": ">85%"
+          }
+        }
+      ]
+    },
+    "multilingual_support": {
+      "description": "多语言语音识别测试",
+      "sample_count": 35,
+      "languages": ["zh-CN", "en-US", "ja-JP", "ko-KR", "fr-FR"],
+      "test_scenarios": [
+        {
+          "id": "asr_multi_001",
+          "language": "ja-JP",
+          "speaker_profile": {
+            "gender": "female",
+            "age_group": "25-35",
+            "accent": "standard_japanese",
+            "speaking_rate": "normal"
+          },
+          "audio_properties": {
+            "duration": 4.5,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "studio"
+          },
+          "transcript": "VoiceHelperは高度な音声認識と合成機能を提供します",
+          "expected_confidence": 0.91,
+          "key_challenges": ["日语发音", "外来词", "长音"],
+          "evaluation_criteria": {
+            "character_accuracy": ">95%",
+            "katakana_accuracy": ">90%",
+            "processing_time": "<250ms"
+          }
+        },
+        {
+          "id": "asr_multi_002",
+          "language": "ko-KR",
+          "speaker_profile": {
+            "gender": "male",
+            "age_group": "30-40",
+            "accent": "seoul_standard",
+            "speaking_rate": "normal"
+          },
+          "audio_properties": {
+            "duration": 5.1,
+            "sample_rate": 16000,
+            "bit_depth": 16,
+            "channels": 1,
+            "format": "wav",
+            "quality": "studio"
+          },
+          "transcript": "VoiceHelper는 기업용 음성 인식 및 합성 솔루션을 제공합니다",
+          "expected_confidence": 0.89,
+          "key_challenges": ["한글 발음", "외래어", "조사 변화"],
+          "evaluation_criteria": {
+            "syllable_accuracy": ">93%",
+            "morpheme_accuracy": ">88%",
+            "processing_time": "<280ms"
+          }
+        }
+      ]
+    }
+  },
+  "tts_test_cases": {
+    "naturalness_quality": {
+      "description": "语音合成自然度测试",
+      "sample_count": 30,
+      "evaluation_metrics": ["naturalness", "intelligibility", "pleasantness"],
+      "test_scenarios": [
+        {
+          "id": "tts_natural_001",
+          "language": "zh-CN",
+          "voice_profile": {
+            "voice_id": "zh-CN-XiaoxiaoNeural",
+            "gender": "female",
+            "age": "young_adult",
+            "style": "friendly"
+          },
+          "synthesis_config": {
+            "speed": 1.0,
+            "pitch": 0.0,
+            "volume": 1.0,
+            "emotion": "neutral"
+          },
+          "input_text": "欢迎使用VoiceHelper智能语音助手。我们致力于为您提供最自然、最智能的语音交互体验。无论是语音识别还是语音合成，我们都采用了最先进的人工智能技术。",
+          "expected_quality": {
+            "naturalness_score": ">4.0/5.0",
+            "intelligibility_score": ">4.5/5.0",
+            "pleasantness_score": ">4.0/5.0"
+          },
+          "audio_properties": {
+            "expected_duration": "12-15s",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "format": "wav"
+          },
+          "evaluation_criteria": {
+            "pronunciation_accuracy": ">95%",
+            "prosody_naturalness": ">90%",
+            "emotional_appropriateness": ">85%"
+          }
+        },
+        {
+          "id": "tts_natural_002",
+          "language": "en-US",
+          "voice_profile": {
+            "voice_id": "en-US-JennyNeural",
+            "gender": "female", 
+            "age": "adult",
+            "style": "professional"
+          },
+          "synthesis_config": {
+            "speed": 1.1,
+            "pitch": 2.0,
+            "volume": 0.9,
+            "emotion": "confident"
+          },
+          "input_text": "VoiceHelper provides enterprise-grade speech recognition and synthesis solutions. Our advanced AI technology ensures high accuracy and natural-sounding voice output for all your business needs.",
+          "expected_quality": {
+            "naturalness_score": ">4.2/5.0",
+            "intelligibility_score": ">4.6/5.0",
+            "pleasantness_score": ">4.1/5.0"
+          },
+          "audio_properties": {
+            "expected_duration": "10-12s",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "format": "wav"
+          },
+          "evaluation_criteria": {
+            "pronunciation_accuracy": ">96%",
+            "stress_pattern_accuracy": ">92%",
+            "intonation_naturalness": ">88%"
+          }
+        }
+      ]
+    },
+    "emotional_synthesis": {
+      "description": "情感语音合成测试",
+      "sample_count": 25,
+      "emotions": ["happy", "sad", "angry", "surprised", "calm", "excited"],
+      "test_scenarios": [
+        {
+          "id": "tts_emotion_001",
+          "language": "zh-CN",
+          "emotion_config": {
+            "target_emotion": "happy",
+            "intensity": 0.8,
+            "voice_modifications": {
+              "pitch_increase": "+15%",
+              "speed_increase": "+10%",
+              "energy_boost": "+20%"
+            }
+          },
+          "voice_profile": {
+            "voice_id": "zh-CN-XiaoxiaoNeural",
+            "gender": "female",
+            "base_style": "cheerful"
+          },
+          "input_text": "恭喜您！您的订单已经成功处理，我们会尽快为您安排发货。感谢您选择我们的服务！",
+          "expected_emotion_recognition": {
+            "detected_emotion": "happy",
+            "confidence": ">0.85",
+            "intensity": "0.7-0.9"
+          },
+          "audio_properties": {
+            "expected_duration": "8-10s",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "format": "wav"
+          },
+          "evaluation_criteria": {
+            "emotion_authenticity": ">85%",
+            "emotional_consistency": ">90%",
+            "naturalness_preservation": ">80%"
+          }
+        },
+        {
+          "id": "tts_emotion_002",
+          "language": "zh-CN",
+          "emotion_config": {
+            "target_emotion": "empathetic",
+            "intensity": 0.7,
+            "voice_modifications": {
+              "pitch_decrease": "-5%",
+              "speed_decrease": "-15%",
+              "warmth_increase": "+25%"
+            }
+          },
+          "voice_profile": {
+            "voice_id": "zh-CN-YunxiNeural",
+            "gender": "male",
+            "base_style": "gentle"
+          },
+          "input_text": "我理解您遇到的困难，这确实令人沮丧。请放心，我会尽我所能帮助您解决这个问题。",
+          "expected_emotion_recognition": {
+            "detected_emotion": "empathetic",
+            "confidence": ">0.80",
+            "intensity": "0.6-0.8"
+          },
+          "audio_properties": {
+            "expected_duration": "9-11s",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "format": "wav"
+          },
+          "evaluation_criteria": {
+            "empathy_expression": ">85%",
+            "tone_appropriateness": ">90%",
+            "emotional_impact": ">80%"
+          }
+        }
+      ]
+    },
+    "prosody_control": {
+      "description": "韵律控制测试",
+      "sample_count": 20,
+      "prosody_features": ["stress", "intonation", "rhythm", "pause"],
+      "test_scenarios": [
+        {
+          "id": "tts_prosody_001",
+          "language": "zh-CN",
+          "prosody_config": {
+            "emphasis_words": ["重要", "立即", "紧急"],
+            "pause_positions": [3, 8, 12],
+            "intonation_pattern": "declarative_with_emphasis"
+          },
+          "voice_profile": {
+            "voice_id": "zh-CN-YunxiNeural",
+            "gender": "male",
+            "style": "serious"
+          },
+          "input_text": "这是一个重要通知。请立即检查您的邮箱，有紧急文件需要您的确认。",
+          "expected_prosody": {
+            "stress_placement": "correct_on_emphasis_words",
+            "pause_timing": "natural_and_appropriate",
+            "intonation_contour": "matches_declarative_pattern"
+          },
+          "evaluation_criteria": {
+            "stress_accuracy": ">90%",
+            "pause_naturalness": ">85%",
+            "intonation_appropriateness": ">88%"
+          }
+        }
+      ]
+    }
+  },
+  "real_time_processing": {
+    "description": "实时语音处理测试",
+    "sample_count": 25,
+    "processing_modes": ["streaming_asr", "real_time_tts", "duplex_conversation"],
+    "test_scenarios": [
+      {
+        "id": "realtime_001",
+        "mode": "streaming_asr",
+        "language": "zh-CN",
+        "test_config": {
+          "chunk_size": 1024,
+          "chunk_interval": 100,
+          "buffer_size": 4096,
+          "latency_target": "<150ms"
+        },
+        "input_stream": {
+          "total_duration": 30.0,
+          "content_type": "continuous_speech",
+          "speaker_changes": 0,
+          "speech_rate": "normal"
+        },
+        "expected_performance": {
+          "first_word_latency": "<200ms",
+          "incremental_latency": "<100ms",
+          "final_accuracy": ">92%",
+          "partial_accuracy": ">85%"
+        },
+        "evaluation_criteria": {
+          "latency_consistency": "stable_within_10ms",
+          "accuracy_degradation": "<5%_vs_batch",
+          "resource_usage": "cpu<50%_memory<200mb"
+        }
+      },
+      {
+        "id": "realtime_002",
+        "mode": "duplex_conversation",
+        "language": "zh-CN",
+        "test_config": {
+          "conversation_turns": 10,
+          "interruption_handling": true,
+          "voice_activity_detection": true,
+          "echo_cancellation": true
+        },
+        "conversation_flow": {
+          "user_speech_duration": "2-5s_per_turn",
+          "system_response_delay": "<500ms",
+          "overlap_handling": "graceful_interruption"
+        },
+        "expected_performance": {
+          "turn_taking_accuracy": ">90%",
+          "interruption_detection": ">85%",
+          "echo_suppression": ">95%",
+          "overall_conversation_quality": ">4.0/5.0"
+        }
+      }
+    ]
+  },
+  "voice_biometrics": {
+    "description": "声纹识别和验证测试",
+    "sample_count": 15,
+    "biometric_features": ["speaker_identification", "speaker_verification", "anti_spoofing"],
+    "test_scenarios": [
+      {
+        "id": "biometric_001",
+        "task": "speaker_identification",
+        "test_config": {
+          "enrolled_speakers": 10,
+          "test_utterances_per_speaker": 5,
+          "impostor_attempts": 20,
+          "audio_duration": "3-10s"
+        },
+        "expected_performance": {
+          "identification_accuracy": ">95%",
+          "false_acceptance_rate": "<2%",
+          "false_rejection_rate": "<3%",
+          "processing_time": "<1s"
+        },
+        "evaluation_criteria": {
+          "robustness_to_noise": "maintains_90%_accuracy_at_15db_snr",
+          "channel_invariance": "cross_device_accuracy_>85%",
+          "temporal_stability": "consistent_over_6_months"
+        }
+      }
+    ]
+  },
+  "performance_benchmarks": {
+    "latency_requirements": {
+      "asr_streaming": "<150ms",
+      "asr_batch": "<500ms", 
+      "tts_synthesis": "<200ms_per_sentence",
+      "emotion_recognition": "<100ms",
+      "voice_biometrics": "<1s"
+    },
+    "accuracy_requirements": {
+      "asr_clean_speech": ">95%",
+      "asr_noisy_speech": ">80%",
+      "tts_naturalness": ">4.0/5.0",
+      "emotion_recognition": ">85%",
+      "speaker_identification": ">95%"
+    },
+    "resource_requirements": {
+      "cpu_usage": "<70%_single_core",
+      "memory_usage": "<500mb_per_session",
+      "gpu_memory": "<2gb_for_neural_models",
+      "network_bandwidth": "<100kbps_for_streaming"
+    }
+  },
+  "test_data_generation": {
+    "synthetic_data": {
+      "description": "合成测试数据生成配置",
+      "generation_rules": {
+        "text_templates": [
+          "请帮我{action}{object}",
+          "我想了解{topic}的{aspect}",
+          "系统出现了{error_type}错误",
+          "{greeting}，{request}"
+        ],
+        "voice_variations": {
+          "speed_range": [0.8, 1.5],
+          "pitch_range": [-10, 10],
+          "emotion_intensities": [0.3, 0.5, 0.7, 0.9]
+        },
+        "noise_simulation": {
+          "types": ["gaussian", "office", "street", "cafe"],
+          "snr_levels": [5, 10, 15, 20, 25]
+        }
+      }
+    },
+    "data_augmentation": {
+      "techniques": [
+        "speed_perturbation",
+        "pitch_shifting", 
+        "noise_addition",
+        "reverb_simulation",
+        "codec_simulation"
+      ],
+      "augmentation_ratios": {
+        "speed_perturbation": 0.3,
+        "pitch_shifting": 0.2,
+        "noise_addition": 0.4,
+        "reverb_simulation": 0.1
+      }
+    }
+  },
+  "evaluation_protocols": {
+    "automated_evaluation": {
+      "metrics": [
+        "word_error_rate",
+        "character_error_rate", 
+        "bleu_score",
+        "mel_cepstral_distortion",
+        "perceptual_evaluation_speech_quality"
+      ],
+      "tools": ["espnet", "fairseq", "speechbrain", "librosa"]
+    },
+    "human_evaluation": {
+      "criteria": [
+        "naturalness",
+        "intelligibility", 
+        "pleasantness",
+        "emotional_appropriateness"
+      ],
+      "rating_scale": "1-5_likert_scale",
+      "evaluator_requirements": "native_speakers_with_audio_training"
+    }
+  },
+  "usage_instructions": {
+    "test_execution": "使用这些语音数据测试ASR、TTS和情感识别系统",
+    "quality_assurance": "根据性能基准评估系统表现",
+    "continuous_improvement": "基于测试结果优化模型和算法",
+    "data_expansion": "使用数据生成规则创建更多测试样本"
+  }
+}

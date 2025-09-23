@@ -1,0 +1,1051 @@
+{
+	"Golang errors": {
+		"": [
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\npkg/utils/error_handler.go:59:30: context.Canceled undefined (type string has no field or method Canceled)\npkg/utils/error_handler.go:62:30: context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded)"
+			},
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\ninternal/contracts/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)\ninternal/contracts/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)\ninternal/contracts/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)\ninternal/contracts/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)"
+			},
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\ninternal/auth/sso_providers.go:369:25: undefined: samlsp.DefaultSessionCookieStore\ninternal/auth/sso_providers.go:388:3: unknown field IDPMetadataURL in struct literal of type samlsp.Options"
+			},
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\npkg/common/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)\npkg/common/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)\npkg/common/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)\npkg/common/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)"
+			},
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\ninternal/handlers/api_routes.go:348:16: undefined: strconv\ninternal/handlers/api_routes.go:349:17: undefined: strconv\ninternal/handlers/api_routes.go:352:10: undefined: repository\ninternal/handlers/api_routes.go:360:33: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)\ninternal/handlers/api_routes.go:362:3: undefined: logger\ninternal/handlers/api_routes.go:396:11: undefined: repository\ninternal/handlers/api_routes.go:405:14: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)\ninternal/handlers/api_routes.go:406:3: undefined: logger\ninternal/handlers/api_routes.go:411:2: undefined: logger\ninternal/handlers/api_routes.go:429:17: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)\ninternal/handlers/api_routes.go:429:17: too many errors"
+			},
+			{
+				"line": 0,
+				"column": 0,
+				"error": "# command-line-arguments\npkg/integration/service_connector.go:389:2: declared and not used: service"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/internal/auth/sso_providers.go": [
+			{
+				"line": 369,
+				"column": 25,
+				"error": "undefined: samlsp.DefaultSessionCookieStore"
+			},
+			{
+				"line": 388,
+				"column": 3,
+				"error": "unknown field IDPMetadataURL in struct literal of type samlsp.Options"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/internal/contracts/validation.go": [
+			{
+				"line": 144,
+				"column": 24,
+				"error": "v.getMessage undefined (type string has no field or method getMessage)"
+			},
+			{
+				"line": 148,
+				"column": 24,
+				"error": "v.getMessage undefined (type interface{} has no field or method getMessage)"
+			},
+			{
+				"line": 166,
+				"column": 24,
+				"error": "v.getMessage undefined (type string has no field or method getMessage)"
+			},
+			{
+				"line": 170,
+				"column": 24,
+				"error": "v.getMessage undefined (type interface{} has no field or method getMessage)"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/api_routes.go": [
+			{
+				"line": 348,
+				"column": 16,
+				"error": "undefined: strconv"
+			},
+			{
+				"line": 349,
+				"column": 17,
+				"error": "undefined: strconv"
+			},
+			{
+				"line": 352,
+				"column": 10,
+				"error": "undefined: repository"
+			},
+			{
+				"line": 360,
+				"column": 33,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 362,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 396,
+				"column": 11,
+				"error": "undefined: repository"
+			},
+			{
+				"line": 405,
+				"column": 14,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 406,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 411,
+				"column": 2,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 429,
+				"column": 17,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 431,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 468,
+				"column": 17,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 495,
+				"column": 14,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 496,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 518,
+				"column": 17,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 530,
+				"column": 14,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 531,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 536,
+				"column": 2,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 553,
+				"column": 17,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 568,
+				"column": 16,
+				"error": "undefined: strconv"
+			},
+			{
+				"line": 569,
+				"column": 17,
+				"error": "undefined: strconv"
+			},
+			{
+				"line": 572,
+				"column": 10,
+				"error": "undefined: repository"
+			},
+			{
+				"line": 580,
+				"column": 28,
+				"error": "h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)"
+			},
+			{
+				"line": 582,
+				"column": 3,
+				"error": "undefined: logger"
+			},
+			{
+				"line": 660,
+				"column": 15,
+				"error": "h.callAgentService undefined (type *APIHandler has no field or method callAgentService)"
+			},
+			{
+				"line": 681,
+				"column": 18,
+				"error": "undefined: io"
+			},
+			{
+				"line": 688,
+				"column": 20,
+				"error": "undefined: json"
+			},
+			{
+				"line": 689,
+				"column": 4,
+				"error": "undefined: fmt"
+			},
+			{
+				"line": 690,
+				"column": 4,
+				"error": "undefined: fmt"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/pkg/common/validation.go": [
+			{
+				"line": 144,
+				"column": 24,
+				"error": "v.getMessage undefined (type string has no field or method getMessage)"
+			},
+			{
+				"line": 148,
+				"column": 24,
+				"error": "v.getMessage undefined (type interface{} has no field or method getMessage)"
+			},
+			{
+				"line": 166,
+				"column": 24,
+				"error": "v.getMessage undefined (type string has no field or method getMessage)"
+			},
+			{
+				"line": 170,
+				"column": 24,
+				"error": "v.getMessage undefined (type interface{} has no field or method getMessage)"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/pkg/integration/service_connector.go": [
+			{
+				"line": 389,
+				"column": 2,
+				"error": "declared and not used: service"
+			}
+		],
+		"/Users/lintao/important/ai-customer/voicehelper/backend/pkg/utils/error_handler.go": [
+			{
+				"line": 59,
+				"column": 30,
+				"error": "context.Canceled undefined (type string has no field or method Canceled)"
+			},
+			{
+				"line": 62,
+				"column": 30,
+				"error": "context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded)"
+			}
+		]
+	},
+	"Issues": [
+		{
+			"severity": "HIGH",
+			"confidence": "MEDIUM",
+			"cwe": {
+				"id": "338",
+				"url": "https://cwe.mitre.org/data/definitions/338.html"
+			},
+			"rule_id": "G404",
+			"details": "Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand)",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/pkg/discovery/load_balancer.go",
+			"code": "214: \t// Select random point\n215: \trandomPoint := rand.Intn(totalWeight)\n216: \tcurrentWeight := 0\n",
+			"line": "215",
+			"column": "17",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G201",
+			"details": "SQL string formatting",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/dataset_repository.go",
+			"code": "312: \t// 查询数据\n313: \tquery := fmt.Sprintf(`\n314: \t\tSELECT \n315: \t\t\tid, dataset_id, name, source, type, size, status,\n316: \t\t\tchunk_count, token_count, metadata, created_at, updated_at\n317: \t\tFROM documents\n318: \t\tWHERE dataset_id = $1 AND deleted_at IS NULL\n319: \t\tORDER BY %s %s\n320: \t\tLIMIT $2 OFFSET $3\n321: \t`, opts.SortBy, opts.Order)\n322: \n",
+			"line": "313-321",
+			"column": "11",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G201",
+			"details": "SQL string formatting",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/dataset_repository.go",
+			"code": "105: \t// 查询数据\n106: \tquery := fmt.Sprintf(`\n107: \t\tSELECT \n108: \t\t\tid, tenant_id, name, description, type, status,\n109: \t\t\tdoc_count, chunk_count, token_count, metadata,\n110: \t\t\tcreated_by, updated_by, created_at, updated_at\n111: \t\tFROM datasets\n112: \t\tWHERE tenant_id = $1 AND deleted_at IS NULL\n113: \t\tORDER BY %s %s\n114: \t\tLIMIT $2 OFFSET $3\n115: \t`, opts.SortBy, opts.Order)\n116: \n",
+			"line": "106-115",
+			"column": "11",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G201",
+			"details": "SQL string formatting",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go",
+			"code": "410: \t// 查询数据\n411: \tquery := fmt.Sprintf(`\n412: \t\tSELECT \n413: \t\t\tid, conversation_id, role, content, modality,\n414: \t\t\ttoken_count, metadata, references, created_at\n415: \t\tFROM messages\n416: \t\tWHERE conversation_id = $1\n417: \t\tORDER BY %s %s\n418: \t\tLIMIT $2 OFFSET $3\n419: \t`, opts.SortBy, opts.Order)\n420: \n",
+			"line": "411-419",
+			"column": "11",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G201",
+			"details": "SQL string formatting",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go",
+			"code": "183: \t// 查询数据\n184: \tquery := fmt.Sprintf(`\n185: \t\tSELECT \n186: \t\t\tid, user_id, tenant_id, title, summary, status,\n187: \t\t\tmetadata, created_at, updated_at, last_msg_at,\n188: \t\t\tmsg_count, token_count\n189: \t\tFROM conversations\n190: \t\tWHERE user_id = $1 AND deleted_at IS NULL\n191: \t\tORDER BY %s %s\n192: \t\tLIMIT $2 OFFSET $3\n193: \t`, opts.SortBy, opts.Order)\n194: \n",
+			"line": "184-193",
+			"column": "11",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "89",
+				"url": "https://cwe.mitre.org/data/definitions/89.html"
+			},
+			"rule_id": "G201",
+			"details": "SQL string formatting",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "285: \t// 查询数据\n286: \tquery := fmt.Sprintf(`\n287: \t\tSELECT \n288: \t\t\tid, tenant_id, name, key, status,\n289: \t\t\tpermissions, rate_limit, metadata, expires_at,\n290: \t\t\tlast_used_at, created_at, updated_at\n291: \t\tFROM api_keys\n292: \t\tWHERE tenant_id = $1 AND deleted_at IS NULL\n293: \t\tORDER BY %s %s\n294: \t\tLIMIT $2 OFFSET $3\n295: \t`, opts.SortBy, opts.Order)\n296: \n",
+			"line": "286-295",
+			"column": "11",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "LOW",
+			"cwe": {
+				"id": "400",
+				"url": "https://cwe.mitre.org/data/definitions/400.html"
+			},
+			"rule_id": "G112",
+			"details": "Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go",
+			"code": "413: \n414: \tserver := \u0026http.Server{\n415: \t\tAddr:    fmt.Sprintf(\":%d\", port),\n416: \t\tHandler: mux,\n417: \t}\n418: \n",
+			"line": "414-417",
+			"column": "13",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "276",
+				"url": "https://cwe.mitre.org/data/definitions/276.html"
+			},
+			"rule_id": "G302",
+			"details": "Expect file permissions to be 0600 or less",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/pkg/security/audit.go",
+			"code": "120: \n121: \tfile, err := os.OpenFile(al.config.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)\n122: \tif err != nil {\n",
+			"line": "121",
+			"column": "15",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "MEDIUM",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "276",
+				"url": "https://cwe.mitre.org/data/definitions/276.html"
+			},
+			"rule_id": "G301",
+			"details": "Expect directory permissions to be 0750 or less",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/pkg/security/audit.go",
+			"code": "116: \t// Create directory if it doesn't exist\n117: \tif err := os.MkdirAll(\"/var/log/chatbot\", 0755); err != nil {\n118: \t\treturn fmt.Errorf(\"failed to create log directory: %v\", err)\n",
+			"line": "117",
+			"column": "12",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/pkg/utils/error_handler.go",
+			"code": "266: \t\t\tif catchFunc != nil {\n267: \t\t\t\tcatchFunc(err)\n268: \t\t\t}\n",
+			"line": "267",
+			"column": "5",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/pkg/storage/minio.go",
+			"code": "184: \tif err != nil {\n185: \t\tobject.Close()\n186: \t\treturn nil, fmt.Errorf(\"failed to stat object: %w\", err)\n",
+			"line": "185",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/service/service.go",
+			"code": "216: \tif resp.StatusCode != http.StatusOK {\n217: \t\tresp.Body.Close()\n218: \t\treturn nil, fmt.Errorf(\"unexpected status code: %d\", resp.StatusCode)\n",
+			"line": "217",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/service/service.go",
+			"code": "99: \tif resp.StatusCode != http.StatusOK {\n100: \t\tresp.Body.Close()\n101: \t\treturn nil, fmt.Errorf(\"unexpected status code: %d\", resp.StatusCode)\n",
+			"line": "100",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go",
+			"code": "501: \t\tif len(referencesJSON) \u003e 0 {\n502: \t\t\tjson.Unmarshal(referencesJSON, \u0026msg.References)\n503: \t\t}\n",
+			"line": "502",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go",
+			"code": "498: \t\tif len(metadataJSON) \u003e 0 {\n499: \t\t\tjson.Unmarshal(metadataJSON, \u0026msg.Metadata)\n500: \t\t}\n",
+			"line": "499",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go",
+			"code": "377: \t\t\ttitleQuery := `UPDATE conversations SET title = $2 WHERE id = $1`\n378: \t\t\ttx.ExecContext(ctx, titleQuery, msg.ConversationID, title)\n379: \t\t}\n",
+			"line": "378",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "481: \tbytes := make([]byte, 32)\n482: \trand.Read(bytes)\n483: \thash := sha256.Sum256(bytes)\n",
+			"line": "482",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "418: \t\tif result.Allowed {\n419: \t\t\tr.UpdateLastUsed(ctx, id)\n420: \t\t}\n",
+			"line": "419",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "319: \t\tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n320: \t\tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n321: \n",
+			"line": "320",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "318: \t\t// 解析JSON字段\n319: \t\tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n320: \t\tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n",
+			"line": "319",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "247: \tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n248: \tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n249: \n",
+			"line": "248",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "246: \t// 解析JSON字段\n247: \tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n248: \tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n",
+			"line": "247",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "191: \t\t// 更新状态为过期\n192: \t\tr.updateStatus(ctx, key.ID, \"expired\")\n193: \t\treturn nil, fmt.Errorf(\"API key has expired\")\n",
+			"line": "192",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "174: \tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n175: \tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n176: \n",
+			"line": "175",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go",
+			"code": "173: \t// 解析JSON字段\n174: \tjson.Unmarshal(permissionsJSON, \u0026key.Permissions)\n175: \tjson.Unmarshal(metadataJSON, \u0026key.Metadata)\n",
+			"line": "174",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "466: \t\t// 关闭客户端连接\n467: \t\tclient.Conn.Close()\n468: \t}\n",
+			"line": "467",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "230: \t\tcase \u003c-ticker.C:\n231: \t\t\tclient.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))\n232: \t\t\tif err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {\n",
+			"line": "231",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "219: \t\t\tif !ok {\n220: \t\t\t\tclient.Conn.WriteMessage(websocket.CloseMessage, []byte{})\n221: \t\t\t\treturn\n",
+			"line": "220",
+			"column": "5",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "217: \t\tcase message, ok := \u003c-client.Send:\n218: \t\t\tclient.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))\n219: \t\t\tif !ok {\n",
+			"line": "218",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "197: \t\tclient.LastActive = time.Now()\n198: \t\tclient.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))\n199: \n",
+			"line": "198",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "179: \tclient.Conn.SetPongHandler(func(string) error {\n180: \t\tclient.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))\n181: \t\tclient.LastActive = time.Now()\n",
+			"line": "180",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go",
+			"code": "177: \tclient.Conn.SetReadLimit(512)\n178: \tclient.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))\n179: \tclient.Conn.SetPongHandler(func(string) error {\n",
+			"line": "178",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go",
+			"code": "147: \t\t// 重置读取超时\n148: \t\tconn.SetReadDeadline(time.Now().Add(60 * time.Second))\n149: \n",
+			"line": "148",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go",
+			"code": "117: \tconn.SetPongHandler(func(string) error {\n118: \t\tconn.SetReadDeadline(time.Now().Add(60 * time.Second))\n119: \t\treturn nil\n",
+			"line": "118",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go",
+			"code": "115: \t// 设置读取超时\n116: \tconn.SetReadDeadline(time.Now().Add(60 * time.Second))\n117: \tconn.SetPongHandler(func(string) error {\n",
+			"line": "116",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "242: \t// 发送会话停止确认\n243: \thandler.WriteEnvelope(\"session_stopped\", map[string]interface{}{\n244: \t\t\"session_id\": msg.SessionID,\n245: \t\t\"status\":     \"stopped\",\n246: \t})\n247: }\n",
+			"line": "243-246",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "227: \t// 模拟ASR结果（实际应该从算法服务获取）\n228: \thandler.WriteEnvelope(\"asr_partial\", map[string]interface{}{\n229: \t\t\"text\":       \"识别中...\",\n230: \t\t\"confidence\": 0.8,\n231: \t})\n232: }\n",
+			"line": "228-231",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "213: \tif msg.Data == \"\" {\n214: \t\thandler.WriteErrorEnvelope(\"empty_audio_data\", \"Audio data is empty\")\n215: \t\treturn\n",
+			"line": "214",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "204: \t// 发送会话开始确认\n205: \thandler.WriteEnvelope(\"session_started\", map[string]interface{}{\n206: \t\t\"session_id\": msg.SessionID,\n207: \t\t\"config\":     config,\n208: \t\t\"status\":     \"started\",\n209: \t})\n210: }\n",
+			"line": "205-209",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "180: \tif msg.SessionID == \"\" {\n181: \t\thandler.WriteErrorEnvelope(\"missing_session_id\", \"Session ID is required\")\n182: \t\treturn\n",
+			"line": "181",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "168: \t\tdefault:\n169: \t\t\thandler.WriteErrorEnvelope(\"unknown_message_type\", \"Unknown message type: \"+msg.Type)\n170: \t\t}\n",
+			"line": "169",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "158: \t\t\tif sessionID == \"\" {\n159: \t\t\t\thandler.WriteErrorEnvelope(\"no_session\", \"No active voice session\")\n160: \t\t\t\tcontinue\n",
+			"line": "159",
+			"column": "5",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go",
+			"code": "120: \t// 发送连接确认\n121: \tstreamHandler.WriteEnvelope(\"connected\", map[string]interface{}{\n122: \t\t\"status\": \"connected\",\n123: \t})\n124: \n",
+			"line": "121-123",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/base.go",
+			"code": "37: \tbytes := make([]byte, 8)\n38: \trand.Read(bytes)\n39: \treturn fmt.Sprintf(\"trace_%s\", hex.EncodeToString(bytes))\n",
+			"line": "38",
+			"column": "2",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/internal/auth/multi_tenant_auth.go",
+			"code": "249: \t\t\t// 回滚租户创建\n250: \t\t\ts.tenantRepo.DeleteTenant(ctx, tenant.ID)\n251: \t\t\treturn nil, fmt.Errorf(\"failed to create admin user: %w\", err)\n",
+			"line": "250",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go",
+			"code": "400: \t\tw.Header().Set(\"Content-Type\", \"application/json\")\n401: \t\tjson.NewEncoder(w).Encode(map[string]interface{}{\n402: \t\t\t\"name\":        fmt.Sprintf(\"Test Service %d\", port),\n403: \t\t\t\"version\":     \"1.0.0\",\n404: \t\t\t\"description\": \"Test service for discovery demo\",\n405: \t\t\t\"port\":        port,\n406: \t\t})\n407: \t})\n",
+			"line": "401-406",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go",
+			"code": "394: \t\t\tw.WriteHeader(http.StatusInternalServerError)\n395: \t\t\tjson.NewEncoder(w).Encode(map[string]string{\"status\": \"unhealthy\"})\n396: \t\t}\n",
+			"line": "395",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go",
+			"code": "391: \t\t\tw.WriteHeader(http.StatusOK)\n392: \t\t\tjson.NewEncoder(w).Encode(map[string]string{\"status\": \"healthy\"})\n393: \t\t} else {\n",
+			"line": "392",
+			"column": "4",
+			"nosec": false,
+			"suppressions": null
+		},
+		{
+			"severity": "LOW",
+			"confidence": "HIGH",
+			"cwe": {
+				"id": "703",
+				"url": "https://cwe.mitre.org/data/definitions/703.html"
+			},
+			"rule_id": "G104",
+			"details": "Errors unhandled",
+			"file": "/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go",
+			"code": "246: \tfor _, service := range testServices {\n247: \t\tregistry.RegisterService(ctx, service)\n248: \t}\n",
+			"line": "247",
+			"column": "3",
+			"nosec": false,
+			"suppressions": null
+		}
+	],
+	"Stats": {
+		"files": 56,
+		"lines": 20538,
+		"nosec": 0,
+		"found": 49
+	},
+	"GosecVersion": "dev"
+}

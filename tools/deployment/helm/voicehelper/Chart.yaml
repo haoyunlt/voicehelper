@@ -1,0 +1,39 @@
+apiVersion: v2
+name: voicehelper
+description: VoiceHelper AI - 智能语音助手平台 Helm Chart
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+home: https://github.com/voicehelper/voicehelper
+sources:
+  - https://github.com/voicehelper/voicehelper
+maintainers:
+  - name: VoiceHelper Team
+    email: team@voicehelper.ai
+keywords:
+  - ai
+  - voice
+  - assistant
+  - chatbot
+  - kubernetes
+  - microservices
+annotations:
+  category: AI/ML
+  licenses: MIT
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: prometheus
+    version: "15.x.x"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+  - name: grafana
+    version: "6.x.x"
+    repository: https://grafana.github.io/helm-charts
+    condition: monitoring.grafana.enabled

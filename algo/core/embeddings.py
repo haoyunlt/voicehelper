@@ -1,9 +1,9 @@
 import os
 import requests
 from typing import List
-from sentence_transformers import SentenceTransformer
-from langchain.embeddings.base import Embeddings
-from core.config import config
+# from sentence_transformers import SentenceTransformer  # 暂时注释掉
+from langchain_core.embeddings import Embeddings
+from core.config import default_rag_config
 
 class BGEEmbeddings(Embeddings):
     """BGE Embedding 模型（简化版）"""
@@ -40,8 +40,8 @@ class ArkEmbeddings(Embeddings):
     """豆包 Embedding API"""
     
     def __init__(self, api_key: str = None, base_url: str = None):
-        self.api_key = api_key or config.ARK_API_KEY
-        self.base_url = base_url or config.ARK_BASE_URL
+        self.api_key = api_key or os.getenv("ARK_API_KEY")
+        self.base_url = base_url or os.getenv("ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -94,7 +94,7 @@ class ArkEmbeddings(Embeddings):
 
 def get_embeddings() -> Embeddings:
     """获取嵌入模型实例"""
-    if config.ARK_API_KEY:
+    if os.getenv("ARK_API_KEY"):
         try:
             # 优先使用豆包 Embedding
             embeddings = ArkEmbeddings()
@@ -108,4 +108,4 @@ def get_embeddings() -> Embeddings:
     
     # 回退到 BGE
     print("Using BGE Embeddings")
-    return BGEEmbeddings(config.EMBEDDING_MODEL)
+    return BGEEmbeddings()

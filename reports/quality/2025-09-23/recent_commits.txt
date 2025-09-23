@@ -1,0 +1,10 @@
+f9cc8dd 恢复 simple_batch_scheduler.py 文件
+71e268e feat: 升级批处理调度器为企业级实现
+b348970 feat: 完成编译、部署和测试工作，创建TODO清理任务文档
+5271cad feat: 完成项目目录结构优化的后续工作
+91ffa01 feat: 优化项目目录结构
+4649079 feat: V2架构重构完成 - 语音增强聊天助手
+ea441ec docs: 创建 v2.0 开发计划
+78d3b49 feat: 统一环境配置管理
+15709f6 feat: 实现完整的语音服务(ASR/TTS)功能
+b77252b docs: 优化文档格式，提升可读性和一致性

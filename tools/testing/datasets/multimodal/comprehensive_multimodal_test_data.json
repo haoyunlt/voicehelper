@@ -1,0 +1,662 @@
+{
+  "metadata": {
+    "name": "多模态融合测试数据集",
+    "version": "2.0.0",
+    "description": "包含文本、图像、语音多模态融合测试的综合数据集",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_test_cases": 120,
+    "modalities": ["text", "image", "audio", "video"],
+    "fusion_strategies": [
+      "early_fusion",
+      "late_fusion", 
+      "attention_fusion",
+      "gated_fusion",
+      "hierarchical_fusion"
+    ],
+    "test_categories": [
+      "cross_modal_understanding",
+      "multimodal_reasoning",
+      "fusion_quality",
+      "modality_alignment",
+      "performance_optimization"
+    ]
+  },
+  "cross_modal_understanding_tests": {
+    "text_image_fusion": [
+      {
+        "id": "multimodal_001",
+        "name": "文本图像理解融合",
+        "category": "cross_modal_understanding",
+        "priority": "high",
+        "test_scenario": {
+          "description": "用户上传产品图片并询问相关问题",
+          "modalities": ["text", "image"],
+          "fusion_strategy": "attention_fusion"
+        },
+        "test_data": {
+          "image": {
+            "file_path": "test_images/smartphone_product.jpg",
+            "format": "JPEG",
+            "resolution": "1920x1080",
+            "size_mb": 2.5,
+            "content_description": "一部黑色智能手机的产品展示图，包含品牌logo、型号信息和主要特征"
+          },
+          "text_query": "这个手机有什么特色功能？价格大概多少？",
+          "context": {
+            "user_intent": "product_inquiry",
+            "expected_entities": ["brand", "model", "features", "price"],
+            "conversation_history": []
+          }
+        },
+        "expected_fusion_output": {
+          "image_understanding": {
+            "detected_objects": ["smartphone", "brand_logo", "text_overlay"],
+            "extracted_text": ["品牌名称", "型号信息", "规格参数"],
+            "visual_features": ["color", "design", "size"]
+          },
+          "text_understanding": {
+            "intent": "product_inquiry",
+            "entities": ["特色功能", "价格"],
+            "question_type": "factual_inquiry"
+          },
+          "fused_response": {
+            "content": "根据图片显示，这是一款[品牌][型号]智能手机，主要特色功能包括[从图片识别的功能]。关于价格信息，我需要查询最新的产品数据库来为您提供准确报价。",
+            "confidence_score": 0.85,
+            "modality_contributions": {
+              "image": 0.6,
+              "text": 0.4
+            }
+          }
+        },
+        "evaluation_criteria": {
+          "image_text_alignment": ">0.8",
+          "response_relevance": ">0.85",
+          "factual_accuracy": ">0.9",
+          "fusion_quality": ">0.8"
+        }
+      },
+      {
+        "id": "multimodal_002",
+        "name": "图表数据分析",
+        "category": "cross_modal_understanding",
+        "priority": "high",
+        "test_scenario": {
+          "description": "用户上传数据图表并询问分析问题",
+          "modalities": ["text", "image"],
+          "fusion_strategy": "hierarchical_fusion"
+        },
+        "test_data": {
+          "image": {
+            "file_path": "test_images/sales_chart.png",
+            "format": "PNG",
+            "resolution": "1200x800",
+            "size_mb": 1.8,
+            "content_description": "2024年月度销售额柱状图，显示1-12月的销售数据趋势"
+          },
+          "text_query": "从这个图表可以看出什么趋势？哪个月份表现最好？",
+          "context": {
+            "user_intent": "data_analysis",
+            "expected_analysis": ["trend_identification", "peak_performance", "insights"]
+          }
+        },
+        "expected_fusion_output": {
+          "chart_understanding": {
+            "chart_type": "bar_chart",
+            "data_extraction": "monthly_sales_values",
+            "trend_analysis": "upward_trend_with_seasonal_peaks"
+          },
+          "analytical_response": {
+            "trend_summary": "整体呈上升趋势",
+            "peak_month": "12月",
+            "insights": ["季节性因素", "增长率分析", "异常值识别"]
+          }
+        }
+      }
+    ],
+    "text_audio_fusion": [
+      {
+        "id": "multimodal_003",
+        "name": "语音情感与文本内容融合",
+        "category": "cross_modal_understanding",
+        "priority": "high",
+        "test_scenario": {
+          "description": "分析语音中的情感与文本内容的一致性",
+          "modalities": ["text", "audio"],
+          "fusion_strategy": "gated_fusion"
+        },
+        "test_data": {
+          "audio": {
+            "file_path": "test_audio/customer_complaint.wav",
+            "format": "WAV",
+            "duration": 15.3,
+            "sample_rate": 16000,
+            "content_description": "客户投诉语音，语调显示明显的不满情绪"
+          },
+          "transcribed_text": "我对你们的服务很不满意，这已经是第三次出现同样的问题了，希望能够得到妥善解决。",
+          "context": {
+            "scenario": "customer_service",
+            "expected_emotion": "frustrated",
+            "priority_level": "high"
+          }
+        },
+        "expected_fusion_output": {
+          "audio_emotion_analysis": {
+            "detected_emotion": "frustrated",
+            "emotion_intensity": 0.8,
+            "voice_characteristics": {
+              "pitch_variation": "high",
+              "speaking_rate": "fast",
+              "energy_level": "elevated"
+            }
+          },
+          "text_sentiment_analysis": {
+            "sentiment": "negative",
+            "sentiment_score": -0.7,
+            "key_phrases": ["不满意", "第三次", "同样的问题"]
+          },
+          "fused_understanding": {
+            "overall_emotion": "frustrated",
+            "confidence": 0.92,
+            "consistency_score": 0.95,
+            "recommended_response_tone": "empathetic_and_solution_focused"
+          }
+        }
+      }
+    ],
+    "image_audio_fusion": [
+      {
+        "id": "multimodal_004",
+        "name": "视觉场景与音频环境融合",
+        "category": "cross_modal_understanding",
+        "priority": "medium",
+        "test_scenario": {
+          "description": "结合图像场景和音频环境信息进行综合理解",
+          "modalities": ["image", "audio"],
+          "fusion_strategy": "early_fusion"
+        },
+        "test_data": {
+          "image": {
+            "file_path": "test_images/office_meeting.jpg",
+            "content_description": "会议室场景，多人围坐会议桌讨论"
+          },
+          "audio": {
+            "file_path": "test_audio/meeting_discussion.wav",
+            "content_description": "会议讨论音频，包含多人对话和背景噪音"
+          }
+        },
+        "expected_fusion_output": {
+          "scene_understanding": {
+            "visual_context": "business_meeting",
+            "audio_context": "group_discussion",
+            "consistency_check": "high_consistency",
+            "environment_type": "professional_office"
+          }
+        }
+      }
+    ]
+  },
+  "multimodal_reasoning_tests": {
+    "complex_reasoning_scenarios": [
+      {
+        "id": "reasoning_001",
+        "name": "多模态逻辑推理",
+        "category": "multimodal_reasoning",
+        "priority": "high",
+        "test_scenario": {
+          "description": "基于多模态信息进行复杂逻辑推理",
+          "modalities": ["text", "image", "audio"],
+          "reasoning_type": "causal_inference"
+        },
+        "test_data": {
+          "scenario": "产品故障诊断",
+          "text_description": "用户反馈设备出现异常声音，屏幕显示错误信息",
+          "image": {
+            "file_path": "test_images/device_error_screen.jpg",
+            "content_description": "设备屏幕显示错误代码E001"
+          },
+          "audio": {
+            "file_path": "test_audio/device_abnormal_sound.wav",
+            "content_description": "设备运行时的异常机械声音"
+          }
+        },
+        "expected_reasoning_output": {
+          "problem_identification": {
+            "primary_issue": "mechanical_component_failure",
+            "error_code_analysis": "E001_indicates_motor_malfunction",
+            "audio_pattern_analysis": "bearing_wear_signature"
+          },
+          "causal_chain": [
+            "bearing_wear",
+            "motor_vibration_increase",
+            "error_detection_triggered",
+            "error_code_display"
+          ],
+          "recommended_actions": [
+            "immediate_shutdown",
+            "professional_inspection",
+            "component_replacement"
+          ],
+          "confidence_level": 0.88
+        }
+      }
+    ],
+    "temporal_reasoning": [
+      {
+        "id": "reasoning_002",
+        "name": "时序多模态推理",
+        "category": "multimodal_reasoning",
+        "priority": "high",
+        "test_scenario": {
+          "description": "基于时间序列的多模态数据进行推理",
+          "modalities": ["text", "image", "audio"],
+          "temporal_window": "30_seconds",
+          "reasoning_type": "temporal_pattern_analysis"
+        },
+        "test_data": {
+          "time_series_data": [
+            {
+              "timestamp": 0,
+              "text": "开始录制会议内容",
+              "image": "meeting_start.jpg",
+              "audio": "meeting_intro.wav"
+            },
+            {
+              "timestamp": 10,
+              "text": "讨论项目进展",
+              "image": "presentation_slide.jpg", 
+              "audio": "discussion_segment.wav"
+            },
+            {
+              "timestamp": 20,
+              "text": "决策制定阶段",
+              "image": "decision_making.jpg",
+              "audio": "decision_discussion.wav"
+            }
+          ]
+        },
+        "expected_reasoning_output": {
+          "meeting_flow_analysis": {
+            "phases": ["introduction", "discussion", "decision_making"],
+            "transition_points": [10, 20],
+            "engagement_levels": [0.7, 0.9, 0.8]
+          },
+          "content_coherence": {
+            "cross_modal_consistency": 0.92,
+            "temporal_continuity": 0.88,
+            "narrative_flow": "logical_progression"
+          }
+        }
+      }
+    ]
+  },
+  "fusion_quality_tests": {
+    "attention_mechanism_tests": [
+      {
+        "id": "fusion_attention_001",
+        "name": "跨模态注意力机制测试",
+        "category": "fusion_quality",
+        "priority": "high",
+        "test_scenario": {
+          "description": "测试注意力机制在多模态融合中的效果",
+          "fusion_strategy": "cross_modal_attention",
+          "attention_types": ["self_attention", "cross_attention", "co_attention"]
+        },
+        "test_data": {
+          "input_modalities": {
+            "text": "请分析这张图片中的关键信息",
+            "image": "complex_scene_with_multiple_objects.jpg",
+            "audio": "user_voice_instruction.wav"
+          }
+        },
+        "expected_attention_patterns": {
+          "text_to_image_attention": {
+            "high_attention_regions": ["key_objects", "relevant_areas"],
+            "attention_weights": ">0.7_for_relevant_regions"
+          },
+          "image_to_text_attention": {
+            "focused_words": ["分析", "关键信息"],
+            "attention_distribution": "concentrated_on_task_relevant_words"
+          },
+          "audio_integration": {
+            "voice_emphasis_alignment": "matches_text_emphasis",
+            "prosody_attention": "aligned_with_semantic_content"
+          }
+        },
+        "evaluation_metrics": {
+          "attention_accuracy": ">0.85",
+          "cross_modal_alignment": ">0.8",
+          "fusion_effectiveness": ">0.82"
+        }
+      }
+    ],
+    "modality_weighting_tests": [
+      {
+        "id": "fusion_weighting_001",
+        "name": "模态权重自适应测试",
+        "category": "fusion_quality",
+        "priority": "medium",
+        "test_scenario": {
+          "description": "测试系统根据输入质量自适应调整模态权重",
+          "adaptive_weighting": true,
+          "quality_factors": ["signal_quality", "information_richness", "relevance"]
+        },
+        "test_cases": [
+          {
+            "case": "高质量图像+低质量音频",
+            "image_quality": 0.9,
+            "audio_quality": 0.3,
+            "text_quality": 0.8,
+            "expected_weights": {
+              "image": 0.5,
+              "audio": 0.1,
+              "text": 0.4
+            }
+          },
+          {
+            "case": "清晰语音+模糊图像",
+            "image_quality": 0.4,
+            "audio_quality": 0.95,
+            "text_quality": 0.7,
+            "expected_weights": {
+              "image": 0.2,
+              "audio": 0.5,
+              "text": 0.3
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "modality_alignment_tests": {
+    "semantic_alignment": [
+      {
+        "id": "alignment_semantic_001",
+        "name": "语义对齐测试",
+        "category": "modality_alignment",
+        "priority": "high",
+        "test_scenario": {
+          "description": "测试不同模态间的语义对齐质量",
+          "alignment_type": "semantic_space_alignment",
+          "embedding_dimensions": 768
+        },
+        "test_data": {
+          "aligned_pairs": [
+            {
+              "text": "一只可爱的小猫在阳光下睡觉",
+              "image": "cat_sleeping_in_sunlight.jpg",
+              "expected_similarity": ">0.85"
+            },
+            {
+              "text": "激烈的足球比赛现场",
+              "audio": "football_match_crowd.wav",
+              "expected_similarity": ">0.8"
+            }
+          ],
+          "misaligned_pairs": [
+            {
+              "text": "宁静的湖泊风景",
+              "image": "busy_city_street.jpg",
+              "expected_similarity": "<0.3"
+            }
+          ]
+        },
+        "evaluation_metrics": {
+          "alignment_accuracy": ">0.9",
+          "false_positive_rate": "<0.05",
+          "semantic_consistency": ">0.85"
+        }
+      }
+    ],
+    "temporal_alignment": [
+      {
+        "id": "alignment_temporal_001",
+        "name": "时序对齐测试",
+        "category": "modality_alignment",
+        "priority": "medium",
+        "test_scenario": {
+          "description": "测试音视频时序对齐精度",
+          "alignment_precision": "frame_level",
+          "synchronization_tolerance": "±50ms"
+        },
+        "test_data": {
+          "synchronized_content": {
+            "video": "speaker_presentation.mp4",
+            "audio": "presentation_audio.wav",
+            "text_timestamps": "presentation_transcript_with_timing.json"
+          }
+        },
+        "expected_alignment": {
+          "lip_sync_accuracy": ">95%",
+          "gesture_speech_alignment": ">90%",
+          "slide_transition_sync": ">98%"
+        }
+      }
+    ]
+  },
+  "performance_optimization_tests": {
+    "fusion_efficiency": [
+      {
+        "id": "perf_fusion_001",
+        "name": "融合计算效率测试",
+        "category": "performance_optimization",
+        "priority": "high",
+        "test_scenario": {
+          "description": "测试不同融合策略的计算效率",
+          "fusion_strategies": ["early", "late", "attention", "gated"],
+          "input_sizes": ["small", "medium", "large"]
+        },
+        "performance_targets": {
+          "early_fusion": {
+            "latency": "<100ms",
+            "memory_usage": "<500MB",
+            "cpu_utilization": "<60%"
+          },
+          "late_fusion": {
+            "latency": "<150ms",
+            "memory_usage": "<300MB",
+            "cpu_utilization": "<40%"
+          },
+          "attention_fusion": {
+            "latency": "<200ms",
+            "memory_usage": "<800MB",
+            "cpu_utilization": "<80%"
+          }
+        },
+        "scalability_tests": {
+          "batch_sizes": [1, 8, 16, 32, 64],
+          "expected_scaling": "sub_linear_memory_growth",
+          "throughput_target": ">50_samples_per_second"
+        }
+      }
+    ],
+    "model_compression": [
+      {
+        "id": "perf_compression_001",
+        "name": "多模态模型压缩测试",
+        "category": "performance_optimization",
+        "priority": "medium",
+        "test_scenario": {
+          "description": "测试模型压缩对融合质量的影响",
+          "compression_techniques": ["quantization", "pruning", "distillation"],
+          "compression_ratios": ["2x", "4x", "8x", "16x"]
+        },
+        "quality_preservation": {
+          "fusion_accuracy_threshold": ">95%_of_original",
+          "latency_improvement": ">50%_reduction",
+          "memory_reduction": ">75%_reduction"
+        }
+      }
+    ]
+  },
+  "edge_case_tests": {
+    "modality_missing": [
+      {
+        "id": "edge_missing_001",
+        "name": "模态缺失处理测试",
+        "category": "edge_cases",
+        "priority": "high",
+        "test_scenarios": [
+          {
+            "missing_modality": "image",
+            "available_modalities": ["text", "audio"],
+            "expected_behavior": "graceful_degradation",
+            "performance_impact": "<20%_accuracy_loss"
+          },
+          {
+            "missing_modality": "audio",
+            "available_modalities": ["text", "image"],
+            "expected_behavior": "text_image_fusion_only",
+            "performance_impact": "<15%_accuracy_loss"
+          }
+        ]
+      }
+    ],
+    "quality_degradation": [
+      {
+        "id": "edge_quality_001",
+        "name": "输入质量退化测试",
+        "category": "edge_cases",
+        "priority": "medium",
+        "test_scenarios": [
+          {
+            "degradation_type": "image_blur",
+            "severity_levels": ["mild", "moderate", "severe"],
+            "expected_adaptation": "increase_text_audio_weights"
+          },
+          {
+            "degradation_type": "audio_noise",
+            "noise_levels": ["10dB", "5dB", "0dB", "-5dB"],
+            "expected_adaptation": "rely_more_on_visual_text_cues"
+          }
+        ]
+      }
+    ]
+  },
+  "evaluation_frameworks": {
+    "automated_evaluation": {
+      "metrics": [
+        {
+          "name": "cross_modal_similarity",
+          "description": "不同模态间语义相似度",
+          "calculation": "cosine_similarity_in_shared_embedding_space",
+          "target_threshold": ">0.8"
+        },
+        {
+          "name": "fusion_coherence",
+          "description": "融合结果的连贯性",
+          "calculation": "consistency_across_modalities",
+          "target_threshold": ">0.85"
+        },
+        {
+          "name": "information_preservation",
+          "description": "信息保持度",
+          "calculation": "mutual_information_preservation",
+          "target_threshold": ">0.9"
+        }
+      ]
+    },
+    "human_evaluation": {
+      "evaluation_criteria": [
+        {
+          "criterion": "naturalness",
+          "description": "融合结果的自然度",
+          "scale": "1-5_likert_scale",
+          "target_score": ">4.0"
+        },
+        {
+          "criterion": "relevance",
+          "description": "融合结果与输入的相关性",
+          "scale": "1-5_likert_scale",
+          "target_score": ">4.2"
+        },
+        {
+          "criterion": "completeness",
+          "description": "信息完整性",
+          "scale": "1-5_likert_scale",
+          "target_score": ">4.0"
+        }
+      ],
+      "evaluator_requirements": {
+        "background": "ai_or_multimedia_experience",
+        "training": "multimodal_evaluation_guidelines",
+        "inter_annotator_agreement": ">0.8_kappa"
+      }
+    }
+  },
+  "data_generation_pipeline": {
+    "synthetic_data_creation": {
+      "text_generation": {
+        "templates": [
+          "描述性文本模板",
+          "指令性文本模板",
+          "对话性文本模板"
+        ],
+        "generation_rules": {
+          "length_range": [10, 200],
+          "complexity_levels": ["simple", "medium", "complex"],
+          "domain_coverage": ["general", "technical", "conversational"]
+        }
+      },
+      "image_synthesis": {
+        "generation_methods": ["stable_diffusion", "dalle", "midjourney"],
+        "image_categories": ["objects", "scenes", "charts", "documents"],
+        "quality_levels": ["high", "medium", "low"],
+        "resolution_options": ["256x256", "512x512", "1024x1024"]
+      },
+      "audio_synthesis": {
+        "voice_synthesis": "neural_tts_models",
+        "sound_effects": "procedural_audio_generation",
+        "music_generation": "ai_music_models",
+        "quality_variations": ["studio", "broadcast", "phone", "noisy"]
+      }
+    },
+    "data_augmentation": {
+      "cross_modal_augmentation": [
+        "text_paraphrasing",
+        "image_style_transfer",
+        "audio_pitch_shifting",
+        "temporal_stretching"
+      ],
+      "consistency_preservation": {
+        "semantic_consistency": "maintain_core_meaning",
+        "temporal_consistency": "preserve_timing_relationships",
+        "quality_consistency": "balanced_degradation"
+      }
+    }
+  },
+  "integration_testing": {
+    "end_to_end_workflows": [
+      {
+        "workflow": "multimodal_customer_service",
+        "steps": [
+          "user_uploads_image_and_asks_question",
+          "system_processes_image_and_text",
+          "fusion_engine_combines_modalities",
+          "response_generation_with_multimodal_context",
+          "quality_assessment_and_feedback"
+        ],
+        "success_criteria": {
+          "response_relevance": ">0.85",
+          "processing_time": "<3s",
+          "user_satisfaction": ">4.0/5.0"
+        }
+      }
+    ],
+    "api_integration": {
+      "multimodal_endpoints": [
+        "/api/v1/multimodal/analyze",
+        "/api/v1/multimodal/fusion",
+        "/api/v1/multimodal/chat"
+      ],
+      "input_formats": ["json", "multipart_form_data", "base64_encoded"],
+      "output_formats": ["json", "xml", "protobuf"]
+    }
+  },
+  "usage_instructions": {
+    "test_execution": "使用这些多模态测试数据验证融合算法的效果和性能",
+    "quality_assessment": "根据评估框架对多模态系统进行全面质量评估",
+    "performance_optimization": "基于测试结果优化融合策略和模型架构",
+    "continuous_improvement": "持续收集多模态交互数据，改进融合质量"
+  }
+}

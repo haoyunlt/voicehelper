@@ -507,7 +507,7 @@ class GraphRAG:
         # 使用本地向量存储进行检索
         vector_results = await self._local_vector_search(query, top_k * 2)
         all_results.extend(vector_results)
-            metadata["techniques_used"].append("vector_search")
+        metadata["techniques_used"].append("vector_search")
         
         # 3. 图遍历检索
         if use_graph_traversal and query_entities:

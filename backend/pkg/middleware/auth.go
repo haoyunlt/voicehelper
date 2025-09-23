@@ -25,6 +25,11 @@ func NewAuthMiddleware(secretKey string, skipPaths []string) *AuthMiddleware {
 	}
 }
 
+// GetJWTSecret 获取JWT密钥
+func (a *AuthMiddleware) GetJWTSecret() string {
+	return string(a.secretKey)
+}
+
 // Claims JWT声明
 type Claims struct {
 	UserID   string   `json:"user_id"`

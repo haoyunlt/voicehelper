@@ -1,0 +1,16 @@
+# VoiceHelper 简化管理后台依赖
+# 只包含基础Flask功能，使用SQLite数据库
+
+Flask==2.3.3
+Werkzeug==2.3.7
+
+# 数据库（SQLite内置，无需额外依赖）
+# 可选：如果需要更好的SQLite支持
+# sqlite3 # Python内置模块
+
+# 工具库
+requests==2.31.0
+python-dateutil==2.8.2
+
+# 开发工具（可选）
+# flask-cors==4.0.0  # 如果需要跨域支持

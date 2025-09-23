@@ -9,7 +9,7 @@ from pathlib import Path
 import requests
 from loguru import logger
 
-from core.config import config
+from core.config import default_rag_config
 from core.embeddings import get_embeddings
 from core.models import QueryRequest, QueryResponse, Reference, Message
 
@@ -19,7 +19,7 @@ class RetrieveService:
         # 使用本地向量存储替代 Milvus
         self.vector_store = {}
         self.documents_store = {}
-        self.storage_path = Path("/app/data")
+        self.storage_path = Path("data")
         self.storage_path.mkdir(exist_ok=True)
         self._load_local_storage()
     

@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 import hashlib
 
-from core.config import config
+from core.config import default_rag_config
 
 class MCPClient:
     """MCP 客户端 - 统一的工具调用接口"""

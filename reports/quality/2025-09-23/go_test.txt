@@ -1,0 +1,56 @@
+# voicehelper/backend/pkg/integration
+pkg/integration/service_connector.go:389:2: declared and not used: service
+# voicehelper/backend/internal/contracts
+internal/contracts/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+internal/contracts/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+internal/contracts/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)
+internal/contracts/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+# voicehelper/backend/pkg/common
+pkg/common/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+pkg/common/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+pkg/common/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)
+pkg/common/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+# voicehelper/backend/internal/auth
+internal/auth/sso_providers.go:369:25: undefined: samlsp.DefaultSessionCookieStore
+internal/auth/sso_providers.go:388:3: unknown field IDPMetadataURL in struct literal of type samlsp.Options
+# voicehelper/backend/internal/handlers
+internal/handlers/api_helpers.go:21:30: undefined: repository.DocumentRepository
+internal/handlers/api_helpers.go:29:26: undefined: repository.DocumentRepository
+internal/handlers/api_helpers.go:293:3: cannot use "user_id" (untyped string constant) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:293:14: cannot use userID (variable of type string) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:294:3: cannot use "tool_name" (untyped string constant) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:294:16: cannot use toolName (variable of type string) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:295:3: cannot use "conversation_id" (untyped string constant) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:295:22: cannot use conversationID (variable of type string) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:296:3: cannot use "timestamp" (untyped string constant) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:296:16: cannot use time.Now().Unix() (value of type int64) as logger.Field value in argument to logger.Info
+internal/handlers/api_helpers.go:296:16: too many errors
+FAIL	voicehelper/backend/cmd/gateway [build failed]
+	voicehelper/backend/common/errors		coverage: 0.0% of statements
+	voicehelper/backend/common/logger		coverage: 0.0% of statements
+	voicehelper/backend/examples		coverage: 0.0% of statements
+FAIL	voicehelper/backend/internal/auth [build failed]
+FAIL	voicehelper/backend/internal/contracts [build failed]
+FAIL	voicehelper/backend/internal/handlers [build failed]
+	voicehelper/backend/internal/middleware		coverage: 0.0% of statements
+# voicehelper/backend/pkg/utils
+pkg/utils/error_handler.go:59:30: context.Canceled undefined (type string has no field or method Canceled)
+pkg/utils/error_handler.go:62:30: context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded)
+ok  	voicehelper/backend/internal/repository	1.215s	coverage: 6.6% of statements
+	voicehelper/backend/internal/service		coverage: 0.0% of statements
+	voicehelper/backend/pkg/cache		coverage: 0.0% of statements
+FAIL	voicehelper/backend/pkg/common [build failed]
+	voicehelper/backend/pkg/config		coverage: 0.0% of statements
+	voicehelper/backend/pkg/database		coverage: 0.0% of statements
+	voicehelper/backend/pkg/discovery		coverage: 0.0% of statements
+FAIL	voicehelper/backend/pkg/integration [build failed]
+	voicehelper/backend/pkg/metrics		coverage: 0.0% of statements
+	voicehelper/backend/pkg/middleware		coverage: 0.0% of statements
+	voicehelper/backend/pkg/monitoring		coverage: 0.0% of statements
+	voicehelper/backend/pkg/ratelimit		coverage: 0.0% of statements
+	voicehelper/backend/pkg/security		coverage: 0.0% of statements
+	voicehelper/backend/pkg/storage		coverage: 0.0% of statements
+	voicehelper/backend/pkg/types		coverage: 0.0% of statements
+FAIL	voicehelper/backend/pkg/utils [build failed]
+ok  	voicehelper/backend/tests	(cached)	coverage: [no statements]
+FAIL

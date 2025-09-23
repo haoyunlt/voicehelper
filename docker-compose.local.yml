@@ -22,7 +22,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./deploy/database/init:/docker-entrypoint-initdb.d
+      - ./tools/deployment/database:/docker-entrypoint-initdb.d
     networks:
       - voicehelper-network
     healthcheck:
@@ -41,7 +41,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-      - ./deploy/config/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./tools/deployment/config/redis-optimized.conf:/usr/local/etc/redis/redis.conf
     networks:
       - voicehelper-network
     healthcheck:
@@ -133,6 +133,7 @@ services:
       - NEO4J_URI=bolt://neo4j:7687
       - PORT=${ALGO_PORT:-8000}
       - SERVICE_NAME=${ALGO_SERVICE_NAME:-voicehelper-algo}
+      - PYTHONPATH=/app
     ports:
       - "8000:8000"
     volumes:
@@ -153,41 +154,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    command: ["./start.sh"]
 
-  # Python 语音服务
-  voice-service:
-    build:
-      context: ./algo
-      dockerfile: Dockerfile.voice.dev
-    container_name: voicehelper-voice
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      # 容器内部服务发现配置 (覆盖 .env 中的 localhost 配置)
-      - REDIS_HOST=redis
-      - PORT=${VOICE_PORT:-8001}
-      - SERVICE_NAME=${VOICE_SERVICE_NAME:-voicehelper-voice}
-    ports:
-      - "8001:8001"
-    volumes:
-      - ./algo:/app
-      - /app/__pycache__
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - voicehelper-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # Next.js 前端服务
   frontend:
     build:
-      context: ./frontend
+      context: ./platforms/web
       dockerfile: Dockerfile.simple
     container_name: voicehelper-frontend
     restart: unless-stopped
@@ -199,7 +172,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./platforms/web:/app
       - frontend_node_modules:/app/node_modules
       - frontend_next:/app/.next
     depends_on:
@@ -211,7 +184,7 @@ services:
   # 开发者门户
   developer-portal:
     build:
-      context: ./developer-portal
+      context: ./platforms/web/developer-portal
       dockerfile: Dockerfile
     container_name: voicehelper-portal
     restart: unless-stopped
@@ -223,7 +196,7 @@ services:
     ports:
       - "3002:3002"
     volumes:
-      - ./developer-portal:/app
+      - ./platforms/web/developer-portal:/app
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -231,32 +204,31 @@ services:
     networks:
       - voicehelper-network
 
-  # 管理后台
+  # 管理后台 (简化版，使用SQLite)
   admin:
     build:
-      context: ./admin
-      dockerfile: Dockerfile
+      context: ./platforms/admin
+      dockerfile: Dockerfile.simple
     container_name: voicehelper-admin
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      # 容器内部服务发现配置 (覆盖 .env 中的 localhost 配置)
-      - DATABASE_URL=postgresql://voicehelper:voicehelper123@postgres:5432/voicehelper
-      - REDIS_URL=redis://:redis123@redis:6379/0
-      - PORT=${ADMIN_PORT:-5001}
-      - SERVICE_NAME=${ADMIN_SERVICE_NAME:-voicehelper-admin}
+      - PORT=5001
+      - HOST=0.0.0.0
+      - SERVICE_NAME=voicehelper-admin
+      - FLASK_ENV=development
     ports:
       - "5001:5001"
     volumes:
-      - ./admin:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - ./platforms/admin:/app
+      - admin_data:/app/data
     networks:
       - voicehelper-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["python", "simple_app.py"]
 
   # ===========================================
   # 开发工具和管理界面
@@ -275,7 +247,7 @@ services:
       - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-      - ./deploy/config/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./tools/deployment/config/pgadmin/servers.json:/pgadmin4/servers.json
     depends_on:
       - postgres
     networks:
@@ -315,7 +287,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./tools/deployment/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
       - voicehelper-network
@@ -333,8 +305,8 @@ services:
       - "3004:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./deploy/config/grafana/provisioning:/etc/grafana/provisioning
-      - ./deploy/config/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./tools/deployment/config/grafana/provisioning:/etc/grafana/provisioning
+      - ./tools/deployment/config/grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     networks:
@@ -364,9 +336,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./deploy/config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./deploy/config/nginx/conf.d:/etc/nginx/conf.d
-      - ./deploy/ssl:/etc/nginx/ssl
+      - ./tools/deployment/config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./tools/deployment/config/nginx/conf.d:/etc/nginx/conf.d
+      - ./tools/deployment/ssl:/etc/nginx/ssl
     depends_on:
       - frontend
       - gateway
@@ -422,4 +394,8 @@ volumes:
   
   # 算法服务数据卷
   algo_data:
+    driver: local
+  
+  # 管理后台数据卷
+  admin_data:
     driver: local

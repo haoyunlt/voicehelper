@@ -79,6 +79,7 @@ temp_*.sh
 
 # ==================== 开发环境文件 ====================
 # 环境配置（敏感信息）
+.env
 .env.*
 .env.backup.*
 .env.bak
@@ -97,12 +98,23 @@ credentials.json
 *.swo
 *~
 
-# ==================== v1.9.0 特定排除 ====================
+# ==================== v2.0 特定排除 ====================
 # 开发者平台
 developer-portal/node_modules/
 developer-portal/.next/
 developer-portal/dist/
 developer-portal/coverage/
+
+# Python 虚拟环境（完全排除）
+voice_venv/**
+venv/**
+env/**
+.venv/**
+.env_*/**
+algo_venv/**
+algo_venv_new/**
+**/venv/**
+**/.venv/**
 
 # SDK构建产物
 sdks/javascript/lib/
@@ -236,3 +248,62 @@ frontend/.nyc_output/**
 # 算法测试数据
 algo/tests/e2e/node_modules/**
 algo/tests/e2e/package-lock.json
+
+# ==================== v2.0 新增排除项 ====================
+# 后端构建产物
+backend/gateway
+backend/server
+backend/tmp/**
+backend/bin/**
+backend/cmd/*/main
+backend/cmd/*/*
+
+# 工具和报告
+tools/reports/**
+*.benchmark
+*.test
+
+# 平台构建产物
+platforms/admin/data/**
+platforms/web/src/types/*.d.ts.bak
+
+# 临时脚本和备份
+*.sh.bak
+*.py.bak
+*.go.bak
+temp_*
+*_backup_*
+
+# 大型文档文件（保留核心文档）
+docs/SPRINT_COMPLETION_REPORT.md
+docs/RECOVERY_IMPLEMENTATION_REPORT.md
+docs/DOCKER_DEPLOYMENT_FIXES.md
+
+# ==================== 性能优化补充 ====================
+# 测试虚拟环境
+tools/testing/test_venv/**
+tools/testing/e2e/tests/venv/**
+
+# 大型测试文件
+tools/testing/performance/long_context_test.py
+tools/testing/FINAL_TEST_CONSOLIDATION_REPORT.md
+
+# 质量报告目录
+reports/**
+tools/reports/**
+
+# 更多Python缓存
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# 更多构建产物
+**/dist/**
+**/build/**
+**/out/**
+**/target/**
+
+# 大型配置和数据文件
+**/*.json.bak
+**/*.yaml.bak
+**/*.md.bak

@@ -1,0 +1,45 @@
+# VoiceHelper 存储类配置 - Docker Desktop 本地环境
+# 标准存储类 - 默认存储类
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-standard
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: docker.io/hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+---
+# SSD 存储类 - 用于数据库和缓存
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-ssd
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: docker.io/hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+---
+# 快速存储类 - 用于临时数据
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: voicehelper-fast
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: docker.io/hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+allowVolumeExpansion: true

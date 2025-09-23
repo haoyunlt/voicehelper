@@ -1,0 +1,148 @@
+# VoiceHelper Kubernetes 命名空间配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper
+  labels:
+    name: voicehelper
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/version: "2.0.0"
+    app.kubernetes.io/component: namespace
+    environment: production
+  annotations:
+    description: "VoiceHelper AI 语音助手系统"
+    contact: "admin@voicehelper.ai"
+    version: "2.0.0"
+---
+# 监控命名空间
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-monitoring
+  labels:
+    name: voicehelper-monitoring
+    app.kubernetes.io/name: voicehelper-monitoring
+    app.kubernetes.io/version: "2.0.0"
+    app.kubernetes.io/component: monitoring
+    environment: production
+  annotations:
+    description: "VoiceHelper 监控系统"
+---
+# 存储命名空间
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-storage
+  labels:
+    name: voicehelper-storage
+    app.kubernetes.io/name: voicehelper-storage
+    app.kubernetes.io/version: "2.0.0"
+    app.kubernetes.io/component: storage
+    environment: production
+  annotations:
+    description: "VoiceHelper 存储服务"
+---
+# 服务网格命名空间
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    name: istio-system
+    istio-injection: disabled
+  annotations:
+    description: "Istio 服务网格系统"
+---
+# 网络策略：默认拒绝所有流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: voicehelper
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# 网络策略：允许同命名空间内通信
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: voicehelper
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: voicehelper
+---
+# 网络策略：允许DNS查询
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: voicehelper
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+# 资源配额
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: voicehelper-quota
+  namespace: voicehelper
+spec:
+  hard:
+    requests.cpu: "40"
+    requests.memory: 80Gi
+    limits.cpu: "80"
+    limits.memory: 160Gi
+    persistentvolumeclaims: "50"
+    services: "50"
+    secrets: "50"
+    configmaps: "50"
+---
+# 限制范围
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: voicehelper-limits
+  namespace: voicehelper
+spec:
+  limits:
+  - default:
+      cpu: "2"
+      memory: "4Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    type: Container
+  - default:
+      storage: "10Gi"
+    defaultRequest:
+      storage: "1Gi"
+    min:
+      storage: "1Gi"
+    max:
+      storage: "1Ti"
+    type: PersistentVolumeClaim

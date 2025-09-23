@@ -1,12 +1,12 @@
 package middleware
 
 import (
-	"chatbot/pkg/security"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+	"voicehelper/backend/pkg/security"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -219,7 +219,7 @@ func (ztm *ZeroTrustMiddleware) handleComplianceViolations(c *gin.Context, viola
 
 	// For lower severity violations, add warning headers
 	c.Header("X-Compliance-Warning", "true")
-	c.Header("X-Compliance-Violations", string(len(violations)))
+	c.Header("X-Compliance-Violations", fmt.Sprintf("%d", len(violations)))
 }
 
 // Helper methods
@@ -374,7 +374,7 @@ func (ztm *ZeroTrustMiddleware) extractHeaders(c *gin.Context) map[string]string
 
 func (ztm *ZeroTrustMiddleware) generateRequestID() string {
 	return "req_" + time.Now().Format("20060102150405") + "_" +
-		string(time.Now().UnixNano()%1000000)
+		fmt.Sprintf("%d", time.Now().UnixNano()%1000000)
 }
 
 func (ztm *ZeroTrustMiddleware) addSecurityHeaders(c *gin.Context, decision *security.AccessDecision) {

@@ -9,6 +9,7 @@
 | 部署方式 | 适用场景 | 复杂度 | 推荐指数 | 文档位置 |
 |----------|----------|--------|----------|----------|
 | #### Docker Compose | 开发、测试、小规模生产 | ⭐⭐ | ⭐⭐⭐⭐⭐ | [Docker Compose 部署](#docker-compose-部署) |
+| #### Dify集成部署 | AI应用开发、可视化工作流 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | [Dify集成部署](#dify集成部署) |
 | #### Kubernetes | 大规模生产、云原生 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | [Kubernetes 部署](#kubernetes-部署) |
 | #### 手动部署 | 特殊环境、定制需求 | ⭐⭐⭐⭐⭐ | ⭐⭐ | [手动部署](#手动部署) |
 
@@ -26,11 +27,16 @@
 ### 推荐配置
 
 - #### CPU: 8核心
-
 - #### 内存: 16GB
 - #### 存储: 50GB SSD
-
 - #### 网络: 千兆网络
+
+### Dify集成额外要求
+
+- #### CPU: +2核心 (用于Dify服务)
+- #### 内存: +4GB (用于向量数据库和AI处理)
+- #### 存储: +20GB (用于Dify数据和模型缓存)
+- #### 端口: 确保3001, 5001, 8200等端口可用
 
 ### 软件要求
 
@@ -44,6 +50,100 @@
 
 - #### Kubernetes: 1.24+ (生产环境)
 - #### Helm: 3.8+ (K8s部署)
+
+## 🤖 Dify集成部署
+
+### 🚀 一键启动 (推荐)
+
+```bash
+# 克隆项目
+git clone https://github.com/voicehelper/voicehelper.git
+cd voicehelper
+
+# 配置环境变量
+cp env.unified .env
+# 编辑 .env 文件，设置API密钥
+
+# 一键启动VoiceHelper + Dify
+./start-dify.sh
+
+# 访问服务
+# VoiceHelper: http://localhost:3000
+# Dify控制台: http://localhost:3001
+# 集成API: http://localhost:8200
+```
+
+### 📋 详细部署步骤
+
+#### 1. 环境准备
+
+```bash
+# 检查Docker环境
+docker --version
+docker-compose --version
+
+# 检查系统资源
+free -h  # 内存检查
+df -h    # 磁盘检查
+```
+
+#### 2. 配置模型API
+
+编辑 `.env` 文件，配置AI模型API密钥：
+
+```bash
+# 豆包大模型 (推荐)
+ARK_API_KEY=your-ark-api-key
+
+# GLM-4 (备用)
+GLM_API_KEY=your-glm-api-key
+
+# OpenAI (可选)
+OPENAI_API_KEY=your-openai-key
+```
+
+#### 3. 启动服务
+
+```bash
+# 方式1: 使用快速启动脚本
+./start-dify.sh
+
+# 方式2: 使用部署脚本
+./deploy.sh -p dify up -d
+
+# 方式3: 手动启动
+docker-compose -f docker-compose.yml -f docker-compose.dify.yml up -d
+```
+
+#### 4. 验证部署
+
+```bash
+# 检查服务状态
+./deploy.sh status
+
+# 健康检查
+curl http://localhost:8080/health  # VoiceHelper
+curl http://localhost:5001/health  # Dify API
+curl http://localhost:8200/health  # 集成适配器
+```
+
+### 🎯 服务访问
+
+| 服务 | 地址 | 用途 |
+|------|------|------|
+| VoiceHelper Web | http://localhost:3000 | 主应用界面 |
+| Dify控制台 | http://localhost:3001 | AI应用管理 |
+| VoiceHelper API | http://localhost:8080 | 核心API |
+| Dify API | http://localhost:5001 | Dify原生API |
+| 集成适配器 | http://localhost:8200 | 统一集成API |
+| 数据库管理 | http://localhost:5050 | pgAdmin |
+| Dify数据库管理 | http://localhost:5051 | Dify pgAdmin |
+
+### 📚 使用指南
+
+详细使用指南请参考: [Dify集成指南](./DIFY_INTEGRATION_GUIDE.md)
+
+---
 
 ## 🐳 Docker Compose 部署
 

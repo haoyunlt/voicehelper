@@ -1,0 +1,664 @@
+{
+  "metadata": {
+    "name": "综合安全测试数据集",
+    "version": "2.0.0",
+    "description": "包含认证、授权、输入验证、XSS防护、SQL注入等安全测试数据",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_test_cases": 150,
+    "categories": [
+      "authentication",
+      "authorization", 
+      "input_validation",
+      "xss_protection",
+      "sql_injection",
+      "csrf_protection",
+      "rate_limiting",
+      "data_encryption",
+      "session_management",
+      "api_security"
+    ],
+    "severity_levels": ["low", "medium", "high", "critical"],
+    "compliance_standards": ["OWASP_Top_10", "ISO_27001", "GDPR", "SOC2"]
+  },
+  "authentication_tests": {
+    "jwt_token_tests": [
+      {
+        "id": "auth_jwt_001",
+        "name": "有效JWT令牌验证",
+        "category": "authentication",
+        "severity": "high",
+        "test_data": {
+          "valid_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImlhdCI6MTY5NTQ2MjAwMCwiZXhwIjoxNjk1NDY1NjAwLCJyb2xlIjoidXNlciJ9.test_signature",
+          "user_id": "user_123",
+          "role": "user",
+          "issued_at": 1695462000,
+          "expires_at": 1695465600
+        },
+        "expected_result": {
+          "authentication_success": true,
+          "user_identified": true,
+          "role_extracted": true
+        },
+        "test_steps": [
+          "发送带有有效JWT令牌的请求",
+          "验证令牌签名",
+          "检查令牌过期时间",
+          "提取用户信息和角色"
+        ]
+      },
+      {
+        "id": "auth_jwt_002",
+        "name": "过期JWT令牌处理",
+        "category": "authentication",
+        "severity": "high",
+        "test_data": {
+          "expired_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImlhdCI6MTY5NTQ2MjAwMCwiZXhwIjoxNjk1NDYyMDAxLCJyb2xlIjoidXNlciJ9.expired_signature",
+          "current_time": 1695465600,
+          "token_expired_at": 1695462001
+        },
+        "expected_result": {
+          "authentication_success": false,
+          "error_code": "TOKEN_EXPIRED",
+          "error_message": "JWT token has expired",
+          "http_status": 401
+        },
+        "test_steps": [
+          "发送带有过期JWT令牌的请求",
+          "验证系统检测到令牌过期",
+          "确认返回401未授权状态",
+          "检查错误消息格式"
+        ]
+      },
+      {
+        "id": "auth_jwt_003",
+        "name": "篡改JWT令牌检测",
+        "category": "authentication",
+        "severity": "critical",
+        "test_data": {
+          "tampered_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTY5NTQ2MjAwMCwiZXhwIjoxNjk1NDY1NjAwLCJyb2xlIjoiYWRtaW4ifQ.invalid_signature",
+          "original_payload": {"sub": "user_123", "role": "user"},
+          "tampered_payload": {"sub": "admin", "role": "admin"}
+        },
+        "expected_result": {
+          "authentication_success": false,
+          "error_code": "INVALID_TOKEN_SIGNATURE",
+          "error_message": "JWT signature verification failed",
+          "http_status": 401,
+          "security_alert": true
+        },
+        "test_steps": [
+          "创建篡改的JWT令牌",
+          "发送篡改令牌的请求",
+          "验证签名验证失败",
+          "确认触发安全告警"
+        ]
+      }
+    ],
+    "api_key_tests": [
+      {
+        "id": "auth_api_001",
+        "name": "有效API密钥认证",
+        "category": "authentication",
+        "severity": "high",
+        "test_data": {
+          "api_key": "vhk_test_1234567890abcdef",
+          "key_format": "vhk_[env]_[32_char_hex]",
+          "permissions": ["read", "write"],
+          "rate_limit": 1000
+        },
+        "expected_result": {
+          "authentication_success": true,
+          "permissions_loaded": true,
+          "rate_limit_applied": true
+        }
+      },
+      {
+        "id": "auth_api_002",
+        "name": "无效API密钥处理",
+        "category": "authentication", 
+        "severity": "high",
+        "test_data": {
+          "invalid_keys": [
+            "invalid_format_key",
+            "vhk_test_short",
+            "vhk_test_" + "x" * 33,
+            "",
+            null
+          ]
+        },
+        "expected_result": {
+          "authentication_success": false,
+          "error_code": "INVALID_API_KEY",
+          "http_status": 401
+        }
+      }
+    ],
+    "session_management": [
+      {
+        "id": "auth_session_001",
+        "name": "会话超时处理",
+        "category": "session_management",
+        "severity": "medium",
+        "test_data": {
+          "session_id": "sess_abc123def456",
+          "created_at": 1695462000,
+          "last_activity": 1695462000,
+          "timeout_duration": 1800,
+          "current_time": 1695463900
+        },
+        "expected_result": {
+          "session_valid": false,
+          "timeout_detected": true,
+          "redirect_to_login": true
+        }
+      },
+      {
+        "id": "auth_session_002",
+        "name": "并发会话限制",
+        "category": "session_management",
+        "severity": "medium",
+        "test_data": {
+          "user_id": "user_123",
+          "max_concurrent_sessions": 3,
+          "existing_sessions": [
+            "sess_1", "sess_2", "sess_3"
+          ],
+          "new_session_request": true
+        },
+        "expected_result": {
+          "new_session_created": false,
+          "oldest_session_terminated": true,
+          "error_message": "Maximum concurrent sessions exceeded"
+        }
+      }
+    ]
+  },
+  "authorization_tests": {
+    "rbac_tests": [
+      {
+        "id": "authz_rbac_001",
+        "name": "基于角色的访问控制",
+        "category": "authorization",
+        "severity": "high",
+        "test_data": {
+          "user_roles": ["user", "voice_user"],
+          "required_permissions": ["voice:read", "voice:write"],
+          "resource": "/api/v1/voice/synthesize",
+          "action": "POST"
+        },
+        "expected_result": {
+          "access_granted": true,
+          "permission_check_passed": true
+        }
+      },
+      {
+        "id": "authz_rbac_002",
+        "name": "权限不足访问拒绝",
+        "category": "authorization",
+        "severity": "high",
+        "test_data": {
+          "user_roles": ["guest"],
+          "required_permissions": ["admin:manage"],
+          "resource": "/api/v1/admin/users",
+          "action": "DELETE"
+        },
+        "expected_result": {
+          "access_granted": false,
+          "error_code": "INSUFFICIENT_PERMISSIONS",
+          "http_status": 403
+        }
+      }
+    ],
+    "resource_access_tests": [
+      {
+        "id": "authz_resource_001",
+        "name": "用户只能访问自己的资源",
+        "category": "authorization",
+        "severity": "high",
+        "test_data": {
+          "requesting_user": "user_123",
+          "resource_owner": "user_123",
+          "resource_type": "voice_session",
+          "resource_id": "session_456"
+        },
+        "expected_result": {
+          "access_granted": true
+        }
+      },
+      {
+        "id": "authz_resource_002",
+        "name": "禁止访问他人资源",
+        "category": "authorization",
+        "severity": "critical",
+        "test_data": {
+          "requesting_user": "user_123",
+          "resource_owner": "user_456",
+          "resource_type": "voice_session",
+          "resource_id": "session_789"
+        },
+        "expected_result": {
+          "access_granted": false,
+          "error_code": "RESOURCE_ACCESS_DENIED",
+          "http_status": 403,
+          "audit_log_created": true
+        }
+      }
+    ]
+  },
+  "input_validation_tests": {
+    "sql_injection_tests": [
+      {
+        "id": "input_sql_001",
+        "name": "SQL注入攻击防护",
+        "category": "sql_injection",
+        "severity": "critical",
+        "test_data": {
+          "malicious_inputs": [
+            "'; DROP TABLE users; --",
+            "1' OR '1'='1",
+            "admin'/**/OR/**/1=1#",
+            "1; UPDATE users SET password='hacked' WHERE id=1; --",
+            "' UNION SELECT password FROM users WHERE username='admin' --"
+          ],
+          "target_parameters": ["username", "search_query", "user_id"]
+        },
+        "expected_result": {
+          "injection_blocked": true,
+          "error_code": "INVALID_INPUT",
+          "sanitized_input": true,
+          "security_alert": true
+        },
+        "test_steps": [
+          "发送包含SQL注入代码的请求",
+          "验证输入被正确转义或拒绝",
+          "确认数据库操作安全",
+          "检查安全日志记录"
+        ]
+      }
+    ],
+    "xss_protection_tests": [
+      {
+        "id": "input_xss_001",
+        "name": "XSS攻击防护",
+        "category": "xss_protection",
+        "severity": "high",
+        "test_data": {
+          "malicious_scripts": [
+            "<script>alert('XSS')</script>",
+            "<img src=x onerror=alert('XSS')>",
+            "javascript:alert('XSS')",
+            "<svg onload=alert('XSS')>",
+            "';alert('XSS');//"
+          ],
+          "target_fields": ["message", "username", "comment"]
+        },
+        "expected_result": {
+          "script_sanitized": true,
+          "html_encoded": true,
+          "csp_header_present": true,
+          "xss_blocked": true
+        }
+      }
+    ],
+    "data_validation_tests": [
+      {
+        "id": "input_validation_001",
+        "name": "数据格式验证",
+        "category": "input_validation",
+        "severity": "medium",
+        "test_data": {
+          "invalid_inputs": {
+            "email": ["invalid-email", "test@", "@domain.com", ""],
+            "phone": ["123", "abc-def-ghij", "+1-800-INVALID"],
+            "url": ["not-a-url", "ftp://invalid", "javascript:void(0)"],
+            "json": ["{invalid json}", "null", "undefined"]
+          }
+        },
+        "expected_result": {
+          "validation_failed": true,
+          "error_messages": "descriptive_and_safe",
+          "input_rejected": true
+        }
+      }
+    ]
+  },
+  "api_security_tests": {
+    "rate_limiting_tests": [
+      {
+        "id": "api_rate_001",
+        "name": "API速率限制",
+        "category": "rate_limiting",
+        "severity": "medium",
+        "test_data": {
+          "rate_limit": {
+            "requests_per_minute": 100,
+            "burst_limit": 20,
+            "window_size": 60
+          },
+          "test_requests": 150,
+          "time_window": 60
+        },
+        "expected_result": {
+          "first_100_requests": "accepted",
+          "remaining_requests": "rejected",
+          "http_status": 429,
+          "retry_after_header": "present"
+        }
+      }
+    ],
+    "cors_tests": [
+      {
+        "id": "api_cors_001",
+        "name": "CORS策略验证",
+        "category": "api_security",
+        "severity": "medium",
+        "test_data": {
+          "allowed_origins": ["https://app.voicehelper.com", "https://admin.voicehelper.com"],
+          "blocked_origins": ["https://malicious.com", "http://localhost:3000"],
+          "request_origin": "https://malicious.com"
+        },
+        "expected_result": {
+          "cors_blocked": true,
+          "access_control_headers": "not_present"
+        }
+      }
+    ]
+  },
+  "data_protection_tests": {
+    "encryption_tests": [
+      {
+        "id": "data_encrypt_001",
+        "name": "敏感数据加密",
+        "category": "data_encryption",
+        "severity": "critical",
+        "test_data": {
+          "sensitive_fields": ["password", "api_key", "personal_info"],
+          "encryption_algorithm": "AES-256-GCM",
+          "key_rotation": true
+        },
+        "expected_result": {
+          "data_encrypted_at_rest": true,
+          "data_encrypted_in_transit": true,
+          "encryption_key_secure": true
+        }
+      }
+    ],
+    "pii_protection_tests": [
+      {
+        "id": "data_pii_001",
+        "name": "个人信息保护",
+        "category": "data_protection",
+        "severity": "high",
+        "test_data": {
+          "pii_data": {
+            "phone": "13812345678",
+            "email": "user@example.com",
+            "id_card": "110101199001011234",
+            "address": "北京市朝阳区某某街道123号"
+          }
+        },
+        "expected_result": {
+          "pii_masked_in_logs": true,
+          "pii_encrypted_in_db": true,
+          "access_logged": true,
+          "gdpr_compliant": true
+        }
+      }
+    ]
+  },
+  "vulnerability_tests": {
+    "csrf_tests": [
+      {
+        "id": "vuln_csrf_001",
+        "name": "CSRF攻击防护",
+        "category": "csrf_protection",
+        "severity": "high",
+        "test_data": {
+          "legitimate_request": {
+            "csrf_token": "valid_token_123",
+            "origin": "https://app.voicehelper.com"
+          },
+          "malicious_request": {
+            "csrf_token": "invalid_token_456",
+            "origin": "https://malicious.com"
+          }
+        },
+        "expected_result": {
+          "legitimate_request_accepted": true,
+          "malicious_request_blocked": true,
+          "csrf_token_validated": true
+        }
+      }
+    ],
+    "directory_traversal_tests": [
+      {
+        "id": "vuln_traversal_001",
+        "name": "目录遍历攻击防护",
+        "category": "input_validation",
+        "severity": "high",
+        "test_data": {
+          "malicious_paths": [
+            "../../../etc/passwd",
+            "..\\..\\..\\windows\\system32\\config\\sam",
+            "....//....//....//etc/passwd",
+            "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd"
+          ]
+        },
+        "expected_result": {
+          "path_traversal_blocked": true,
+          "file_access_denied": true,
+          "security_alert": true
+        }
+      }
+    ]
+  },
+  "compliance_tests": {
+    "gdpr_compliance": [
+      {
+        "id": "compliance_gdpr_001",
+        "name": "数据删除权利",
+        "category": "data_protection",
+        "severity": "high",
+        "test_data": {
+          "user_id": "user_123",
+          "deletion_request": true,
+          "data_locations": ["database", "logs", "backups", "cache"]
+        },
+        "expected_result": {
+          "data_deleted_from_all_locations": true,
+          "deletion_confirmed": true,
+          "audit_trail_maintained": true
+        }
+      }
+    ],
+    "audit_logging": [
+      {
+        "id": "compliance_audit_001",
+        "name": "安全事件审计日志",
+        "category": "audit_logging",
+        "severity": "medium",
+        "test_data": {
+          "security_events": [
+            "failed_login_attempt",
+            "privilege_escalation_attempt",
+            "data_access_violation",
+            "api_abuse"
+          ]
+        },
+        "expected_result": {
+          "events_logged": true,
+          "log_integrity_maintained": true,
+          "log_retention_compliant": true
+        }
+      }
+    ]
+  },
+  "penetration_test_scenarios": {
+    "authentication_bypass": [
+      {
+        "id": "pentest_auth_001",
+        "name": "认证绕过尝试",
+        "category": "penetration_testing",
+        "severity": "critical",
+        "attack_vectors": [
+          "JWT算法混淆攻击",
+          "会话固定攻击",
+          "密码重置令牌预测",
+          "OAuth状态参数篡改"
+        ],
+        "expected_defenses": [
+          "算法验证严格",
+          "会话ID随机生成",
+          "令牌不可预测",
+          "状态参数验证"
+        ]
+      }
+    ],
+    "privilege_escalation": [
+      {
+        "id": "pentest_priv_001",
+        "name": "权限提升攻击",
+        "category": "penetration_testing",
+        "severity": "critical",
+        "attack_vectors": [
+          "参数污染攻击",
+          "批量操作权限绕过",
+          "API版本降级攻击",
+          "隐藏参数利用"
+        ],
+        "expected_defenses": [
+          "参数验证严格",
+          "批量操作权限检查",
+          "API版本控制",
+          "参数白名单"
+        ]
+      }
+    ]
+  },
+  "security_headers_tests": {
+    "http_security_headers": [
+      {
+        "id": "headers_001",
+        "name": "HTTP安全头检查",
+        "category": "api_security",
+        "severity": "medium",
+        "required_headers": {
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          "X-XSS-Protection": "1; mode=block",
+          "Content-Security-Policy": "default-src 'self'",
+          "Referrer-Policy": "strict-origin-when-cross-origin"
+        },
+        "expected_result": {
+          "all_headers_present": true,
+          "header_values_secure": true
+        }
+      }
+    ]
+  },
+  "automated_security_tests": {
+    "dependency_scanning": [
+      {
+        "id": "auto_deps_001",
+        "name": "依赖漏洞扫描",
+        "category": "vulnerability_management",
+        "severity": "high",
+        "scan_targets": [
+          "package.json",
+          "requirements.txt",
+          "go.mod",
+          "Dockerfile"
+        ],
+        "expected_result": {
+          "no_critical_vulnerabilities": true,
+          "high_vulnerabilities_addressed": true,
+          "scan_report_generated": true
+        }
+      }
+    ],
+    "code_analysis": [
+      {
+        "id": "auto_code_001",
+        "name": "静态代码安全分析",
+        "category": "code_security",
+        "severity": "medium",
+        "analysis_rules": [
+          "hardcoded_secrets",
+          "sql_injection_patterns",
+          "xss_vulnerabilities",
+          "insecure_random",
+          "weak_cryptography"
+        ],
+        "expected_result": {
+          "no_security_issues": true,
+          "false_positives_minimized": true
+        }
+      }
+    ]
+  },
+  "performance_security_tests": {
+    "dos_protection": [
+      {
+        "id": "perf_dos_001",
+        "name": "拒绝服务攻击防护",
+        "category": "performance_security",
+        "severity": "high",
+        "attack_patterns": [
+          "large_payload_attack",
+          "slow_loris_attack",
+          "resource_exhaustion",
+          "algorithmic_complexity_attack"
+        ],
+        "expected_defenses": [
+          "payload_size_limits",
+          "connection_timeouts",
+          "resource_monitoring",
+          "complexity_limits"
+        ]
+      }
+    ]
+  },
+  "test_execution_config": {
+    "test_environments": [
+      "development",
+      "staging", 
+      "production"
+    ],
+    "test_frequency": {
+      "critical_tests": "daily",
+      "high_priority_tests": "weekly",
+      "medium_priority_tests": "monthly"
+    },
+    "reporting": {
+      "format": ["json", "html", "pdf"],
+      "recipients": ["security_team", "dev_team", "management"],
+      "escalation_rules": {
+        "critical": "immediate",
+        "high": "within_4_hours",
+        "medium": "within_24_hours"
+      }
+    }
+  },
+  "security_metrics": {
+    "kpis": {
+      "vulnerability_detection_rate": ">95%",
+      "false_positive_rate": "<5%",
+      "mean_time_to_detection": "<1_hour",
+      "mean_time_to_resolution": "<24_hours"
+    },
+    "compliance_scores": {
+      "owasp_top_10": "100%_coverage",
+      "iso_27001": "compliant",
+      "gdpr": "compliant",
+      "soc2": "type_2_compliant"
+    }
+  },
+  "usage_instructions": {
+    "test_execution": "使用这些安全测试数据验证系统的安全防护能力",
+    "vulnerability_assessment": "根据测试结果评估系统安全风险",
+    "compliance_validation": "确保系统符合相关安全标准和法规",
+    "continuous_monitoring": "集成到CI/CD流水线进行持续安全测试"
+  }
+}

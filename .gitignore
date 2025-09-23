@@ -6,12 +6,11 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-.vscode/
-.cursor/
-.cursorignore
 
 # IDE和编辑器
 .vscode/
+.cursor/
+.cursorignore
 .idea/
 *.swp
 *.swo
@@ -21,6 +20,7 @@ Thumbs.db
 .settings/
 
 # 环境变量和配置（敏感信息）
+
 .env
 .env.*
 .env.local
@@ -289,6 +289,8 @@ target/
 *.exe~
 backend/cmd/server/server
 backend/cmd/server/chatbot-backend*
+backend/gateway
+backend/server
 *-linux-*
 *-darwin-*
 *-windows-*
@@ -380,3 +382,40 @@ tests/performance/reports/
 algo/reasoning/cache/
 algo/reasoning/models/
 algo/reasoning/temp/
+
+# Python 虚拟环境
+voice_venv/
+venv/
+env/
+.venv/
+.env_*/
+algo_venv/
+algo_venv_new/
+**/venv/
+**/.venv/
+
+# 新增构建产物和临时文件
+backend/tmp/
+backend/bin/
+backend/cmd/*/main
+backend/cmd/*/*
+*.test
+algo/start.sh.bak
+
+# BGE和FAISS服务相关
+algo/data/
+algo/storage/
+algo/vectors/
+algo/embeddings/
+services/bge-service/data/
+services/faiss-service/data/
+
+# K8s部署相关临时文件
+tools/deployment/k8s/*.log
+tools/deployment/k8s/temp_*
+tools/reports/*.md.bak
+
+# 平台特定忽略
+platforms/admin/data/
+platforms/web/src/types/*.d.ts.bak
+developer-portal/node_modules/

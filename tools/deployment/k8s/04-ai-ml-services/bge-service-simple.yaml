@@ -1,0 +1,111 @@
+# BGE 向量化服务部署 - 简化版本
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bge-service
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bge-service
+      app.kubernetes.io/component: vectorization
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bge-service
+        app.kubernetes.io/component: vectorization
+        app.kubernetes.io/part-of: voicehelper
+    spec:
+      containers:
+      - name: bge-service
+        image: voicehelper/bge-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PORT
+          value: "8080"
+        - name: BGE_MODEL_NAME
+          value: "BAAI/bge-large-zh-v1.5"
+        - name: BGE_DEVICE
+          value: "cpu"
+        - name: BGE_BATCH_SIZE
+          value: "32"
+        - name: BGE_MAX_LENGTH
+          value: "512"
+        - name: LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: model-cache
+          mountPath: /models
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: bge-models-pvc
+---
+# BGE 服务
+apiVersion: v1
+kind: Service
+metadata:
+  name: bge-service
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+    app.kubernetes.io/part-of: voicehelper
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: vectorization
+---
+# BGE 模型缓存 PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bge-models-pvc
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: bge-service
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: voicehelper-standard

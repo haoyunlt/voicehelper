@@ -11,23 +11,23 @@ import (
 // VoiceMetrics 语音相关指标
 type VoiceMetrics struct {
 	// ASR 指标
-	ASRLatency        time.Duration
-	ASRAccuracy       float64
-	ASRWordErrorRate  float64
-	
+	ASRLatency       time.Duration
+	ASRAccuracy      float64
+	ASRWordErrorRate float64
+
 	// TTS 指标
-	TTSLatency        time.Duration
-	TTSFirstAudio     time.Duration
-	TTSInterruptTime  time.Duration
-	
+	TTSLatency       time.Duration
+	TTSFirstAudio    time.Duration
+	TTSInterruptTime time.Duration
+
 	// 对话指标
-	EndToEndLatency   time.Duration
+	EndToEndLatency    time.Duration
 	BargeInSuccessRate float64
 	CancelResponseTime time.Duration
-	
+
 	// 质量指标
-	AudioQuality      float64
-	NetworkLatency    time.Duration
+	AudioQuality   float64
+	NetworkLatency time.Duration
 }
 
 // VoiceMetricsCollector 语音指标收集器
@@ -45,21 +45,21 @@ func NewVoiceMetricsCollector() *VoiceMetricsCollector {
 func VoiceMetricsMiddleware(collector *VoiceMetricsCollector) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		
+
 		// 处理请求
 		c.Next()
-		
+
 		// 收集指标
 		duration := time.Since(start)
 		path := c.Request.URL.Path
 		method := c.Request.Method
 		status := c.Writer.Status()
-		
+
 		// 记录语音相关指标
 		if isVoiceEndpoint(path) {
 			collector.recordMetrics(c, duration, status)
 		}
-		
+
 		// 记录日志
 		logrus.WithFields(logrus.Fields{
 			"method":   method,
@@ -76,34 +76,34 @@ func (c *VoiceMetricsCollector) recordMetrics(ctx *gin.Context, duration time.Du
 	if sessionID == "" {
 		sessionID = "unknown"
 	}
-	
+
 	if _, exists := c.metrics[sessionID]; !exists {
 		c.metrics[sessionID] = &VoiceMetrics{}
 	}
-	
+
 	metrics := c.metrics[sessionID]
 	path := ctx.Request.URL.Path
-	
+
 	switch {
 	case path == "/api/voice/stream":
 		// WebSocket 连接指标
 		metrics.NetworkLatency = duration
-		
+
 	case path == "/api/chat/cancel":
 		// 取消请求响应时间
 		metrics.CancelResponseTime = duration
-		
+
 		// 记录 Barge-in 成功率
 		if status == 200 {
 			// 成功取消
 			logrus.WithFields(logrus.Fields{
-				"session_id": sessionID,
+				"session_id":  sessionID,
 				"cancel_time": duration,
-				"status": "success",
+				"status":      "success",
 			}).Info("Barge-in cancel successful")
 		}
 	}
-	
+
 	// 记录端到端延迟
 	if endToEndStart := ctx.GetHeader("X-Start-Time"); endToEndStart != "" {
 		if startTime, err := strconv.ParseInt(endToEndStart, 10, 64); err == nil {
@@ -117,14 +117,14 @@ func (c *VoiceMetricsCollector) RecordASRMetrics(sessionID string, latency time.
 	if _, exists := c.metrics[sessionID]; !exists {
 		c.metrics[sessionID] = &VoiceMetrics{}
 	}
-	
+
 	metrics := c.metrics[sessionID]
 	metrics.ASRLatency = latency
 	metrics.ASRAccuracy = accuracy
-	
+
 	logrus.WithFields(logrus.Fields{
-		"session_id": sessionID,
-		"asr_latency": latency,
+		"session_id":   sessionID,
+		"asr_latency":  latency,
 		"asr_accuracy": accuracy,
 	}).Info("ASR metrics recorded")
 }
@@ -134,14 +134,14 @@ func (c *VoiceMetricsCollector) RecordTTSMetrics(sessionID string, latency, firs
 	if _, exists := c.metrics[sessionID]; !exists {
 		c.metrics[sessionID] = &VoiceMetrics{}
 	}
-	
+
 	metrics := c.metrics[sessionID]
 	metrics.TTSLatency = latency
 	metrics.TTSFirstAudio = firstAudio
-	
+
 	logrus.WithFields(logrus.Fields{
-		"session_id": sessionID,
-		"tts_latency": latency,
+		"session_id":      sessionID,
+		"tts_latency":     latency,
 		"tts_first_audio": firstAudio,
 	}).Info("TTS metrics recorded")
 }
@@ -151,20 +151,20 @@ func (c *VoiceMetricsCollector) RecordBargeInMetrics(sessionID string, interrupt
 	if _, exists := c.metrics[sessionID]; !exists {
 		c.metrics[sessionID] = &VoiceMetrics{}
 	}
-	
+
 	metrics := c.metrics[sessionID]
 	metrics.TTSInterruptTime = interruptTime
-	
+
 	if success {
 		metrics.BargeInSuccessRate = 1.0
 	} else {
 		metrics.BargeInSuccessRate = 0.0
 	}
-	
+
 	logrus.WithFields(logrus.Fields{
-		"session_id": sessionID,
+		"session_id":     sessionID,
 		"interrupt_time": interruptTime,
-		"success": success,
+		"success":        success,
 	}).Info("Barge-in metrics recorded")
 }
 
@@ -199,7 +199,7 @@ func isVoiceEndpoint(path string) bool {
 		"/api/voice/stream",
 		"/api/chat/cancel",
 	}
-	
+
 	for _, endpoint := range voiceEndpoints {
 		if path == endpoint {
 			return true

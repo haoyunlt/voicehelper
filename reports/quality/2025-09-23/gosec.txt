@@ -1,0 +1,569 @@
+Results:
+
+Golang errors in file: []:
+
+  > [line 0 : column 0] - # command-line-arguments
+internal/auth/sso_providers.go:369:25: undefined: samlsp.DefaultSessionCookieStore
+internal/auth/sso_providers.go:388:3: unknown field IDPMetadataURL in struct literal of type samlsp.Options
+
+  > [line 0 : column 0] - # command-line-arguments
+internal/contracts/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+internal/contracts/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+internal/contracts/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)
+internal/contracts/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+
+  > [line 0 : column 0] - # command-line-arguments
+internal/handlers/api_routes.go:348:16: undefined: strconv
+internal/handlers/api_routes.go:349:17: undefined: strconv
+internal/handlers/api_routes.go:352:10: undefined: repository
+internal/handlers/api_routes.go:360:33: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:362:3: undefined: logger
+internal/handlers/api_routes.go:396:11: undefined: repository
+internal/handlers/api_routes.go:405:14: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:406:3: undefined: logger
+internal/handlers/api_routes.go:411:2: undefined: logger
+internal/handlers/api_routes.go:429:17: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:429:17: too many errors
+
+  > [line 0 : column 0] - # command-line-arguments
+pkg/integration/service_connector.go:389:2: declared and not used: service
+
+  > [line 0 : column 0] - # command-line-arguments
+pkg/utils/error_handler.go:59:30: context.Canceled undefined (type string has no field or method Canceled)
+pkg/utils/error_handler.go:62:30: context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded)
+
+  > [line 0 : column 0] - # command-line-arguments
+pkg/common/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+pkg/common/validation.go:148:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+pkg/common/validation.go:166:24: v.getMessage undefined (type string has no field or method getMessage)
+pkg/common/validation.go:170:24: v.getMessage undefined (type interface{} has no field or method getMessage)
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/internal/auth/sso_providers.go]:
+
+  > [line 369 : column 25] - undefined: samlsp.DefaultSessionCookieStore
+
+  > [line 388 : column 3] - unknown field IDPMetadataURL in struct literal of type samlsp.Options
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/internal/contracts/validation.go]:
+
+  > [line 144 : column 24] - v.getMessage undefined (type string has no field or method getMessage)
+
+  > [line 148 : column 24] - v.getMessage undefined (type interface{} has no field or method getMessage)
+
+  > [line 166 : column 24] - v.getMessage undefined (type string has no field or method getMessage)
+
+  > [line 170 : column 24] - v.getMessage undefined (type interface{} has no field or method getMessage)
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/api_routes.go]:
+
+  > [line 348 : column 16] - undefined: strconv
+
+  > [line 349 : column 17] - undefined: strconv
+
+  > [line 352 : column 10] - undefined: repository
+
+  > [line 360 : column 33] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 362 : column 3] - undefined: logger
+
+  > [line 396 : column 11] - undefined: repository
+
+  > [line 405 : column 14] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 406 : column 3] - undefined: logger
+
+  > [line 411 : column 2] - undefined: logger
+
+  > [line 429 : column 17] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 431 : column 3] - undefined: logger
+
+  > [line 468 : column 17] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 495 : column 14] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 496 : column 3] - undefined: logger
+
+  > [line 518 : column 17] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 530 : column 14] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 531 : column 3] - undefined: logger
+
+  > [line 536 : column 2] - undefined: logger
+
+  > [line 553 : column 17] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 568 : column 16] - undefined: strconv
+
+  > [line 569 : column 17] - undefined: strconv
+
+  > [line 572 : column 10] - undefined: repository
+
+  > [line 580 : column 28] - h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+
+  > [line 582 : column 3] - undefined: logger
+
+  > [line 660 : column 15] - h.callAgentService undefined (type *APIHandler has no field or method callAgentService)
+
+  > [line 681 : column 18] - undefined: io
+
+  > [line 688 : column 20] - undefined: json
+
+  > [line 689 : column 4] - undefined: fmt
+
+  > [line 690 : column 4] - undefined: fmt
+
+  > [line 728 : column 8] - h.isToolAllowed undefined (type *APIHandler has no field or method isToolAllowed)
+
+  > [line 734 : column 19] - h.executeToolInternal undefined (type *APIHandler has no field or method executeToolInternal)
+
+  > [line 736 : column 3] - undefined: logger
+
+  > [line 742 : column 4] - h.logToolUsage undefined (type *APIHandler has no field or method logToolUsage)
+
+  > [line 778 : column 25] - h.getAvailableTools undefined (type *APIHandler has no field or method getAvailableTools)
+
+  > [line 808 : column 28] - h.filterCapabilitiesByPermission undefined (type *APIHandler has no field or method filterCapabilitiesByPermission)
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/pkg/common/validation.go]:
+
+  > [line 144 : column 24] - v.getMessage undefined (type string has no field or method getMessage)
+
+  > [line 148 : column 24] - v.getMessage undefined (type interface{} has no field or method getMessage)
+
+  > [line 166 : column 24] - v.getMessage undefined (type string has no field or method getMessage)
+
+  > [line 170 : column 24] - v.getMessage undefined (type interface{} has no field or method getMessage)
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/pkg/integration/service_connector.go]:
+
+  > [line 389 : column 2] - declared and not used: service
+
+
+Golang errors in file: [/Users/lintao/important/ai-customer/voicehelper/backend/pkg/utils/error_handler.go]:
+
+  > [line 59 : column 30] - context.Canceled undefined (type string has no field or method Canceled)
+
+  > [line 62 : column 30] - context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded)
+
+
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/pkg/discovery/load_balancer.go:215] - G404 (CWE-338): Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (Confidence: MEDIUM, Severity: HIGH)
+    214: 	// Select random point
+  > 215: 	randomPoint := rand.Intn(totalWeight)
+    216: 	currentWeight := 0
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/dataset_repository.go:313-321] - G201 (CWE-89): SQL string formatting (Confidence: HIGH, Severity: MEDIUM)
+    312: 	// 查询数据
+  > 313: 	query := fmt.Sprintf(`
+  > 314: 		SELECT 
+  > 315: 			id, dataset_id, name, source, type, size, status,
+  > 316: 			chunk_count, token_count, metadata, created_at, updated_at
+  > 317: 		FROM documents
+  > 318: 		WHERE dataset_id = $1 AND deleted_at IS NULL
+  > 319: 		ORDER BY %s %s
+  > 320: 		LIMIT $2 OFFSET $3
+  > 321: 	`, opts.SortBy, opts.Order)
+    322: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/dataset_repository.go:106-115] - G201 (CWE-89): SQL string formatting (Confidence: HIGH, Severity: MEDIUM)
+    105: 	// 查询数据
+  > 106: 	query := fmt.Sprintf(`
+  > 107: 		SELECT 
+  > 108: 			id, tenant_id, name, description, type, status,
+  > 109: 			doc_count, chunk_count, token_count, metadata,
+  > 110: 			created_by, updated_by, created_at, updated_at
+  > 111: 		FROM datasets
+  > 112: 		WHERE tenant_id = $1 AND deleted_at IS NULL
+  > 113: 		ORDER BY %s %s
+  > 114: 		LIMIT $2 OFFSET $3
+  > 115: 	`, opts.SortBy, opts.Order)
+    116: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go:411-419] - G201 (CWE-89): SQL string formatting (Confidence: HIGH, Severity: MEDIUM)
+    410: 	// 查询数据
+  > 411: 	query := fmt.Sprintf(`
+  > 412: 		SELECT 
+  > 413: 			id, conversation_id, role, content, modality,
+  > 414: 			token_count, metadata, references, created_at
+  > 415: 		FROM messages
+  > 416: 		WHERE conversation_id = $1
+  > 417: 		ORDER BY %s %s
+  > 418: 		LIMIT $2 OFFSET $3
+  > 419: 	`, opts.SortBy, opts.Order)
+    420: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go:184-193] - G201 (CWE-89): SQL string formatting (Confidence: HIGH, Severity: MEDIUM)
+    183: 	// 查询数据
+  > 184: 	query := fmt.Sprintf(`
+  > 185: 		SELECT 
+  > 186: 			id, user_id, tenant_id, title, summary, status,
+  > 187: 			metadata, created_at, updated_at, last_msg_at,
+  > 188: 			msg_count, token_count
+  > 189: 		FROM conversations
+  > 190: 		WHERE user_id = $1 AND deleted_at IS NULL
+  > 191: 		ORDER BY %s %s
+  > 192: 		LIMIT $2 OFFSET $3
+  > 193: 	`, opts.SortBy, opts.Order)
+    194: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:286-295] - G201 (CWE-89): SQL string formatting (Confidence: HIGH, Severity: MEDIUM)
+    285: 	// 查询数据
+  > 286: 	query := fmt.Sprintf(`
+  > 287: 		SELECT 
+  > 288: 			id, tenant_id, name, key, status,
+  > 289: 			permissions, rate_limit, metadata, expires_at,
+  > 290: 			last_used_at, created_at, updated_at
+  > 291: 		FROM api_keys
+  > 292: 		WHERE tenant_id = $1 AND deleted_at IS NULL
+  > 293: 		ORDER BY %s %s
+  > 294: 		LIMIT $2 OFFSET $3
+  > 295: 	`, opts.SortBy, opts.Order)
+    296: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go:414-417] - G112 (CWE-400): Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server (Confidence: LOW, Severity: MEDIUM)
+    413: 
+  > 414: 	server := &http.Server{
+  > 415: 		Addr:    fmt.Sprintf(":%d", port),
+  > 416: 		Handler: mux,
+  > 417: 	}
+    418: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/pkg/security/audit.go:121] - G302 (CWE-276): Expect file permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+    120: 
+  > 121: 	file, err := os.OpenFile(al.config.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    122: 	if err != nil {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/pkg/security/audit.go:117] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    116: 	// Create directory if it doesn't exist
+  > 117: 	if err := os.MkdirAll("/var/log/chatbot", 0755); err != nil {
+    118: 		return fmt.Errorf("failed to create log directory: %v", err)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/pkg/utils/error_handler.go:267] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    266: 			if catchFunc != nil {
+  > 267: 				catchFunc(err)
+    268: 			}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/pkg/storage/minio.go:185] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    184: 	if err != nil {
+  > 185: 		object.Close()
+    186: 		return nil, fmt.Errorf("failed to stat object: %w", err)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/service/service.go:217] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    216: 	if resp.StatusCode != http.StatusOK {
+  > 217: 		resp.Body.Close()
+    218: 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/service/service.go:100] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    99: 	if resp.StatusCode != http.StatusOK {
+  > 100: 		resp.Body.Close()
+    101: 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go:502] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    501: 		if len(referencesJSON) > 0 {
+  > 502: 			json.Unmarshal(referencesJSON, &msg.References)
+    503: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go:499] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    498: 		if len(metadataJSON) > 0 {
+  > 499: 			json.Unmarshal(metadataJSON, &msg.Metadata)
+    500: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/conversation_repository.go:378] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    377: 			titleQuery := `UPDATE conversations SET title = $2 WHERE id = $1`
+  > 378: 			tx.ExecContext(ctx, titleQuery, msg.ConversationID, title)
+    379: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:482] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    481: 	bytes := make([]byte, 32)
+  > 482: 	rand.Read(bytes)
+    483: 	hash := sha256.Sum256(bytes)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:419] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    418: 		if result.Allowed {
+  > 419: 			r.UpdateLastUsed(ctx, id)
+    420: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:320] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    319: 		json.Unmarshal(permissionsJSON, &key.Permissions)
+  > 320: 		json.Unmarshal(metadataJSON, &key.Metadata)
+    321: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:319] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    318: 		// 解析JSON字段
+  > 319: 		json.Unmarshal(permissionsJSON, &key.Permissions)
+    320: 		json.Unmarshal(metadataJSON, &key.Metadata)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:248] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    247: 	json.Unmarshal(permissionsJSON, &key.Permissions)
+  > 248: 	json.Unmarshal(metadataJSON, &key.Metadata)
+    249: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:247] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    246: 	// 解析JSON字段
+  > 247: 	json.Unmarshal(permissionsJSON, &key.Permissions)
+    248: 	json.Unmarshal(metadataJSON, &key.Metadata)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:192] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    191: 		// 更新状态为过期
+  > 192: 		r.updateStatus(ctx, key.ID, "expired")
+    193: 		return nil, fmt.Errorf("API key has expired")
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:175] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    174: 	json.Unmarshal(permissionsJSON, &key.Permissions)
+  > 175: 	json.Unmarshal(metadataJSON, &key.Metadata)
+    176: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/repository/apikey_repository.go:174] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    173: 	// 解析JSON字段
+  > 174: 	json.Unmarshal(permissionsJSON, &key.Permissions)
+    175: 	json.Unmarshal(metadataJSON, &key.Metadata)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:467] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    466: 		// 关闭客户端连接
+  > 467: 		client.Conn.Close()
+    468: 	}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:231] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    230: 		case <-ticker.C:
+  > 231: 			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+    232: 			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:220] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    219: 			if !ok {
+  > 220: 				client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+    221: 				return
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:218] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    217: 		case message, ok := <-client.Send:
+  > 218: 			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+    219: 			if !ok {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:198] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    197: 		client.LastActive = time.Now()
+  > 198: 		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    199: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:180] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    179: 	client.Conn.SetPongHandler(func(string) error {
+  > 180: 		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    181: 		client.LastActive = time.Now()
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/webrtc_signaling.go:178] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    177: 	client.Conn.SetReadLimit(512)
+  > 178: 	client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    179: 	client.Conn.SetPongHandler(func(string) error {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go:148] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    147: 		// 重置读取超时
+  > 148: 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    149: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go:118] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    117: 	conn.SetPongHandler(func(string) error {
+  > 118: 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    119: 		return nil
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/voice_ws.go:116] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    115: 	// 设置读取超时
+  > 116: 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+    117: 	conn.SetPongHandler(func(string) error {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:243-246] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    242: 	// 发送会话停止确认
+  > 243: 	handler.WriteEnvelope("session_stopped", map[string]interface{}{
+  > 244: 		"session_id": msg.SessionID,
+  > 245: 		"status":     "stopped",
+  > 246: 	})
+    247: }
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:228-231] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    227: 	// 模拟ASR结果（实际应该从算法服务获取）
+  > 228: 	handler.WriteEnvelope("asr_partial", map[string]interface{}{
+  > 229: 		"text":       "识别中...",
+  > 230: 		"confidence": 0.8,
+  > 231: 	})
+    232: }
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:214] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    213: 	if msg.Data == "" {
+  > 214: 		handler.WriteErrorEnvelope("empty_audio_data", "Audio data is empty")
+    215: 		return
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:205-209] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    204: 	// 发送会话开始确认
+  > 205: 	handler.WriteEnvelope("session_started", map[string]interface{}{
+  > 206: 		"session_id": msg.SessionID,
+  > 207: 		"config":     config,
+  > 208: 		"status":     "started",
+  > 209: 	})
+    210: }
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:181] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    180: 	if msg.SessionID == "" {
+  > 181: 		handler.WriteErrorEnvelope("missing_session_id", "Session ID is required")
+    182: 		return
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:169] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    168: 		default:
+  > 169: 			handler.WriteErrorEnvelope("unknown_message_type", "Unknown message type: "+msg.Type)
+    170: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:159] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    158: 			if sessionID == "" {
+  > 159: 				handler.WriteErrorEnvelope("no_session", "No active voice session")
+    160: 				continue
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/v2_voice.go:121-123] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    120: 	// 发送连接确认
+  > 121: 	streamHandler.WriteEnvelope("connected", map[string]interface{}{
+  > 122: 		"status": "connected",
+  > 123: 	})
+    124: 
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/handlers/base.go:38] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    37: 	bytes := make([]byte, 8)
+  > 38: 	rand.Read(bytes)
+    39: 	return fmt.Sprintf("trace_%s", hex.EncodeToString(bytes))
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/internal/auth/multi_tenant_auth.go:250] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    249: 			// 回滚租户创建
+  > 250: 			s.tenantRepo.DeleteTenant(ctx, tenant.ID)
+    251: 			return nil, fmt.Errorf("failed to create admin user: %w", err)
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go:401-406] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    400: 		w.Header().Set("Content-Type", "application/json")
+  > 401: 		json.NewEncoder(w).Encode(map[string]interface{}{
+  > 402: 			"name":        fmt.Sprintf("Test Service %d", port),
+  > 403: 			"version":     "1.0.0",
+  > 404: 			"description": "Test service for discovery demo",
+  > 405: 			"port":        port,
+  > 406: 		})
+    407: 	})
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go:395] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    394: 			w.WriteHeader(http.StatusInternalServerError)
+  > 395: 			json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy"})
+    396: 		}
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go:392] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    391: 			w.WriteHeader(http.StatusOK)
+  > 392: 			json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
+    393: 		} else {
+
+Autofix: 
+
+[/Users/lintao/important/ai-customer/voicehelper/backend/examples/service_discovery_example.go:247] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    246: 	for _, service := range testServices {
+  > 247: 		registry.RegisterService(ctx, service)
+    248: 	}
+
+Autofix: 
+
+Summary:
+  Gosec  : dev
+  Files  : 56
+  Lines  : 20635
+  Nosec  : 0
+  Issues : 49
+
