@@ -25,10 +25,11 @@ export function LoggerProvider({ children }: LoggerProviderProps) {
   
   useEffect(() => {
     // 初始化日志系统
-    const logger = initLogger('voicehelper-frontend');
+    initLogger();
+    const logger = getLogger();
     
     // 记录应用启动
-    logger.startup('前端应用启动', {
+    logger.info('前端应用启动', {
       pathname,
       userAgent: navigator.userAgent,
       language: navigator.language,
@@ -43,7 +44,7 @@ export function LoggerProvider({ children }: LoggerProviderProps) {
 
     // 监听页面可见性变化
     const handleVisibilityChange = () => {
-      logger.userAction(document.hidden ? 'page_hidden' : 'page_visible', {
+      logger.info(document.hidden ? 'page_hidden' : 'page_visible', {
         pathname,
         timestamp: new Date().toISOString(),
       });
@@ -51,7 +52,7 @@ export function LoggerProvider({ children }: LoggerProviderProps) {
 
     // 监听页面卸载
     const handleBeforeUnload = () => {
-      logger.userAction('page_unload', {
+      logger.info('page_unload', {
         pathname,
         timestamp: new Date().toISOString(),
       });
@@ -59,14 +60,14 @@ export function LoggerProvider({ children }: LoggerProviderProps) {
 
     // 监听网络状态变化
     const handleOnline = () => {
-      logger.userAction('network_online', {
+      logger.info('network_online', {
         pathname,
         timestamp: new Date().toISOString(),
       });
     };
 
     const handleOffline = () => {
-      logger.userAction('network_offline', {
+      logger.info('network_offline', {
         pathname,
         timestamp: new Date().toISOString(),
       });
@@ -113,7 +114,9 @@ export function LoggerProvider({ children }: LoggerProviderProps) {
 
   // 监听路由变化
   useEffect(() => {
-    pageView(pathname, {
+    pageView(pathname);
+    logger.info('page_view', {
+      pathname,
       referrer: document.referrer,
       timestamp: new Date().toISOString(),
     });

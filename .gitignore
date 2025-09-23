@@ -20,6 +20,7 @@ Thumbs.db
 .settings/
 
 # 环境变量和配置（敏感信息）
+
 .env
 .env.*
 .env.local

@@ -8,20 +8,20 @@ import (
 	"unicode/utf8"
 )
 
-// ValidationError 验证错误
-type ValidationError struct {
+// LegacyValidationError 旧版验证错误（保持兼容性）
+type LegacyValidationError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 	Code    string `json:"code"`
 }
 
 // Error 实现error接口
-func (e ValidationError) Error() string {
+func (e LegacyValidationError) Error() string {
 	return fmt.Sprintf("validation error on field '%s': %s", e.Field, e.Message)
 }
 
 // ValidationErrors 验证错误集合
-type ValidationErrors []ValidationError
+type ValidationErrors []LegacyValidationError
 
 // Error 实现error接口
 func (e ValidationErrors) Error() string {
@@ -55,7 +55,7 @@ func NewValidator() *Validator {
 
 // AddError 添加错误
 func (v *Validator) AddError(field, message, code string) {
-	v.errors = append(v.errors, ValidationError{
+	v.errors = append(v.errors, LegacyValidationError{
 		Field:   field,
 		Message: message,
 		Code:    code,

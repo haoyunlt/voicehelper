@@ -86,7 +86,7 @@ agent = LangGraphAgent(
 ```bash
 # BGE模型配置
 BGE_MODEL_NAME=BAAI/bge-large-zh-v1.5
-BGE_DEVICE=cuda
+BGE_DEVICE=cpu
 BGE_NORMALIZE=true
 BGE_BATCH_SIZE=32
 

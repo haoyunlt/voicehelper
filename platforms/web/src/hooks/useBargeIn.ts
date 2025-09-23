@@ -106,7 +106,7 @@ export function useBargeIn(options: UseBargeInOptions) {
 
     let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
-      const sample = (dataArray[i] - 128) / 128; // 转换到 -1 到 1 范围
+      const sample = ((dataArray[i] || 0) - 128) / 128; // 转换到 -1 到 1 范围
       sum += sample * sample;
     }
 
@@ -130,14 +130,14 @@ export function useBargeIn(options: UseBargeInOptions) {
       
       // 自适应阈值 = 噪声底线 + 固定偏移
       const adaptiveThreshold = Math.max(
-        noiseFloor * 3, // 至少是噪声的3倍
+        (noiseFloor || 0) * 3, // 至少是噪声的3倍
         config.energyThreshold // 不低于配置的最小阈值
       );
 
       setMetrics(prev => ({
         ...prev,
         adaptiveThreshold,
-        averageEnergy: sortedEnergies[Math.floor(sortedEnergies.length * 0.5)] // 中位数
+        averageEnergy: sortedEnergies[Math.floor(sortedEnergies.length * 0.5)] || 0 // 中位数
       }));
     }
   }, [config.energyThreshold]);

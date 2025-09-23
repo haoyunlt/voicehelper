@@ -11,7 +11,7 @@ import os
 class BGEConfig:
     """BGE嵌入模型配置"""
     model_name: str = "BAAI/bge-large-zh-v1.5"
-    device: str = "cuda"
+    device: str = "cpu"
     normalize: bool = True
     cache_folder: Optional[str] = None
     batch_size: int = 32
@@ -74,7 +74,7 @@ def load_rag_config() -> RAGConfig:
     # BGE配置
     bge_config = BGEConfig(
         model_name=os.getenv("BGE_MODEL_NAME", "BAAI/bge-large-zh-v1.5"),
-        device=os.getenv("BGE_DEVICE", "cuda"),
+        device=os.getenv("BGE_DEVICE", "cpu"),
         normalize=os.getenv("BGE_NORMALIZE", "true").lower() == "true",
         cache_folder=os.getenv("BGE_CACHE_FOLDER"),
         batch_size=int(os.getenv("BGE_BATCH_SIZE", "32"))

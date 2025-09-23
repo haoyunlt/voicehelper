@@ -33,6 +33,7 @@ export const Typewriter: React.FC<TypewriterProps> = ({
     } else if (onComplete) {
       onComplete();
     }
+    return undefined;
   }, [currentIndex, text, speed, onComplete]);
 
   return (
@@ -231,6 +232,7 @@ export const Toast: React.FC<ToastProps> = ({
       const timer = setTimeout(onClose, 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isVisible, onClose]);
 
   if (!isVisible) return null;

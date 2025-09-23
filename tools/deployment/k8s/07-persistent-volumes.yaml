@@ -1,0 +1,180 @@
+# VoiceHelper 持久化卷配置
+
+# PostgreSQL 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgresql-pv
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/component: database
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/postgresql
+    type: DirectoryOrCreate
+
+---
+# Redis 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/redis
+    type: DirectoryOrCreate
+
+---
+# MinIO 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-pv
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/minio
+    type: DirectoryOrCreate
+
+---
+# FAISS 数据持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: faiss-data-pv
+  labels:
+    app.kubernetes.io/name: faiss-service
+    app.kubernetes.io/component: vector-search
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/faiss
+    type: DirectoryOrCreate
+
+---
+# NATS 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nats-pv
+  labels:
+    app.kubernetes.io/name: nats
+    app.kubernetes.io/component: message-queue
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/nats
+    type: DirectoryOrCreate
+
+---
+# 模型缓存持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: model-cache-pv
+  labels:
+    app.kubernetes.io/name: model-cache
+    app.kubernetes.io/component: storage
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/model-cache
+    type: DirectoryOrCreate
+
+---
+# Prometheus 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: monitoring
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/prometheus
+    type: DirectoryOrCreate
+
+---
+# Grafana 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana-pv
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: visualization
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/grafana
+    type: DirectoryOrCreate
+
+---
+# AlertManager 持久化卷
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: alertmanager-pv
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: alerting
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: voicehelper-storage
+  hostPath:
+    path: /Users/lintao/voicehelper-storage/alertmanager
+    type: DirectoryOrCreate

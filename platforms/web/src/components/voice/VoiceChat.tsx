@@ -265,14 +265,14 @@ export default function VoiceChat({
 
   // 发送音频帧
   const sendAudioFrame = useCallback((audioData: Float32Array) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || !audioData) {
       return
     }
 
     // 转换为PCM16
     const pcm16 = new Int16Array(audioData.length)
     for (let i = 0; i < audioData.length; i++) {
-      pcm16[i] = Math.max(-32768, Math.min(32767, audioData[i] * 32767))
+      pcm16[i] = Math.max(-32768, Math.min(32767, (audioData[i] || 0) * 32767))
     }
 
     // 构建二进制帧头部（20字节）
@@ -304,6 +304,29 @@ export default function VoiceChat({
       playNextAudio()
     }
   }, [isPlaying])
+
+  // 队列音频播放
+  const queueAudioForPlayback = useCallback((audioData: string | ArrayBuffer) => {
+    try {
+      let audioBuffer: ArrayBuffer
+      
+      if (typeof audioData === 'string') {
+        // 如果是base64字符串，转换为ArrayBuffer
+        const binaryString = atob(audioData)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        audioBuffer = bytes.buffer
+      } else {
+        audioBuffer = audioData
+      }
+      
+      handleAudioData(audioBuffer)
+    } catch (error) {
+      console.error('Failed to queue audio for playback:', error)
+    }
+  }, [handleAudioData])
 
   // 播放音频队列
   const playNextAudio = useCallback(async () => {

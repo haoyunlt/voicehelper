@@ -47,6 +47,7 @@ export const VoiceVisualizer: React.FC<VoiceVisualizerProps> = ({
     } else {
       setCurrentFrequencies([])
     }
+    return undefined;
   }, [isRecording, audioLevel])
 
   // Canvas绘制

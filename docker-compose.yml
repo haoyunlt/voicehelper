@@ -52,73 +52,57 @@ services:
       timeout: 3s
       retries: 5
 
-  # Milvus 向量数据库 - Standalone 模式
-  milvus-etcd:
-    image: quay.io/coreos/etcd:v3.5.5
-    container_name: voicehelper-milvus-etcd
+  # BGE 向量化服务
+  bge-service:
+    build:
+      context: ./algo
+      dockerfile: Dockerfile.bge
+    container_name: voicehelper-bge
     restart: unless-stopped
     environment:
-      - ETCD_AUTO_COMPACTION_MODE=revision
-      - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
-      - ETCD_SNAPSHOT_COUNT=50000
-    volumes:
-      - milvus_etcd_data:/etcd
-    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
-    networks:
-      - voicehelper-network
-    healthcheck:
-      test: ["CMD", "etcdctl", "endpoint", "health"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  milvus-minio:
-    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
-    container_name: voicehelper-milvus-minio
-    restart: unless-stopped
-    environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      - MODEL_NAME=BAAI/bge-large-zh-v1.5
+      - MODEL_CACHE_DIR=/app/models
+      - MAX_BATCH_SIZE=32
+      - MAX_SEQUENCE_LENGTH=512
+      - PORT=8080
     ports:
-      - "9001:9001"
-      - "9000:9000"
+      - "8080:8080"
     volumes:
-      - milvus_minio_data:/minio_data
-    command: minio server /minio_data --console-address ":9001"
+      - bge_models:/app/models
     networks:
       - voicehelper-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  milvus:
-    image: milvusdb/milvus:v2.3.3
-    container_name: voicehelper-milvus
-    restart: unless-stopped
-    command: ["milvus", "run", "standalone"]
-    environment:
-      ETCD_ENDPOINTS: milvus-etcd:2379
-      MINIO_ADDRESS: milvus-minio:9000
-    volumes:
-      - milvus_data:/var/lib/milvus
-      - ./tools/deployment/config/milvus.yaml:/milvus/configs/milvus.yaml
-    ports:
-      - "19530:19530"
-      - "9091:9091"
-    depends_on:
-      - milvus-etcd
-      - milvus-minio
-    networks:
-      - voicehelper-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 120s
+
+  # FAISS 向量搜索服务
+  faiss-service:
+    build:
+      context: ./algo
+      dockerfile: Dockerfile.faiss
+    container_name: voicehelper-faiss
+    restart: unless-stopped
+    environment:
+      - FAISS_INDEX_TYPE=IVF
+      - FAISS_NLIST=100
+      - FAISS_NPROBE=10
+      - VECTOR_DIMENSION=1024
+      - INDEX_SAVE_INTERVAL=300
+      - PORT=8081
+    ports:
+      - "8081:8081"
+    volumes:
+      - faiss_data:/app/data
+    networks:
+      - voicehelper-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # Neo4j 图数据库
   neo4j:
@@ -197,8 +181,8 @@ services:
       - REDIS_HOST=redis
       - NEO4J_URI=bolt://neo4j:7687
       - NATS_URL=nats://nats:4222
-      - MILVUS_HOST=milvus
-      - MILVUS_PORT=19530
+      - BGE_SERVICE_URL=http://bge-service:8080
+      - FAISS_SERVICE_URL=http://faiss-service:8081
       - PORT=${GATEWAY_PORT:-8080}
       - SERVICE_NAME=voicehelper-gateway
       - GIN_MODE=release
@@ -238,8 +222,8 @@ services:
       - REDIS_HOST=redis
       - NEO4J_URI=bolt://neo4j:7687
       - NATS_URL=nats://nats:4222
-      - MILVUS_HOST=milvus
-      - MILVUS_PORT=19530
+      - BGE_SERVICE_URL=http://bge-service:8080
+      - FAISS_SERVICE_URL=http://faiss-service:8081
       - PORT=${ALGO_PORT:-8000}
       - SERVICE_NAME=voicehelper-algo
       - PYTHONPATH=/app
@@ -254,7 +238,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      milvus:
+      bge-service:
+        condition: service_healthy
+      faiss-service:
         condition: service_healthy
       nats:
         condition: service_healthy
@@ -409,17 +395,21 @@ services:
     networks:
       - voicehelper-network
 
-  # Attu - Milvus 管理界面
-  attu:
-    image: zilliz/attu:v2.3.3
-    container_name: voicehelper-attu
+  # BGE+FAISS 管理界面
+  vector-admin:
+    build:
+      context: ./tools/vector-admin
+      dockerfile: Dockerfile
+    container_name: voicehelper-vector-admin
     restart: unless-stopped
     environment:
-      MILVUS_URL: milvus:19530
+      - BGE_SERVICE_URL=http://bge-service:8080
+      - FAISS_SERVICE_URL=http://faiss-service:8081
     ports:
       - "3001:3000"
     depends_on:
-      - milvus
+      - bge-service
+      - faiss-service
     networks:
       - voicehelper-network
 
@@ -585,12 +575,10 @@ volumes:
   neo4j_plugins:
     driver: local
   
-  # 向量数据库数据卷
-  milvus_data:
+  # 向量服务数据卷
+  bge_models:
     driver: local
-  milvus_etcd_data:
-    driver: local
-  milvus_minio_data:
+  faiss_data:
     driver: local
   
   # 消息队列数据卷

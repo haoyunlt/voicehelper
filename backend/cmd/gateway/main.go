@@ -95,6 +95,7 @@ func main() {
 		conversationRepo,
 		"http://localhost:8000", // 算法服务URL
 		voiceHandler,
+		db.DB,
 	)
 
 	// 设置Gin模式

@@ -96,14 +96,13 @@ export const useEnhancedWebRTC = (
 
   // WebSocket for signaling
   const {
-    socket,
     isConnected: wsConnected,
-    sendMessage: sendSignalingMessage
+    send: sendSignalingMessage
   } = useWebSocket(signalingUrl, {
     onMessage: handleSignalingMessage,
     onError: (error) => {
       console.error('Signaling error:', error)
-      setError(new Error(`Signaling error: ${error.message}`))
+      setError(new Error(`Signaling error: ${error.type || 'Unknown error'}`))
     }
   })
 
@@ -155,26 +154,29 @@ export const useEnhancedWebRTC = (
 
       // Remote stream handler
       pc.ontrack = (event) => {
-        remoteStreamRef.current = event.streams[0]
-        // Handle remote audio
-        const audioContext = new AudioContext()
-        const source = audioContext.createMediaStreamSource(event.streams[0])
-        const analyser = audioContext.createAnalyser()
-        source.connect(analyser)
-        
-        // Monitor audio level
-        const dataArray = new Uint8Array(analyser.frequencyBinCount)
-        const updateAudioLevel = () => {
-          analyser.getByteFrequencyData(dataArray)
-          const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length
-          const audioLevel = average / 255
-          setMetrics(prev => ({ ...prev, audioLevel }))
+        const stream = event.streams[0]
+        if (stream) {
+          remoteStreamRef.current = stream
+          // Handle remote audio
+          const audioContext = new AudioContext()
+          const source = audioContext.createMediaStreamSource(stream)
+          const analyser = audioContext.createAnalyser()
+          source.connect(analyser)
           
-          if (isConnected) {
-            requestAnimationFrame(updateAudioLevel)
+          // Monitor audio level
+          const dataArray = new Uint8Array(analyser.frequencyBinCount)
+          const updateAudioLevel = () => {
+            analyser.getByteFrequencyData(dataArray)
+            const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length
+            const audioLevel = average / 255
+            setMetrics(prev => ({ ...prev, audioLevel }))
+            
+            if (isConnected) {
+              requestAnimationFrame(updateAudioLevel)
+            }
           }
+          updateAudioLevel()
         }
-        updateAudioLevel()
       }
 
       // Data channel for heartbeat and metrics
@@ -456,7 +458,7 @@ export const useEnhancedWebRTC = (
     const sender = pc.getSenders().find(s => s.track?.kind === 'audio')
     if (sender) {
       const params = sender.getParameters()
-      if (params.encodings && params.encodings.length > 0) {
+      if (params.encodings && params.encodings.length > 0 && params.encodings[0]) {
         switch (quality) {
           case 'poor':
             params.encodings[0].maxBitrate = 32000 // 32 kbps

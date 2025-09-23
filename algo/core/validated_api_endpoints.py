@@ -454,7 +454,46 @@ class ValidatedChatAPI:
                 )
             
             # 检查消息频率（防止刷屏）
-            # TODO: 实现消息频率检查
+            # 实现消息频率检查
+            import time
+            
+            # 生成用户标识键
+            user_id = getattr(request, 'user_id', 'anonymous')
+            rate_limit_key = f"message_rate:{user_id}"
+            
+            # 简化实现：使用内存存储
+            if not hasattr(self, '_message_rate_cache'):
+                self._message_rate_cache = {}
+            
+            current_time = time.time()
+            
+            # 清理过期记录（超过60秒的记录）
+            expired_keys = [k for k, timestamps in self._message_rate_cache.items() 
+                          if all(current_time - ts > 60 for ts in timestamps)]
+            for key in expired_keys:
+                self._message_rate_cache.pop(key, None)
+            
+            # 获取用户最近的消息时间戳
+            user_timestamps = self._message_rate_cache.get(rate_limit_key, [])
+            
+            # 移除60秒前的时间戳
+            recent_timestamps = [ts for ts in user_timestamps if current_time - ts <= 60]
+            
+            # 检查频率限制（每分钟最多30条消息）
+            max_messages_per_minute = 30
+            if len(recent_timestamps) >= max_messages_per_minute:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "MESSAGE_RATE_LIMIT_EXCEEDED",
+                        "message": f"Too many messages. Maximum {max_messages_per_minute} messages per minute allowed",
+                        "retry_after": 60
+                    }
+                )
+            
+            # 记录当前消息时间戳
+            recent_timestamps.append(current_time)
+            self._message_rate_cache[rate_limit_key] = recent_timestamps
             
             # 调用原始服务
             result = await self.chat_service.send_message(
