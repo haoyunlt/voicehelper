@@ -6,12 +6,11 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-.vscode/
-.cursor/
-.cursorignore
 
 # IDE和编辑器
 .vscode/
+.cursor/
+.cursorignore
 .idea/
 *.swp
 *.swo
@@ -289,6 +288,8 @@ target/
 *.exe~
 backend/cmd/server/server
 backend/cmd/server/chatbot-backend*
+backend/gateway
+backend/server
 *-linux-*
 *-darwin-*
 *-windows-*
@@ -380,3 +381,21 @@ tests/performance/reports/
 algo/reasoning/cache/
 algo/reasoning/models/
 algo/reasoning/temp/
+
+# Python 虚拟环境
+voice_venv/
+venv/
+env/
+.venv/
+.env_*/
+
+# 新增构建产物和临时文件
+backend/tmp/
+*.test
+algo/start.sh.bak
+tools/reports/*.md.bak
+
+# 平台特定忽略
+platforms/admin/data/
+platforms/web/src/types/*.d.ts.bak
+developer-portal/node_modules/
