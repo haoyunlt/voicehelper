@@ -419,3 +419,4 @@ tools/reports/*.md.bak
 platforms/admin/data/
 platforms/web/src/types/*.d.ts.bak
 developer-portal/node_modules/
+.env.local
