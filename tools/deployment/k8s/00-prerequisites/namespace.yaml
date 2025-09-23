@@ -139,4 +139,10 @@ spec:
     type: Container
   - default:
       storage: "10Gi"
+    defaultRequest:
+      storage: "1Gi"
+    min:
+      storage: "1Gi"
+    max:
+      storage: "1Ti"
     type: PersistentVolumeClaim

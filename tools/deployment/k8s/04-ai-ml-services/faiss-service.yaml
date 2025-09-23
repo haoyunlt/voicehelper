@@ -361,7 +361,7 @@ spec:
                 memory: "512Mi"
 ---
 # FAISS 服务监控
-apiVersion: v1
+apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: faiss-service-metrics
