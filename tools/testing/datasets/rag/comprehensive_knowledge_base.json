@@ -1,0 +1,327 @@
+{
+  "metadata": {
+    "name": "RAG综合知识库测试数据集",
+    "version": "2.0.0", 
+    "description": "用于测试RAG检索、重排序、上下文理解的综合知识库数据",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_documents": 300,
+    "total_chunks": 1500,
+    "domains": [
+      "voicehelper_product",
+      "ai_technology",
+      "customer_service",
+      "technical_documentation",
+      "business_policies",
+      "troubleshooting",
+      "api_reference",
+      "best_practices"
+    ],
+    "languages": ["zh-CN", "en-US"],
+    "chunk_sizes": [256, 512, 1024],
+    "embedding_dimensions": 768
+  },
+  "document_categories": {
+    "product_documentation": {
+      "description": "VoiceHelper产品功能和使用说明",
+      "document_count": 60,
+      "avg_chunk_count": 8,
+      "complexity": "medium",
+      "update_frequency": "weekly",
+      "documents": [
+        {
+          "id": "prod_doc_001",
+          "title": "VoiceHelper核心功能介绍",
+          "category": "product_overview",
+          "language": "zh-CN",
+          "content": "VoiceHelper是一个企业级智能语音助手平台，提供全面的语音交互解决方案。\n\n## 核心功能\n\n### 1. 智能语音识别(ASR)\n- **高精度识别**：在安静环境下达到95%以上的识别准确率\n- **多语言支持**：支持中文、英文、日文、韩文等20多种语言\n- **实时处理**：支持流式语音识别，延迟低于150毫秒\n- **噪音抑制**：在噪音环境下仍能保持80%以上的识别准确率\n- **方言识别**：支持普通话、粤语、四川话等主要方言\n\n### 2. 自然语音合成(TTS)\n- **自然音质**：采用神经网络技术，合成语音接近真人\n- **情感表达**：支持高兴、悲伤、愤怒等多种情感语调\n- **个性化定制**：可根据企业需求定制专属语音\n- **多音色选择**：提供男声、女声、童声等多种音色\n- **韵律控制**：精确控制语速、音调、停顿等韵律特征\n\n### 3. 智能对话管理\n- **上下文理解**：能够理解多轮对话中的上下文关系\n- **意图识别**：准确识别用户的真实意图和需求\n- **实体提取**：自动提取对话中的关键信息和实体\n- **对话状态跟踪**：实时跟踪对话进展和状态变化\n- **个性化回复**：根据用户画像提供个性化的回复内容\n\n### 4. 知识库管理\n- **文档智能解析**：自动解析PDF、Word、网页等多种格式文档\n- **语义检索**：基于语义理解的智能检索，而非简单关键词匹配\n- **知识图谱**：构建企业知识图谱，理解概念间的关系\n- **实时更新**：支持知识库的实时更新和版本管理\n- **权限控制**：细粒度的知识访问权限控制\n\n### 5. 多模态交互\n- **文本输入**：支持文字聊天和指令输入\n- **语音输入**：支持语音指令和语音对话\n- **图像理解**：能够理解和分析上传的图片内容\n- **文件处理**：支持文档上传和内容分析\n- **屏幕共享**：支持屏幕共享和视觉辅助\n\n## 技术优势\n\n### 先进的AI技术栈\n- **深度学习模型**：采用Transformer、BERT等先进模型\n- **端到端优化**：从语音到文本到理解的端到端优化\n- **持续学习**：系统能够从用户交互中持续学习和改进\n- **模型压缩**：优化模型大小，支持边缘设备部署\n\n### 企业级可靠性\n- **高可用性**：99.9%的服务可用性保证\n- **弹性扩展**：支持根据业务需求自动扩展\n- **数据安全**：符合GDPR、SOC2等国际安全标准\n- **私有化部署**：支持本地部署，确保数据安全\n\n### 易于集成\n- **RESTful API**：提供标准的REST API接口\n- **SDK支持**：提供多种编程语言的SDK\n- **Webhook集成**：支持事件驱动的集成方式\n- **第三方集成**：与主流CRM、ERP系统无缝集成",
+          "chunks": [
+            {
+              "chunk_id": "prod_doc_001_chunk_001",
+              "content": "VoiceHelper是一个企业级智能语音助手平台，提供全面的语音交互解决方案。核心功能包括智能语音识别(ASR)、自然语音合成(TTS)、智能对话管理、知识库管理和多模态交互。",
+              "chunk_size": 256,
+              "keywords": ["VoiceHelper", "企业级", "语音助手", "ASR", "TTS", "对话管理", "知识库", "多模态"],
+              "semantic_tags": ["产品介绍", "核心功能", "平台概述"],
+              "relevance_score": 0.95
+            },
+            {
+              "chunk_id": "prod_doc_001_chunk_002", 
+              "content": "智能语音识别(ASR)功能：高精度识别在安静环境下达到95%以上的识别准确率，支持中文、英文、日文、韩文等20多种语言，支持流式语音识别延迟低于150毫秒，在噪音环境下仍能保持80%以上的识别准确率，支持普通话、粤语、四川话等主要方言。",
+              "chunk_size": 512,
+              "keywords": ["语音识别", "ASR", "准确率", "多语言", "实时处理", "噪音抑制", "方言"],
+              "semantic_tags": ["语音识别", "技术指标", "功能特性"],
+              "relevance_score": 0.92
+            },
+            {
+              "chunk_id": "prod_doc_001_chunk_003",
+              "content": "自然语音合成(TTS)功能：采用神经网络技术合成语音接近真人，支持高兴、悲伤、愤怒等多种情感语调，可根据企业需求定制专属语音，提供男声、女声、童声等多种音色，精确控制语速、音调、停顿等韵律特征。",
+              "chunk_size": 512,
+              "keywords": ["语音合成", "TTS", "神经网络", "情感语调", "个性化定制", "音色", "韵律控制"],
+              "semantic_tags": ["语音合成", "技术特性", "个性化"],
+              "relevance_score": 0.90
+            }
+          ],
+          "metadata": {
+            "author": "VoiceHelper产品团队",
+            "version": "2.1",
+            "last_updated": "2025-09-20",
+            "review_status": "approved",
+            "target_audience": ["新用户", "产品经理", "技术人员"]
+          }
+        },
+        {
+          "id": "prod_doc_002",
+          "title": "VoiceHelper API接口文档",
+          "category": "api_reference",
+          "language": "zh-CN",
+          "content": "# VoiceHelper API接口文档\n\n## 认证方式\n\nVoiceHelper API使用API Key进行认证。请在请求头中包含您的API Key：\n\n```\nAuthorization: Bearer YOUR_API_KEY\nContent-Type: application/json\n```\n\n## 语音识别API\n\n### 实时语音识别\n\n**接口地址**：`POST /api/v1/asr/stream`\n\n**请求参数**：\n- `audio_format`: 音频格式 (wav, mp3, webm)\n- `sample_rate`: 采样率 (8000, 16000, 44100)\n- `language`: 语言代码 (zh-CN, en-US, ja-JP)\n- `enable_punctuation`: 是否启用标点符号 (true/false)\n- `enable_emotion`: 是否启用情感识别 (true/false)\n\n**响应格式**：\n```json\n{\n  \"request_id\": \"req_123456\",\n  \"status\": \"success\",\n  \"result\": {\n    \"text\": \"识别出的文本内容\",\n    \"confidence\": 0.95,\n    \"emotion\": \"neutral\",\n    \"timestamp\": \"2025-09-23T10:30:00Z\",\n    \"words\": [\n      {\n        \"word\": \"识别\",\n        \"start_time\": 0.5,\n        \"end_time\": 1.0,\n        \"confidence\": 0.98\n      }\n    ]\n  }\n}\n```\n\n### 批量语音识别\n\n**接口地址**：`POST /api/v1/asr/batch`\n\n**请求参数**：\n- `audio_url`: 音频文件URL或base64编码\n- `callback_url`: 结果回调地址 (可选)\n- `language`: 语言代码\n- `speaker_diarization`: 是否启用说话人分离\n\n## 语音合成API\n\n### 文本转语音\n\n**接口地址**：`POST /api/v1/tts/synthesize`\n\n**请求参数**：\n- `text`: 要合成的文本内容\n- `voice_id`: 音色ID (zh-CN-XiaoxiaoNeural, en-US-JennyNeural)\n- `speed`: 语速 (0.5-2.0)\n- `pitch`: 音调 (-20到+20)\n- `emotion`: 情感 (neutral, happy, sad, angry)\n- `output_format`: 输出格式 (wav, mp3)\n\n**响应格式**：\n```json\n{\n  \"request_id\": \"req_789012\",\n  \"status\": \"success\",\n  \"result\": {\n    \"audio_url\": \"https://api.voicehelper.com/audio/output.wav\",\n    \"duration\": 5.2,\n    \"text_length\": 45,\n    \"voice_info\": {\n      \"voice_id\": \"zh-CN-XiaoxiaoNeural\",\n      \"gender\": \"female\",\n      \"age\": \"young_adult\"\n    }\n  }\n}\n```\n\n## 对话管理API\n\n### 创建对话会话\n\n**接口地址**：`POST /api/v1/chat/sessions`\n\n**请求参数**：\n- `user_id`: 用户ID\n- `session_config`: 会话配置\n  - `language`: 对话语言\n  - `personality`: 助手个性\n  - `knowledge_base_ids`: 关联知识库ID列表\n\n### 发送消息\n\n**接口地址**：`POST /api/v1/chat/sessions/{session_id}/messages`\n\n**请求参数**：\n- `message`: 消息内容\n- `message_type`: 消息类型 (text, audio, image)\n- `context`: 上下文信息 (可选)\n\n## 知识库管理API\n\n### 上传文档\n\n**接口地址**：`POST /api/v1/knowledge/documents`\n\n**请求参数**：\n- `file`: 文档文件\n- `title`: 文档标题\n- `category`: 文档分类\n- `tags`: 标签列表\n- `access_level`: 访问级别\n\n### 搜索知识\n\n**接口地址**：`GET /api/v1/knowledge/search`\n\n**查询参数**：\n- `query`: 搜索查询\n- `limit`: 返回结果数量\n- `knowledge_base_id`: 知识库ID\n- `semantic_search`: 是否启用语义搜索\n\n## 错误处理\n\n所有API都遵循统一的错误响应格式：\n\n```json\n{\n  \"error\": {\n    \"code\": \"INVALID_PARAMETER\",\n    \"message\": \"参数验证失败\",\n    \"details\": {\n      \"field\": \"language\",\n      \"reason\": \"不支持的语言代码\"\n    }\n  },\n  \"request_id\": \"req_error_123\"\n}\n```\n\n## 速率限制\n\n- 免费版：100请求/小时\n- 专业版：1000请求/小时\n- 企业版：10000请求/小时\n\n超出限制时返回HTTP 429状态码。",
+          "chunks": [
+            {
+              "chunk_id": "prod_doc_002_chunk_001",
+              "content": "VoiceHelper API使用API Key进行认证，请在请求头中包含Authorization: Bearer YOUR_API_KEY和Content-Type: application/json。提供语音识别、语音合成、对话管理、知识库管理等核心API接口。",
+              "chunk_size": 256,
+              "keywords": ["API", "认证", "API Key", "语音识别", "语音合成", "对话管理", "知识库"],
+              "semantic_tags": ["API文档", "认证方式", "接口概述"],
+              "relevance_score": 0.93
+            },
+            {
+              "chunk_id": "prod_doc_002_chunk_002",
+              "content": "实时语音识别API接口：POST /api/v1/asr/stream，支持wav、mp3、webm格式，可配置采样率、语言、标点符号、情感识别等参数。返回识别文本、置信度、情感、时间戳和词级别信息。",
+              "chunk_size": 512,
+              "keywords": ["实时语音识别", "ASR", "API接口", "音频格式", "置信度", "情感识别"],
+              "semantic_tags": ["语音识别API", "实时处理", "技术参数"],
+              "relevance_score": 0.91
+            }
+          ]
+        }
+      ]
+    },
+    "technical_documentation": {
+      "description": "技术实现和架构文档",
+      "document_count": 45,
+      "avg_chunk_count": 6,
+      "complexity": "high",
+      "documents": [
+        {
+          "id": "tech_doc_001",
+          "title": "VoiceHelper架构设计文档",
+          "category": "system_architecture",
+          "language": "zh-CN",
+          "content": "# VoiceHelper系统架构设计\n\n## 整体架构\n\nVoiceHelper采用微服务架构，主要包括以下核心服务：\n\n### 1. 网关服务 (Gateway Service)\n- **功能**：API网关、负载均衡、认证授权\n- **技术栈**：Go + Gin框架\n- **部署**：Kubernetes + Istio服务网格\n- **性能指标**：P95延迟 < 50ms，支持10000+ QPS\n\n### 2. 语音处理服务 (Voice Processing Service)\n- **ASR模块**：基于Transformer的语音识别\n- **TTS模块**：神经网络语音合成\n- **技术栈**：Python + FastAPI + PyTorch\n- **硬件要求**：GPU加速，NVIDIA V100或以上\n\n### 3. 对话管理服务 (Dialog Management Service)\n- **NLU模块**：意图识别和实体提取\n- **DM模块**：对话状态跟踪和策略管理\n- **NLG模块**：自然语言生成\n- **技术栈**：Python + Rasa + BERT\n\n### 4. 知识库服务 (Knowledge Base Service)\n- **文档处理**：PDF、Word、HTML解析\n- **向量化**：文本嵌入和语义索引\n- **检索引擎**：基于Elasticsearch和Milvus\n- **技术栈**：Python + FastAPI + Milvus\n\n### 5. 数据存储层\n- **关系数据库**：PostgreSQL (用户数据、会话记录)\n- **文档数据库**：MongoDB (非结构化数据)\n- **向量数据库**：Milvus (语义向量)\n- **缓存层**：Redis (会话状态、热点数据)\n- **对象存储**：MinIO (音频文件、文档)\n\n## 数据流架构\n\n### 语音交互流程\n1. **音频输入** → 网关服务 → 语音处理服务\n2. **ASR处理** → 文本输出 → 对话管理服务\n3. **意图理解** → 知识库查询 → 响应生成\n4. **TTS合成** → 音频输出 → 用户端\n\n### 实时流处理\n- **消息队列**：Apache Kafka\n- **流处理**：Apache Flink\n- **监控告警**：Prometheus + Grafana\n\n## 安全架构\n\n### 认证授权\n- **JWT Token**：无状态认证\n- **OAuth 2.0**：第三方集成\n- **RBAC**：基于角色的访问控制\n\n### 数据安全\n- **传输加密**：TLS 1.3\n- **存储加密**：AES-256\n- **密钥管理**：HashiCorp Vault\n\n### 隐私保护\n- **数据脱敏**：敏感信息自动脱敏\n- **访问日志**：完整的审计追踪\n- **合规性**：GDPR、CCPA合规\n\n## 性能优化\n\n### 缓存策略\n- **多级缓存**：浏览器缓存 → CDN → Redis → 应用缓存\n- **缓存预热**：热点数据预加载\n- **缓存更新**：基于事件的缓存失效\n\n### 数据库优化\n- **读写分离**：主从复制\n- **分库分表**：按用户ID水平分片\n- **索引优化**：复合索引和部分索引\n\n### 模型优化\n- **模型压缩**：知识蒸馏和量化\n- **批处理**：动态批处理优化\n- **模型缓存**：预加载常用模型\n\n## 可观测性\n\n### 监控指标\n- **业务指标**：识别准确率、响应时间、用户满意度\n- **技术指标**：CPU、内存、网络、磁盘使用率\n- **自定义指标**：API调用量、错误率、延迟分布\n\n### 日志管理\n- **结构化日志**：JSON格式统一日志\n- **日志聚合**：ELK Stack (Elasticsearch + Logstash + Kibana)\n- **日志分级**：DEBUG、INFO、WARN、ERROR、FATAL\n\n### 链路追踪\n- **分布式追踪**：Jaeger\n- **调用链分析**：跨服务请求追踪\n- **性能分析**：热点方法和慢查询识别\n\n## 部署架构\n\n### 容器化\n- **容器运行时**：Docker\n- **编排平台**：Kubernetes\n- **服务网格**：Istio\n\n### CI/CD流水线\n- **代码管理**：GitLab\n- **构建工具**：GitLab CI/CD\n- **镜像仓库**：Harbor\n- **部署策略**：蓝绿部署、金丝雀发布\n\n### 环境管理\n- **开发环境**：本地Docker Compose\n- **测试环境**：Kubernetes集群\n- **预生产环境**：生产环境镜像\n- **生产环境**：多可用区高可用部署",
+          "chunks": [
+            {
+              "chunk_id": "tech_doc_001_chunk_001",
+              "content": "VoiceHelper采用微服务架构，包括网关服务(Go+Gin)、语音处理服务(Python+FastAPI+PyTorch)、对话管理服务(Python+Rasa+BERT)、知识库服务(Python+FastAPI+Milvus)等核心服务。",
+              "chunk_size": 256,
+              "keywords": ["微服务架构", "网关服务", "语音处理", "对话管理", "知识库服务", "技术栈"],
+              "semantic_tags": ["系统架构", "微服务", "技术选型"],
+              "relevance_score": 0.94
+            },
+            {
+              "chunk_id": "tech_doc_001_chunk_002",
+              "content": "数据存储层包括PostgreSQL关系数据库存储用户数据和会话记录，MongoDB文档数据库存储非结构化数据，Milvus向量数据库存储语义向量，Redis缓存层存储会话状态和热点数据，MinIO对象存储存储音频文件和文档。",
+              "chunk_size": 512,
+              "keywords": ["数据存储", "PostgreSQL", "MongoDB", "Milvus", "Redis", "MinIO"],
+              "semantic_tags": ["数据存储", "数据库选型", "存储架构"],
+              "relevance_score": 0.92
+            }
+          ]
+        }
+      ]
+    },
+    "troubleshooting_guides": {
+      "description": "故障排除和问题解决指南",
+      "document_count": 40,
+      "avg_chunk_count": 5,
+      "complexity": "medium",
+      "documents": [
+        {
+          "id": "trouble_001",
+          "title": "语音识别常见问题排查指南",
+          "category": "asr_troubleshooting",
+          "language": "zh-CN",
+          "content": "# 语音识别常见问题排查指南\n\n## 问题分类\n\n### 1. 识别准确率低\n\n**症状**：语音转文字错误率高，识别结果与实际语音内容差异较大\n\n**可能原因**：\n- 音频质量问题（噪音、回声、音量过低）\n- 语言模型不匹配（方言、专业术语）\n- 网络延迟或不稳定\n- 麦克风设备问题\n\n**排查步骤**：\n1. **检查音频质量**\n   - 使用音频分析工具检查信噪比\n   - 确认采样率是否符合要求（推荐16kHz）\n   - 检查音频格式是否支持\n\n2. **验证语言设置**\n   - 确认语言代码设置正确\n   - 检查是否需要启用方言支持\n   - 验证专业术语词典配置\n\n3. **网络诊断**\n   - 测试网络延迟和带宽\n   - 检查API调用是否超时\n   - 验证服务器响应时间\n\n4. **设备测试**\n   - 更换麦克风设备测试\n   - 检查音频驱动程序\n   - 验证系统音频设置\n\n**解决方案**：\n- 优化录音环境，减少背景噪音\n- 调整麦克风位置和音量\n- 启用噪音抑制功能\n- 添加自定义词典\n- 升级到更高质量的音频设备\n\n### 2. 响应延迟过高\n\n**症状**：从语音输入到文字输出的延迟超过预期\n\n**可能原因**：\n- 服务器负载过高\n- 网络带宽不足\n- 音频文件过大\n- 并发请求过多\n\n**排查步骤**：\n1. **性能监控**\n   - 检查服务器CPU和内存使用率\n   - 监控API响应时间\n   - 分析请求队列长度\n\n2. **网络分析**\n   - 测试上传带宽\n   - 检查网络丢包率\n   - 验证CDN配置\n\n3. **音频优化**\n   - 检查音频文件大小\n   - 验证压缩设置\n   - 测试流式传输\n\n**解决方案**：\n- 启用流式识别模式\n- 优化音频压缩参数\n- 增加服务器资源\n- 使用负载均衡\n- 启用本地缓存\n\n### 3. 连接失败\n\n**症状**：无法连接到语音识别服务\n\n**可能原因**：\n- API密钥错误或过期\n- 网络连接问题\n- 服务器维护\n- 防火墙阻拦\n\n**排查步骤**：\n1. **认证验证**\n   - 检查API密钥格式\n   - 验证密钥有效期\n   - 确认权限设置\n\n2. **网络连通性**\n   - ping服务器地址\n   - 检查DNS解析\n   - 验证端口开放\n\n3. **服务状态**\n   - 查看服务状态页面\n   - 检查维护公告\n   - 联系技术支持\n\n**解决方案**：\n- 更新API密钥\n- 配置网络代理\n- 调整防火墙规则\n- 使用备用服务节点\n\n## 诊断工具\n\n### 1. 音频质量检测工具\n```bash\n# 使用ffmpeg分析音频\nffmpeg -i input.wav -af \"volumedetect\" -f null -\n\n# 检查音频属性\nffprobe -v quiet -print_format json -show_format -show_streams input.wav\n```\n\n### 2. API测试工具\n```bash\n# 使用curl测试API\ncurl -X POST \"https://api.voicehelper.com/v1/asr/stream\" \\\n  -H \"Authorization: Bearer YOUR_API_KEY\" \\\n  -H \"Content-Type: multipart/form-data\" \\\n  -F \"audio=@test.wav\" \\\n  -F \"language=zh-CN\"\n```\n\n### 3. 网络诊断\n```bash\n# 测试网络延迟\nping api.voicehelper.com\n\n# 测试端口连通性\ntelnet api.voicehelper.com 443\n\n# 测试带宽\nspeedtest-cli\n```\n\n## 性能优化建议\n\n### 1. 音频预处理\n- 使用16kHz采样率\n- 单声道录音\n- WAV或FLAC格式\n- 启用自动增益控制\n\n### 2. 网络优化\n- 使用CDN加速\n- 启用HTTP/2\n- 配置连接池\n- 实现断点续传\n\n### 3. 缓存策略\n- 缓存常用词汇\n- 预加载语言模型\n- 使用本地存储\n\n## 监控和告警\n\n### 关键指标\n- 识别准确率 > 95%\n- 响应延迟 < 200ms\n- 可用性 > 99.9%\n- 错误率 < 1%\n\n### 告警设置\n- 准确率低于阈值时告警\n- 延迟超过阈值时告警\n- 错误率异常时告警\n- 服务不可用时告警",
+          "chunks": [
+            {
+              "chunk_id": "trouble_001_chunk_001",
+              "content": "语音识别准确率低的常见原因包括音频质量问题(噪音、回声、音量过低)、语言模型不匹配(方言、专业术语)、网络延迟或不稳定、麦克风设备问题。需要检查音频质量、验证语言设置、网络诊断、设备测试。",
+              "chunk_size": 512,
+              "keywords": ["语音识别", "准确率低", "音频质量", "语言模型", "网络延迟", "设备问题"],
+              "semantic_tags": ["故障排查", "语音识别", "问题诊断"],
+              "relevance_score": 0.95
+            },
+            {
+              "chunk_id": "trouble_001_chunk_002",
+              "content": "响应延迟过高的原因包括服务器负载过高、网络带宽不足、音频文件过大、并发请求过多。解决方案包括启用流式识别模式、优化音频压缩参数、增加服务器资源、使用负载均衡、启用本地缓存。",
+              "chunk_size": 512,
+              "keywords": ["响应延迟", "服务器负载", "网络带宽", "流式识别", "负载均衡", "本地缓存"],
+              "semantic_tags": ["性能优化", "延迟问题", "解决方案"],
+              "relevance_score": 0.93
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "query_test_cases": {
+    "simple_queries": [
+      {
+        "id": "query_001",
+        "query": "VoiceHelper支持哪些语言？",
+        "query_type": "factual",
+        "language": "zh-CN",
+        "expected_documents": ["prod_doc_001"],
+        "expected_chunks": ["prod_doc_001_chunk_002"],
+        "relevance_threshold": 0.8,
+        "expected_answer_contains": ["中文", "英文", "日文", "韩文", "20多种语言"],
+        "difficulty": "easy"
+      },
+      {
+        "id": "query_002", 
+        "query": "如何使用语音识别API？",
+        "query_type": "procedural",
+        "language": "zh-CN",
+        "expected_documents": ["prod_doc_002"],
+        "expected_chunks": ["prod_doc_002_chunk_002"],
+        "relevance_threshold": 0.85,
+        "expected_answer_contains": ["POST /api/v1/asr/stream", "API Key", "音频格式"],
+        "difficulty": "medium"
+      },
+      {
+        "id": "query_003",
+        "query": "语音识别准确率低怎么办？",
+        "query_type": "troubleshooting",
+        "language": "zh-CN", 
+        "expected_documents": ["trouble_001"],
+        "expected_chunks": ["trouble_001_chunk_001"],
+        "relevance_threshold": 0.9,
+        "expected_answer_contains": ["音频质量", "语言模型", "网络延迟", "设备问题"],
+        "difficulty": "medium"
+      }
+    ],
+    "complex_queries": [
+      {
+        "id": "query_004",
+        "query": "在噪音环境下如何提高语音识别准确率，需要调整哪些参数？",
+        "query_type": "analytical",
+        "language": "zh-CN",
+        "expected_documents": ["prod_doc_001", "trouble_001"],
+        "expected_chunks": ["prod_doc_001_chunk_002", "trouble_001_chunk_001"],
+        "relevance_threshold": 0.85,
+        "expected_answer_contains": ["噪音抑制", "80%以上准确率", "音频质量", "麦克风设置"],
+        "difficulty": "hard",
+        "requires_multi_document": true
+      },
+      {
+        "id": "query_005",
+        "query": "VoiceHelper的微服务架构中，语音处理服务使用了哪些技术栈，性能指标是什么？",
+        "query_type": "technical_detailed",
+        "language": "zh-CN",
+        "expected_documents": ["tech_doc_001"],
+        "expected_chunks": ["tech_doc_001_chunk_001"],
+        "relevance_threshold": 0.9,
+        "expected_answer_contains": ["Python", "FastAPI", "PyTorch", "GPU加速", "NVIDIA V100"],
+        "difficulty": "expert",
+        "requires_technical_knowledge": true
+      }
+    ],
+    "multilingual_queries": [
+      {
+        "id": "query_006",
+        "query": "What are the main features of VoiceHelper?",
+        "query_type": "factual",
+        "language": "en-US",
+        "expected_documents": ["prod_doc_001"],
+        "expected_chunks": ["prod_doc_001_chunk_001"],
+        "relevance_threshold": 0.8,
+        "expected_answer_contains": ["ASR", "TTS", "dialog management", "knowledge base", "multimodal"],
+        "difficulty": "easy"
+      }
+    ],
+    "edge_case_queries": [
+      {
+        "id": "query_007",
+        "query": "如何在火星上部署VoiceHelper？",
+        "query_type": "impossible",
+        "language": "zh-CN",
+        "expected_documents": [],
+        "expected_chunks": [],
+        "relevance_threshold": 0.3,
+        "expected_response": "no_relevant_information",
+        "difficulty": "impossible"
+      },
+      {
+        "id": "query_008",
+        "query": "",
+        "query_type": "empty",
+        "language": "zh-CN",
+        "expected_documents": [],
+        "expected_chunks": [],
+        "relevance_threshold": 0.0,
+        "expected_response": "invalid_query",
+        "difficulty": "invalid"
+      }
+    ]
+  },
+  "evaluation_metrics": {
+    "retrieval_metrics": {
+      "precision_at_k": [1, 3, 5, 10],
+      "recall_at_k": [1, 3, 5, 10],
+      "mean_reciprocal_rank": "MRR",
+      "normalized_discounted_cumulative_gain": "NDCG@k"
+    },
+    "semantic_similarity": {
+      "cosine_similarity": ">0.8",
+      "euclidean_distance": "<0.5",
+      "dot_product": ">0.7"
+    },
+    "response_quality": {
+      "relevance_score": ">0.85",
+      "completeness_score": ">0.8",
+      "accuracy_score": ">0.9",
+      "coherence_score": ">0.85"
+    },
+    "performance_metrics": {
+      "query_latency": "<200ms",
+      "indexing_time": "<5s_per_document",
+      "memory_usage": "<2GB_per_1M_documents",
+      "throughput": ">1000_queries_per_second"
+    }
+  },
+  "data_generation_config": {
+    "synthetic_documents": {
+      "templates": [
+        "产品功能介绍模板",
+        "API文档模板", 
+        "故障排查模板",
+        "最佳实践模板"
+      ],
+      "generation_rules": {
+        "document_length": [500, 2000, 5000],
+        "chunk_overlap": 50,
+        "semantic_diversity": 0.7
+      }
+    },
+    "query_generation": {
+      "question_types": [
+        "what_is",
+        "how_to",
+        "why_does",
+        "when_should",
+        "where_can"
+      ],
+      "complexity_levels": [
+        "simple_factual",
+        "multi_step_procedural", 
+        "analytical_reasoning",
+        "expert_technical"
+      ]
+    }
+  },
+  "usage_instructions": {
+    "testing_workflow": "使用查询测试用例验证RAG系统的检索和生成质量",
+    "evaluation_process": "根据评估指标计算系统性能分数",
+    "continuous_improvement": "基于测试结果优化嵌入模型和检索策略",
+    "data_expansion": "使用生成配置创建更多测试数据"
+  }
+}

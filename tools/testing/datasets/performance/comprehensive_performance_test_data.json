@@ -1,0 +1,641 @@
+{
+  "metadata": {
+    "name": "综合性能测试数据集",
+    "version": "2.0.0",
+    "description": "包含负载测试、压力测试、并发测试、内存测试的综合性能数据",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_scenarios": 80,
+    "categories": [
+      "load_testing",
+      "stress_testing",
+      "concurrency_testing",
+      "memory_testing",
+      "latency_testing",
+      "throughput_testing",
+      "scalability_testing",
+      "endurance_testing"
+    ],
+    "test_tools": ["locust", "jmeter", "k6", "artillery", "wrk"],
+    "metrics": ["response_time", "throughput", "error_rate", "resource_usage"]
+  },
+  "load_testing_scenarios": {
+    "api_load_tests": [
+      {
+        "id": "load_api_001",
+        "name": "语音识别API负载测试",
+        "category": "load_testing",
+        "priority": "high",
+        "test_config": {
+          "endpoint": "/api/v1/asr/stream",
+          "method": "POST",
+          "concurrent_users": [10, 50, 100, 200, 500],
+          "ramp_up_time": "5min",
+          "test_duration": "10min",
+          "think_time": "1-3s"
+        },
+        "test_data": {
+          "audio_files": [
+            {
+              "file": "test_audio_5s.wav",
+              "duration": 5.0,
+              "size_mb": 0.8,
+              "language": "zh-CN"
+            },
+            {
+              "file": "test_audio_10s.wav", 
+              "duration": 10.0,
+              "size_mb": 1.6,
+              "language": "zh-CN"
+            },
+            {
+              "file": "test_audio_30s.wav",
+              "duration": 30.0,
+              "size_mb": 4.8,
+              "language": "zh-CN"
+            }
+          ],
+          "request_headers": {
+            "Authorization": "Bearer test_token",
+            "Content-Type": "multipart/form-data"
+          },
+          "request_params": {
+            "language": "zh-CN",
+            "enable_punctuation": true,
+            "enable_emotion": false
+          }
+        },
+        "performance_targets": {
+          "response_time": {
+            "p50": "<500ms",
+            "p95": "<2000ms",
+            "p99": "<5000ms"
+          },
+          "throughput": ">100_requests_per_second",
+          "error_rate": "<1%",
+          "cpu_usage": "<70%",
+          "memory_usage": "<4GB"
+        },
+        "expected_behavior": {
+          "linear_scaling": "up_to_200_users",
+          "degradation_point": "around_500_users",
+          "recovery_time": "<30s_after_load_reduction"
+        }
+      },
+      {
+        "id": "load_api_002",
+        "name": "语音合成API负载测试",
+        "category": "load_testing",
+        "priority": "high",
+        "test_config": {
+          "endpoint": "/api/v1/tts/synthesize",
+          "method": "POST",
+          "concurrent_users": [20, 100, 300, 500, 800],
+          "ramp_up_time": "3min",
+          "test_duration": "15min"
+        },
+        "test_data": {
+          "text_samples": [
+            {
+              "text": "欢迎使用VoiceHelper智能语音助手",
+              "length": 17,
+              "expected_duration": "3-4s"
+            },
+            {
+              "text": "VoiceHelper提供企业级的语音识别和合成解决方案，支持多种语言和方言，具有高精度和低延迟的特点。我们的技术基于最新的深度学习模型，能够理解复杂的语音指令并生成自然流畅的语音回复。",
+              "length": 89,
+              "expected_duration": "15-20s"
+            }
+          ],
+          "voice_configs": [
+            {
+              "voice_id": "zh-CN-XiaoxiaoNeural",
+              "speed": 1.0,
+              "pitch": 0.0,
+              "emotion": "neutral"
+            },
+            {
+              "voice_id": "zh-CN-YunxiNeural",
+              "speed": 1.2,
+              "pitch": 2.0,
+              "emotion": "happy"
+            }
+          ]
+        },
+        "performance_targets": {
+          "response_time": {
+            "p50": "<1000ms",
+            "p95": "<3000ms",
+            "p99": "<8000ms"
+          },
+          "throughput": ">50_requests_per_second",
+          "error_rate": "<2%",
+          "audio_quality": "no_degradation"
+        }
+      }
+    ],
+    "chat_load_tests": [
+      {
+        "id": "load_chat_001",
+        "name": "对话系统负载测试",
+        "category": "load_testing",
+        "priority": "high",
+        "test_config": {
+          "endpoint": "/api/v1/chat/sessions/{session_id}/messages",
+          "method": "POST",
+          "concurrent_sessions": [50, 200, 500, 1000],
+          "messages_per_session": 10,
+          "session_duration": "5min"
+        },
+        "test_data": {
+          "conversation_patterns": [
+            {
+              "pattern": "product_inquiry",
+              "messages": [
+                "你好，我想了解VoiceHelper的功能",
+                "支持哪些语言？",
+                "价格怎么样？",
+                "如何开始使用？"
+              ]
+            },
+            {
+              "pattern": "technical_support",
+              "messages": [
+                "我遇到了语音识别问题",
+                "识别准确率很低",
+                "如何提高准确率？",
+                "还有其他解决方案吗？"
+              ]
+            }
+          ]
+        },
+        "performance_targets": {
+          "response_time": {
+            "p50": "<800ms",
+            "p95": "<2500ms",
+            "p99": "<6000ms"
+          },
+          "concurrent_sessions": ">1000",
+          "session_success_rate": ">99%"
+        }
+      }
+    ]
+  },
+  "stress_testing_scenarios": {
+    "breaking_point_tests": [
+      {
+        "id": "stress_001",
+        "name": "系统极限压力测试",
+        "category": "stress_testing",
+        "priority": "critical",
+        "test_config": {
+          "load_pattern": "gradual_increase",
+          "starting_load": 100,
+          "max_load": 2000,
+          "increment_step": 100,
+          "step_duration": "2min",
+          "failure_threshold": "error_rate_>10%"
+        },
+        "test_scenarios": [
+          {
+            "name": "API网关压力测试",
+            "target": "gateway_service",
+            "endpoints": ["/api/v1/asr/stream", "/api/v1/tts/synthesize", "/api/v1/chat/messages"],
+            "expected_breaking_point": "1500-1800_concurrent_users"
+          },
+          {
+            "name": "数据库连接池压力测试",
+            "target": "database_layer",
+            "connection_pool_size": 100,
+            "expected_breaking_point": "800-1000_concurrent_connections"
+          }
+        ],
+        "recovery_testing": {
+          "load_reduction_strategy": "immediate_50%_reduction",
+          "expected_recovery_time": "<60s",
+          "service_availability_during_recovery": ">95%"
+        }
+      }
+    ],
+    "resource_exhaustion_tests": [
+      {
+        "id": "stress_resource_001",
+        "name": "内存耗尽测试",
+        "category": "stress_testing",
+        "priority": "high",
+        "test_config": {
+          "memory_consumption_pattern": "gradual_increase",
+          "large_payload_size": "10MB-100MB",
+          "concurrent_requests": 200,
+          "duration": "30min"
+        },
+        "expected_behavior": {
+          "memory_limit_enforcement": true,
+          "graceful_degradation": true,
+          "oom_killer_prevention": true,
+          "memory_leak_detection": "no_leaks_detected"
+        }
+      }
+    ]
+  },
+  "concurrency_testing_scenarios": {
+    "race_condition_tests": [
+      {
+        "id": "concurrency_001",
+        "name": "会话并发访问测试",
+        "category": "concurrency_testing",
+        "priority": "high",
+        "test_config": {
+          "concurrent_threads": 50,
+          "shared_resource": "user_session",
+          "operations": ["read", "write", "update", "delete"],
+          "test_iterations": 1000
+        },
+        "test_scenarios": [
+          {
+            "scenario": "同时读写用户会话",
+            "concurrent_operations": [
+              {"operation": "read_session", "threads": 20},
+              {"operation": "update_session", "threads": 10},
+              {"operation": "create_message", "threads": 15}
+            ],
+            "expected_result": {
+              "data_consistency": true,
+              "no_race_conditions": true,
+              "transaction_isolation": "maintained"
+            }
+          }
+        ]
+      },
+      {
+        "id": "concurrency_002",
+        "name": "API限流并发测试",
+        "category": "concurrency_testing",
+        "priority": "medium",
+        "test_config": {
+          "rate_limit": "100_requests_per_minute",
+          "concurrent_clients": 20,
+          "requests_per_client": 10,
+          "time_window": "1min"
+        },
+        "expected_behavior": {
+          "rate_limit_enforced": true,
+          "fair_distribution": true,
+          "no_client_starvation": true
+        }
+      }
+    ]
+  },
+  "memory_testing_scenarios": {
+    "memory_leak_tests": [
+      {
+        "id": "memory_001",
+        "name": "长时间运行内存泄漏测试",
+        "category": "memory_testing",
+        "priority": "high",
+        "test_config": {
+          "test_duration": "24hours",
+          "monitoring_interval": "5min",
+          "baseline_memory": "1GB",
+          "memory_growth_threshold": "10%_per_hour"
+        },
+        "test_operations": [
+          {
+            "operation": "continuous_asr_requests",
+            "frequency": "10_requests_per_minute",
+            "audio_size": "5MB_average"
+          },
+          {
+            "operation": "session_creation_deletion",
+            "frequency": "5_sessions_per_minute",
+            "session_lifetime": "10min_average"
+          }
+        ],
+        "monitoring_metrics": [
+          "heap_memory_usage",
+          "non_heap_memory_usage",
+          "garbage_collection_frequency",
+          "memory_fragmentation"
+        ],
+        "expected_result": {
+          "memory_growth": "<5%_over_24h",
+          "gc_efficiency": ">90%",
+          "no_memory_leaks": true
+        }
+      }
+    ],
+    "garbage_collection_tests": [
+      {
+        "id": "memory_gc_001",
+        "name": "垃圾回收性能测试",
+        "category": "memory_testing",
+        "priority": "medium",
+        "test_config": {
+          "heap_size": "4GB",
+          "allocation_rate": "high",
+          "gc_algorithm": "G1GC",
+          "test_duration": "2hours"
+        },
+        "performance_targets": {
+          "gc_pause_time": "<100ms",
+          "gc_frequency": "adaptive",
+          "memory_utilization": ">80%",
+          "application_throughput": ">95%"
+        }
+      }
+    ]
+  },
+  "latency_testing_scenarios": {
+    "network_latency_tests": [
+      {
+        "id": "latency_001",
+        "name": "网络延迟影响测试",
+        "category": "latency_testing",
+        "priority": "high",
+        "test_config": {
+          "simulated_latencies": ["10ms", "50ms", "100ms", "200ms", "500ms"],
+          "packet_loss_rates": ["0%", "1%", "3%", "5%"],
+          "bandwidth_limits": ["1Mbps", "10Mbps", "100Mbps", "unlimited"]
+        },
+        "test_scenarios": [
+          {
+            "scenario": "语音流式识别延迟测试",
+            "network_conditions": {
+              "latency": "100ms",
+              "packet_loss": "1%",
+              "bandwidth": "10Mbps"
+            },
+            "expected_performance": {
+              "end_to_end_latency": "<300ms",
+              "audio_quality": "no_degradation",
+              "recognition_accuracy": ">90%"
+            }
+          }
+        ]
+      }
+    ],
+    "processing_latency_tests": [
+      {
+        "id": "latency_processing_001",
+        "name": "处理延迟分析测试",
+        "category": "latency_testing",
+        "priority": "high",
+        "test_config": {
+          "request_types": ["asr", "tts", "chat", "knowledge_search"],
+          "payload_sizes": ["1KB", "10KB", "100KB", "1MB", "10MB"],
+          "concurrent_requests": [1, 10, 50, 100]
+        },
+        "latency_breakdown": {
+          "network_time": "target_<50ms",
+          "authentication_time": "target_<10ms",
+          "processing_time": "target_<200ms",
+          "database_query_time": "target_<100ms",
+          "response_serialization": "target_<20ms"
+        }
+      }
+    ]
+  },
+  "throughput_testing_scenarios": {
+    "maximum_throughput_tests": [
+      {
+        "id": "throughput_001",
+        "name": "最大吞吐量测试",
+        "category": "throughput_testing",
+        "priority": "high",
+        "test_config": {
+          "optimization_target": "maximum_rps",
+          "resource_constraints": {
+            "cpu_cores": 8,
+            "memory": "16GB",
+            "network": "1Gbps"
+          },
+          "test_duration": "30min"
+        },
+        "service_throughput_targets": {
+          "asr_service": ">200_requests_per_second",
+          "tts_service": ">100_requests_per_second",
+          "chat_service": ">500_requests_per_second",
+          "knowledge_search": ">1000_requests_per_second"
+        },
+        "bottleneck_analysis": {
+          "cpu_bound_operations": ["audio_processing", "model_inference"],
+          "io_bound_operations": ["database_queries", "file_uploads"],
+          "memory_bound_operations": ["large_model_loading", "cache_operations"]
+        }
+      }
+    ]
+  },
+  "scalability_testing_scenarios": {
+    "horizontal_scaling_tests": [
+      {
+        "id": "scale_horizontal_001",
+        "name": "水平扩展测试",
+        "category": "scalability_testing",
+        "priority": "high",
+        "test_config": {
+          "initial_instances": 2,
+          "max_instances": 10,
+          "scaling_trigger": "cpu_>70%_for_5min",
+          "scaling_cooldown": "10min"
+        },
+        "scaling_scenarios": [
+          {
+            "scenario": "流量突增扩展",
+            "load_pattern": "sudden_spike_10x",
+            "expected_scaling_time": "<5min",
+            "expected_performance_impact": "<20%_degradation"
+          },
+          {
+            "scenario": "渐进式扩展",
+            "load_pattern": "gradual_increase_2x_per_hour",
+            "expected_scaling_behavior": "proactive_scaling",
+            "resource_utilization": "60-80%_target"
+          }
+        ]
+      }
+    ],
+    "vertical_scaling_tests": [
+      {
+        "id": "scale_vertical_001",
+        "name": "垂直扩展测试",
+        "category": "scalability_testing",
+        "priority": "medium",
+        "test_config": {
+          "resource_configurations": [
+            {"cpu": "2_cores", "memory": "4GB"},
+            {"cpu": "4_cores", "memory": "8GB"},
+            {"cpu": "8_cores", "memory": "16GB"},
+            {"cpu": "16_cores", "memory": "32GB"}
+          ]
+        },
+        "performance_scaling": {
+          "expected_cpu_scaling": "linear_up_to_8_cores",
+          "expected_memory_scaling": "linear_up_to_16GB",
+          "diminishing_returns_point": "16_cores_32GB"
+        }
+      }
+    ]
+  },
+  "endurance_testing_scenarios": {
+    "long_running_tests": [
+      {
+        "id": "endurance_001",
+        "name": "7天持续运行测试",
+        "category": "endurance_testing",
+        "priority": "high",
+        "test_config": {
+          "test_duration": "7_days",
+          "load_profile": "realistic_daily_pattern",
+          "monitoring_frequency": "1min",
+          "health_check_interval": "30s"
+        },
+        "daily_load_pattern": {
+          "peak_hours": "09:00-12:00,14:00-18:00",
+          "peak_load": "80%_capacity",
+          "off_peak_load": "20%_capacity",
+          "maintenance_window": "02:00-04:00"
+        },
+        "stability_metrics": {
+          "uptime_target": ">99.9%",
+          "error_rate_target": "<0.1%",
+          "performance_degradation": "<5%_over_7_days",
+          "memory_stability": "no_leaks_detected"
+        }
+      }
+    ]
+  },
+  "performance_monitoring": {
+    "real_time_metrics": [
+      {
+        "metric": "response_time",
+        "collection_interval": "1s",
+        "aggregation": ["p50", "p95", "p99", "max"],
+        "alert_thresholds": {
+          "warning": "p95_>1000ms",
+          "critical": "p95_>3000ms"
+        }
+      },
+      {
+        "metric": "throughput",
+        "collection_interval": "10s",
+        "aggregation": ["avg", "max"],
+        "alert_thresholds": {
+          "warning": "avg_<50%_baseline",
+          "critical": "avg_<25%_baseline"
+        }
+      },
+      {
+        "metric": "error_rate",
+        "collection_interval": "30s",
+        "aggregation": ["rate", "count"],
+        "alert_thresholds": {
+          "warning": "rate_>1%",
+          "critical": "rate_>5%"
+        }
+      },
+      {
+        "metric": "resource_usage",
+        "collection_interval": "30s",
+        "components": ["cpu", "memory", "disk", "network"],
+        "alert_thresholds": {
+          "warning": "cpu_>80%_or_memory_>85%",
+          "critical": "cpu_>95%_or_memory_>95%"
+        }
+      }
+    ],
+    "performance_baselines": {
+      "asr_service": {
+        "response_time_p95": "500ms",
+        "throughput": "200_rps",
+        "cpu_usage": "60%",
+        "memory_usage": "2GB"
+      },
+      "tts_service": {
+        "response_time_p95": "1000ms",
+        "throughput": "100_rps",
+        "cpu_usage": "70%",
+        "memory_usage": "3GB"
+      },
+      "chat_service": {
+        "response_time_p95": "800ms",
+        "throughput": "500_rps",
+        "cpu_usage": "50%",
+        "memory_usage": "1GB"
+      }
+    }
+  },
+  "test_automation": {
+    "ci_cd_integration": {
+      "performance_gates": [
+        {
+          "stage": "pre_deployment",
+          "tests": ["load_test_smoke", "memory_leak_check"],
+          "pass_criteria": "all_tests_pass_and_performance_within_10%_baseline"
+        },
+        {
+          "stage": "post_deployment",
+          "tests": ["production_smoke_test", "capacity_verification"],
+          "pass_criteria": "production_metrics_within_sla"
+        }
+      ],
+      "automated_rollback": {
+        "trigger_conditions": [
+          "error_rate_>5%_for_5min",
+          "response_time_p95_>3000ms_for_3min",
+          "throughput_<50%_baseline_for_10min"
+        ],
+        "rollback_strategy": "immediate_previous_version"
+      }
+    },
+    "test_data_management": {
+      "synthetic_data_generation": {
+        "audio_files": "generate_various_durations_and_qualities",
+        "text_samples": "generate_various_lengths_and_complexities",
+        "user_sessions": "generate_realistic_conversation_patterns"
+      },
+      "data_cleanup": {
+        "test_artifacts": "auto_cleanup_after_24h",
+        "temporary_files": "cleanup_immediately_after_test",
+        "test_databases": "reset_to_baseline_state"
+      }
+    }
+  },
+  "reporting_and_analysis": {
+    "performance_reports": {
+      "real_time_dashboard": {
+        "metrics": ["response_time", "throughput", "error_rate", "resource_usage"],
+        "visualizations": ["time_series", "histograms", "heat_maps"],
+        "refresh_interval": "30s"
+      },
+      "test_summary_report": {
+        "sections": [
+          "executive_summary",
+          "test_results_overview",
+          "performance_trends",
+          "bottleneck_analysis",
+          "recommendations"
+        ],
+        "format": ["html", "pdf", "json"],
+        "distribution": ["dev_team", "ops_team", "management"]
+      }
+    },
+    "trend_analysis": {
+      "performance_regression_detection": {
+        "comparison_baseline": "previous_7_days_average",
+        "regression_threshold": "10%_degradation",
+        "alert_mechanism": "email_and_slack"
+      },
+      "capacity_planning": {
+        "growth_projection": "based_on_3_month_trend",
+        "scaling_recommendations": "proactive_capacity_planning",
+        "cost_optimization": "resource_utilization_analysis"
+      }
+    }
+  },
+  "usage_instructions": {
+    "test_execution": "使用这些性能测试数据验证系统在各种负载条件下的表现",
+    "performance_optimization": "根据测试结果识别性能瓶颈并进行优化",
+    "capacity_planning": "基于测试数据进行容量规划和资源配置",
+    "continuous_monitoring": "集成到监控系统进行持续性能跟踪"
+  }
+}

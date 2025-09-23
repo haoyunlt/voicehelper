@@ -1,0 +1,954 @@
+{
+  "metadata": {
+    "name": "综合对话测试数据集",
+    "version": "2.0.0",
+    "description": "包含多种对话场景、意图识别、情感分析、上下文理解的综合测试数据",
+    "created_at": "2025-09-23",
+    "updated_at": "2025-09-23",
+    "total_scenarios": 100,
+    "categories": [
+      "multi_turn_conversation",
+      "intent_recognition", 
+      "emotion_analysis",
+      "context_understanding",
+      "edge_cases",
+      "technical_support",
+      "business_inquiry",
+      "casual_chat",
+      "problem_solving",
+      "information_seeking"
+    ],
+    "languages": ["zh-CN", "en-US"],
+    "complexity_levels": ["simple", "medium", "complex", "expert"]
+  },
+  "conversation_templates": {
+    "greeting": {
+      "patterns": [
+        "你好",
+        "您好",
+        "Hi",
+        "Hello",
+        "早上好",
+        "下午好",
+        "晚上好"
+      ],
+      "expected_response_type": "greeting_response",
+      "context_setup": "conversation_start"
+    },
+    "product_inquiry": {
+      "patterns": [
+        "我想了解{product}",
+        "能介绍一下{product}吗",
+        "What can you tell me about {product}",
+        "{product}有什么功能",
+        "{product}怎么使用"
+      ],
+      "expected_response_type": "product_information",
+      "context_setup": "product_discussion"
+    },
+    "technical_support": {
+      "patterns": [
+        "我遇到了{problem}",
+        "系统出现{error}",
+        "I'm having trouble with {feature}",
+        "{feature}不工作了",
+        "如何解决{issue}"
+      ],
+      "expected_response_type": "technical_assistance",
+      "context_setup": "support_session"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "conv_001",
+      "category": "multi_turn_conversation",
+      "title": "VoiceHelper功能咨询",
+      "description": "用户询问VoiceHelper的核心功能和使用方法",
+      "complexity": "medium",
+      "language": "zh-CN",
+      "conversation": [
+        {
+          "turn": 1,
+          "speaker": "user",
+          "message": "你好，我想了解一下VoiceHelper的主要功能",
+          "intent": "product_inquiry",
+          "emotion": "neutral",
+          "confidence": 0.95,
+          "entities": [
+            {
+              "type": "product",
+              "value": "VoiceHelper",
+              "start": 9,
+              "end": 20
+            }
+          ],
+          "context": {
+            "conversation_stage": "opening",
+            "user_type": "new_user",
+            "session_id": "test_session_001"
+          }
+        },
+        {
+          "turn": 2,
+          "speaker": "assistant",
+          "message": "您好！VoiceHelper是一个智能语音助手平台，主要提供以下功能：\n1. 智能对话 - 支持自然语言交互\n2. 语音识别 - 将语音转换为文字\n3. 语音合成 - 将文字转换为自然语音\n4. 文档管理 - 智能文档处理和检索\n5. 多模态交互 - 支持文本、语音、图像等多种输入方式\n\n您对哪个功能比较感兴趣呢？",
+          "intent": "provide_information",
+          "emotion": "helpful",
+          "confidence": 0.98,
+          "entities": [
+            {
+              "type": "feature_list",
+              "value": ["智能对话", "语音识别", "语音合成", "文档管理", "多模态交互"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "information_providing",
+            "topics_mentioned": ["features", "capabilities"],
+            "follow_up_expected": true
+          }
+        },
+        {
+          "turn": 3,
+          "speaker": "user",
+          "message": "语音识别的准确率怎么样？支持哪些语言？",
+          "intent": "feature_inquiry",
+          "emotion": "curious",
+          "confidence": 0.92,
+          "entities": [
+            {
+              "type": "feature",
+              "value": "语音识别",
+              "start": 0,
+              "end": 4
+            },
+            {
+              "type": "attribute",
+              "value": "准确率",
+              "start": 5,
+              "end": 8
+            },
+            {
+              "type": "attribute",
+              "value": "语言支持",
+              "start": 14,
+              "end": 18
+            }
+          ],
+          "context": {
+            "conversation_stage": "detail_inquiry",
+            "focus_feature": "speech_recognition",
+            "inquiry_type": "technical_specs"
+          }
+        },
+        {
+          "turn": 4,
+          "speaker": "assistant",
+          "message": "关于语音识别功能：\n\n**准确率**：\n- 标准普通话：95%以上\n- 英语：93%以上\n- 噪音环境下：85%以上\n\n**语言支持**：\n- 中文（普通话、粤语、四川话等方言）\n- 英语（美式、英式）\n- 日语、韩语、法语、德语等20+种语言\n\n**特色功能**：\n- 实时语音转文字\n- 支持专业术语识别\n- 情感语调识别\n- 多人对话分离\n\n您主要需要处理哪种语言的语音呢？",
+          "intent": "provide_detailed_info",
+          "emotion": "professional",
+          "confidence": 0.97,
+          "entities": [
+            {
+              "type": "accuracy_data",
+              "value": {"standard": "95%", "english": "93%", "noisy": "85%"},
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "language_list",
+              "value": ["中文", "英语", "日语", "韩语", "法语", "德语"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "detailed_explanation",
+            "information_depth": "technical",
+            "follow_up_question": "language_preference"
+          }
+        }
+      ],
+      "expected_outcomes": {
+        "user_satisfaction": "high",
+        "information_completeness": "comprehensive",
+        "next_likely_action": "feature_demo_request"
+      },
+      "test_assertions": [
+        {
+          "type": "intent_recognition",
+          "expected": ["product_inquiry", "feature_inquiry"],
+          "tolerance": 0.1
+        },
+        {
+          "type": "entity_extraction",
+          "expected_entities": ["product", "feature", "attribute"],
+          "min_accuracy": 0.85
+        },
+        {
+          "type": "context_maintenance",
+          "expected": "conversation_context_preserved",
+          "validation": "topic_consistency"
+        }
+      ]
+    },
+    {
+      "id": "conv_002",
+      "category": "technical_support",
+      "title": "语音识别问题排查",
+      "description": "用户反馈语音识别不准确，需要技术支持",
+      "complexity": "complex",
+      "language": "zh-CN",
+      "conversation": [
+        {
+          "turn": 1,
+          "speaker": "user",
+          "message": "我在使用语音识别功能时发现准确率很低，经常识别错误，这是什么原因？",
+          "intent": "problem_report",
+          "emotion": "frustrated",
+          "confidence": 0.88,
+          "entities": [
+            {
+              "type": "feature",
+              "value": "语音识别",
+              "start": 5,
+              "end": 9
+            },
+            {
+              "type": "problem",
+              "value": "准确率低",
+              "start": 15,
+              "end": 19
+            },
+            {
+              "type": "symptom",
+              "value": "识别错误",
+              "start": 23,
+              "end": 27
+            }
+          ],
+          "context": {
+            "conversation_stage": "problem_reporting",
+            "user_type": "existing_user",
+            "issue_severity": "medium",
+            "session_id": "support_session_002"
+          }
+        },
+        {
+          "turn": 2,
+          "speaker": "assistant",
+          "message": "我理解您遇到的语音识别准确率问题，这确实会影响使用体验。让我帮您排查一下可能的原因：\n\n**常见影响因素**：\n1. 音频质量 - 麦克风质量、环境噪音\n2. 语音特征 - 语速、音量、口音\n3. 网络状况 - 延迟可能影响实时识别\n4. 系统设置 - 语言模型、敏感度设置\n\n为了更好地帮助您，请问：\n- 您使用的是什么设备和麦克风？\n- 主要在什么环境下使用？\n- 识别错误主要出现在哪些词汇上？",
+          "intent": "troubleshooting_guidance",
+          "emotion": "helpful",
+          "confidence": 0.95,
+          "entities": [
+            {
+              "type": "troubleshooting_factors",
+              "value": ["音频质量", "语音特征", "网络状况", "系统设置"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "diagnostic_questions",
+              "value": ["设备信息", "使用环境", "错误类型"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "problem_diagnosis",
+            "support_approach": "systematic_troubleshooting",
+            "information_gathering": true
+          }
+        },
+        {
+          "turn": 3,
+          "speaker": "user",
+          "message": "我用的是MacBook内置麦克风，主要在办公室使用，周围比较安静。错误主要出现在一些专业术语上，比如'机器学习'经常被识别成'机器血型'",
+          "intent": "provide_diagnostic_info",
+          "emotion": "cooperative",
+          "confidence": 0.91,
+          "entities": [
+            {
+              "type": "device",
+              "value": "MacBook内置麦克风",
+              "start": 4,
+              "end": 14
+            },
+            {
+              "type": "environment",
+              "value": "办公室",
+              "start": 18,
+              "end": 21
+            },
+            {
+              "type": "error_example",
+              "value": {"correct": "机器学习", "incorrect": "机器血型"},
+              "start": 45,
+              "end": 65
+            }
+          ],
+          "context": {
+            "conversation_stage": "information_provided",
+            "problem_category": "terminology_recognition",
+            "device_type": "built_in_microphone"
+          }
+        },
+        {
+          "turn": 4,
+          "speaker": "assistant",
+          "message": "根据您提供的信息，问题主要出现在专业术语识别上。这是一个常见问题，我来为您提供解决方案：\n\n**立即可以尝试的方法**：\n1. **启用专业词汇模式** - 在设置中开启\"技术术语识别\"\n2. **添加自定义词典** - 将常用专业术语添加到个人词典\n3. **调整识别敏感度** - 适当降低识别速度，提高准确性\n\n**具体操作步骤**：\n1. 打开VoiceHelper设置\n2. 进入\"语音识别\"选项\n3. 开启\"专业术语模式\"\n4. 在\"自定义词典\"中添加：机器学习、深度学习、神经网络等\n\n**预期效果**：专业术语识别准确率可提升到90%以上\n\n您现在方便尝试这些设置吗？",
+          "intent": "provide_solution",
+          "emotion": "confident",
+          "confidence": 0.96,
+          "entities": [
+            {
+              "type": "solution_steps",
+              "value": ["启用专业词汇模式", "添加自定义词典", "调整识别敏感度"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "expected_improvement",
+              "value": "90%以上",
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "solution_providing",
+            "solution_type": "configuration_change",
+            "implementation_guidance": true
+          }
+        }
+      ],
+      "expected_outcomes": {
+        "problem_resolution": "high_probability",
+        "user_satisfaction": "high",
+        "follow_up_needed": "verification"
+      },
+      "test_assertions": [
+        {
+          "type": "problem_identification",
+          "expected": "terminology_recognition_issue",
+          "confidence_threshold": 0.8
+        },
+        {
+          "type": "solution_relevance",
+          "expected": "configuration_based_solution",
+          "appropriateness": "high"
+        },
+        {
+          "type": "user_guidance_quality",
+          "expected": "step_by_step_instructions",
+          "completeness": "comprehensive"
+        }
+      ]
+    },
+    {
+      "id": "conv_003",
+      "category": "emotion_analysis",
+      "title": "用户投诉处理",
+      "description": "处理用户对服务不满的投诉，需要情感识别和安抚",
+      "complexity": "complex",
+      "language": "zh-CN",
+      "conversation": [
+        {
+          "turn": 1,
+          "speaker": "user",
+          "message": "我真的很生气！你们的语音助手根本不好用，浪费了我很多时间！我要求退款！",
+          "intent": "complaint",
+          "emotion": "angry",
+          "confidence": 0.94,
+          "emotion_intensity": 0.85,
+          "entities": [
+            {
+              "type": "product",
+              "value": "语音助手",
+              "start": 9,
+              "end": 13
+            },
+            {
+              "type": "complaint_reason",
+              "value": "不好用",
+              "start": 16,
+              "end": 19
+            },
+            {
+              "type": "demand",
+              "value": "退款",
+              "start": 32,
+              "end": 34
+            }
+          ],
+          "context": {
+            "conversation_stage": "complaint_expression",
+            "user_emotional_state": "highly_frustrated",
+            "urgency_level": "high",
+            "session_id": "complaint_session_003"
+          }
+        },
+        {
+          "turn": 2,
+          "speaker": "assistant",
+          "message": "我非常理解您的不满和沮丧，为给您带来的不便深表歉意。您的时间很宝贵，我们没有达到您的期望确实是我们的责任。\n\n让我立即为您处理这个问题：\n1. 首先，我会详细记录您遇到的具体问题\n2. 安排技术专家为您提供一对一支持\n3. 关于退款，我有权限为您立即处理\n\n请您告诉我具体遇到了什么问题，这样我们既能解决您的问题，也能避免其他用户遇到同样困扰。",
+          "intent": "empathy_and_solution",
+          "emotion": "empathetic",
+          "confidence": 0.97,
+          "emotion_intensity": 0.75,
+          "entities": [
+            {
+              "type": "empathy_expressions",
+              "value": ["理解", "歉意", "责任"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "action_plan",
+              "value": ["记录问题", "技术支持", "处理退款"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "empathy_and_de_escalation",
+            "response_strategy": "acknowledge_validate_solve",
+            "authority_level": "can_process_refund"
+          }
+        },
+        {
+          "turn": 3,
+          "speaker": "user",
+          "message": "好吧...主要是语音识别经常出错，而且响应很慢，我说话它要等好几秒才反应",
+          "intent": "problem_specification",
+          "emotion": "calmer_frustrated",
+          "confidence": 0.89,
+          "emotion_intensity": 0.45,
+          "entities": [
+            {
+              "type": "specific_problems",
+              "value": ["识别出错", "响应慢"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "symptom_detail",
+              "value": "等好几秒才反应",
+              "start": 25,
+              "end": 33
+            }
+          ],
+          "context": {
+            "conversation_stage": "problem_clarification",
+            "emotional_state": "de_escalated",
+            "cooperation_level": "increased"
+          }
+        },
+        {
+          "turn": 4,
+          "speaker": "assistant",
+          "message": "谢谢您愿意详细说明问题，这对我们改进产品很重要。您提到的问题确实会严重影响使用体验。\n\n**关于您遇到的问题**：\n- 语音识别错误：可能是模型配置或网络问题\n- 响应延迟：通常与服务器负载或网络连接有关\n\n**我现在为您做以下处理**：\n1. ✅ 已为您的账户标记优先技术支持\n2. ✅ 安排我们的高级工程师明天联系您\n3. ✅ 退款已经启动，3-5个工作日到账\n4. 🎁 额外赠送3个月高级版试用（如果您愿意再给我们一次机会）\n\n我们真的希望能为您提供更好的服务。您觉得这样的处理方案可以吗？",
+          "intent": "comprehensive_resolution",
+          "emotion": "sincere",
+          "confidence": 0.95,
+          "emotion_intensity": 0.65,
+          "entities": [
+            {
+              "type": "problem_acknowledgment",
+              "value": ["识别错误", "响应延迟"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "resolution_actions",
+              "value": ["优先支持", "工程师联系", "退款处理", "免费试用"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "comprehensive_resolution",
+            "resolution_completeness": "full_package",
+            "relationship_repair_attempt": true
+          }
+        }
+      ],
+      "expected_outcomes": {
+        "emotional_de_escalation": "successful",
+        "problem_resolution": "comprehensive",
+        "customer_retention_potential": "medium_to_high"
+      },
+      "test_assertions": [
+        {
+          "type": "emotion_recognition",
+          "expected_progression": ["angry", "calmer_frustrated", "neutral"],
+          "accuracy_threshold": 0.85
+        },
+        {
+          "type": "empathy_response",
+          "expected": "appropriate_empathy_level",
+          "validation": "emotional_intelligence"
+        },
+        {
+          "type": "resolution_completeness",
+          "expected": "addresses_all_concerns",
+          "satisfaction_prediction": "high"
+        }
+      ]
+    },
+    {
+      "id": "conv_004",
+      "category": "context_understanding",
+      "title": "多轮上下文保持",
+      "description": "测试系统在长对话中保持上下文的能力",
+      "complexity": "complex",
+      "language": "zh-CN",
+      "conversation": [
+        {
+          "turn": 1,
+          "speaker": "user",
+          "message": "我想为我们公司部署一个语音助手系统",
+          "intent": "business_inquiry",
+          "emotion": "professional",
+          "confidence": 0.92,
+          "entities": [
+            {
+              "type": "deployment_target",
+              "value": "公司",
+              "start": 5,
+              "end": 7
+            },
+            {
+              "type": "product_type",
+              "value": "语音助手系统",
+              "start": 11,
+              "end": 17
+            }
+          ],
+          "context": {
+            "conversation_stage": "business_inquiry_start",
+            "user_role": "decision_maker",
+            "inquiry_type": "enterprise_deployment"
+          }
+        },
+        {
+          "turn": 2,
+          "speaker": "assistant",
+          "message": "很高兴为您的企业部署需求提供支持！为了给您推荐最合适的解决方案，我需要了解一些基本信息：\n\n1. 您的公司规模大概是多少人？\n2. 主要希望语音助手处理哪些业务场景？\n3. 对数据安全和隐私有什么特殊要求吗？\n4. 预期的部署时间是什么时候？\n\n这些信息将帮助我为您定制最适合的企业级解决方案。",
+          "intent": "information_gathering",
+          "emotion": "professional",
+          "confidence": 0.96,
+          "entities": [
+            {
+              "type": "inquiry_dimensions",
+              "value": ["公司规模", "业务场景", "安全要求", "部署时间"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "requirements_gathering",
+            "information_needed": ["scale", "use_cases", "security", "timeline"],
+            "solution_type": "enterprise"
+          }
+        },
+        {
+          "turn": 3,
+          "speaker": "user",
+          "message": "我们公司大概500人，主要想用在客服和内部会议记录上",
+          "intent": "provide_requirements",
+          "emotion": "cooperative",
+          "confidence": 0.94,
+          "entities": [
+            {
+              "type": "company_size",
+              "value": "500人",
+              "start": 6,
+              "end": 10
+            },
+            {
+              "type": "use_cases",
+              "value": ["客服", "会议记录"],
+              "start": 16,
+              "end": 26
+            }
+          ],
+          "context": {
+            "conversation_stage": "partial_requirements_provided",
+            "provided_info": ["company_size", "use_cases"],
+            "missing_info": ["security_requirements", "timeline"]
+          }
+        },
+        {
+          "turn": 4,
+          "speaker": "assistant",
+          "message": "了解了，500人规模的企业，客服和会议记录是很典型的应用场景。\n\n**针对您的需求，我推荐企业版方案**：\n- **客服场景**：支持多渠道接入，实时语音转文字，智能意图识别\n- **会议记录**：多人语音分离，自动生成会议纪要，支持关键词提取\n\n**关于数据安全**：考虑到企业级应用，我们提供：\n- 私有化部署选项\n- 数据本地存储\n- 企业级加密\n\n您对数据安全有特殊要求吗？另外，希望什么时候开始部署？",
+          "intent": "solution_recommendation",
+          "emotion": "consultative",
+          "confidence": 0.95,
+          "entities": [
+            {
+              "type": "recommended_solution",
+              "value": "企业版方案",
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "feature_mapping",
+              "value": {
+                "客服": ["多渠道接入", "实时转文字", "意图识别"],
+                "会议记录": ["语音分离", "会议纪要", "关键词提取"]
+              },
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "solution_presentation",
+            "context_references": ["500人", "客服", "会议记录"],
+            "pending_questions": ["security_requirements", "timeline"]
+          }
+        },
+        {
+          "turn": 5,
+          "speaker": "user",
+          "message": "安全要求比较高，我们是金融公司。时间上希望下个月能开始试用",
+          "intent": "provide_additional_requirements",
+          "emotion": "serious",
+          "confidence": 0.91,
+          "entities": [
+            {
+              "type": "security_level",
+              "value": "比较高",
+              "start": 2,
+              "end": 5
+            },
+            {
+              "type": "industry",
+              "value": "金融公司",
+              "start": 9,
+              "end": 13
+            },
+            {
+              "type": "timeline",
+              "value": "下个月",
+              "start": 18,
+              "end": 21
+            },
+            {
+              "type": "deployment_phase",
+              "value": "试用",
+              "start": 25,
+              "end": 27
+            }
+          ],
+          "context": {
+            "conversation_stage": "complete_requirements_provided",
+            "industry_context": "financial_services",
+            "security_priority": "high",
+            "urgency": "medium"
+          }
+        },
+        {
+          "turn": 6,
+          "speaker": "assistant",
+          "message": "金融行业的安全要求我们完全理解，这确实需要最高级别的数据保护。\n\n**针对金融行业500人企业的专属方案**：\n\n🔒 **安全保障**：\n- 金融级加密标准（AES-256）\n- 私有云部署，数据不出企业内网\n- 通过ISO27001、SOC2等金融行业认证\n- 完整的审计日志和合规报告\n\n📅 **实施计划**：\n- 第1周：安全评估和环境准备\n- 第2-3周：系统部署和配置\n- 第4周：客服和会议场景试用\n\n💰 **投资预算**：\n- 基础部署：15万元\n- 年度服务费：8万元\n- 包含500个并发用户授权\n\n这个方案能满足您的金融级安全要求和下月试用的时间安排。您希望我安排技术专家进一步沟通具体细节吗？",
+          "intent": "comprehensive_proposal",
+          "emotion": "professional",
+          "confidence": 0.97,
+          "entities": [
+            {
+              "type": "industry_specific_solution",
+              "value": "金融行业专属方案",
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "security_features",
+              "value": ["AES-256加密", "私有云部署", "行业认证", "审计日志"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "implementation_timeline",
+              "value": ["第1周", "第2-3周", "第4周"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "pricing_structure",
+              "value": {"deployment": "15万元", "annual": "8万元", "users": "500并发"},
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "comprehensive_proposal",
+            "context_integration": {
+              "company_size": "500人",
+              "industry": "金融",
+              "use_cases": ["客服", "会议记录"],
+              "security": "高要求",
+              "timeline": "下个月试用"
+            },
+            "next_step": "technical_consultation"
+          }
+        }
+      ],
+      "expected_outcomes": {
+        "context_preservation": "excellent",
+        "solution_relevance": "highly_targeted",
+        "business_progression": "proposal_stage"
+      },
+      "test_assertions": [
+        {
+          "type": "context_continuity",
+          "expected": "all_previous_context_maintained",
+          "validation_points": ["company_size", "industry", "use_cases", "security", "timeline"]
+        },
+        {
+          "type": "solution_customization",
+          "expected": "industry_specific_tailoring",
+          "customization_level": "high"
+        },
+        {
+          "type": "information_integration",
+          "expected": "comprehensive_synthesis",
+          "completeness": "addresses_all_requirements"
+        }
+      ]
+    },
+    {
+      "id": "conv_005",
+      "category": "edge_cases",
+      "title": "混合语言和模糊意图",
+      "description": "处理中英文混合和意图不明确的对话",
+      "complexity": "expert",
+      "language": "mixed",
+      "conversation": [
+        {
+          "turn": 1,
+          "speaker": "user",
+          "message": "Hi，我想问一下你们的AI model支持fine-tuning吗？还有就是API的rate limit是多少？",
+          "intent": "technical_inquiry",
+          "emotion": "neutral",
+          "confidence": 0.78,
+          "language_mix": ["zh-CN", "en-US"],
+          "entities": [
+            {
+              "type": "technical_term",
+              "value": "AI model",
+              "language": "en-US",
+              "start": 11,
+              "end": 19
+            },
+            {
+              "type": "technical_term",
+              "value": "fine-tuning",
+              "language": "en-US",
+              "start": 22,
+              "end": 33
+            },
+            {
+              "type": "technical_term",
+              "value": "API",
+              "language": "en-US",
+              "start": 42,
+              "end": 45
+            },
+            {
+              "type": "technical_term",
+              "value": "rate limit",
+              "language": "en-US",
+              "start": 46,
+              "end": 56
+            }
+          ],
+          "context": {
+            "conversation_stage": "technical_inquiry",
+            "language_complexity": "code_switching",
+            "user_profile": "technical_user",
+            "domain": "ai_development"
+          }
+        },
+        {
+          "turn": 2,
+          "speaker": "assistant",
+          "message": "您好！关于您的技术问题：\n\n**AI模型微调 (Fine-tuning)**：\n✅ 支持基于您的数据进行模型微调\n- 支持的模型：GPT系列、BERT、语音识别模型\n- 数据要求：最少1000条标注数据\n- 训练时间：通常2-5天\n- 成本：根据数据量和模型复杂度定价\n\n**API Rate Limit**：\n- 免费版：100 requests/hour\n- 专业版：1000 requests/hour  \n- 企业版：10000 requests/hour\n- 可申请更高限额\n\n您主要想fine-tune哪种类型的模型？是for语音识别还是对话生成？",
+          "intent": "technical_response",
+          "emotion": "professional",
+          "confidence": 0.94,
+          "language_mix": ["zh-CN", "en-US"],
+          "entities": [
+            {
+              "type": "feature_confirmation",
+              "value": "支持fine-tuning",
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "technical_specs",
+              "value": {
+                "models": ["GPT系列", "BERT", "语音识别模型"],
+                "data_requirement": "1000条",
+                "training_time": "2-5天"
+              },
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "rate_limits",
+              "value": {
+                "free": "100/hour",
+                "pro": "1000/hour", 
+                "enterprise": "10000/hour"
+              },
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "technical_information_provided",
+            "language_adaptation": "matches_user_style",
+            "follow_up_question": "model_type_clarification"
+          }
+        },
+        {
+          "turn": 3,
+          "speaker": "user",
+          "message": "嗯...其实我也不太确定，可能是想improve我们的customer service chatbot，但是也想试试speech recognition的效果",
+          "intent": "uncertain_requirements",
+          "emotion": "uncertain",
+          "confidence": 0.65,
+          "language_mix": ["zh-CN", "en-US"],
+          "entities": [
+            {
+              "type": "uncertainty_indicator",
+              "value": ["不太确定", "可能", "也想试试"],
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "potential_use_case",
+              "value": "customer service chatbot",
+              "language": "en-US",
+              "start": 20,
+              "end": 43
+            },
+            {
+              "type": "potential_use_case",
+              "value": "speech recognition",
+              "language": "en-US",
+              "start": 50,
+              "end": 67
+            }
+          ],
+          "context": {
+            "conversation_stage": "requirement_clarification_needed",
+            "user_certainty_level": "low",
+            "multiple_interests": ["chatbot", "speech_recognition"]
+          }
+        },
+        {
+          "turn": 4,
+          "speaker": "assistant",
+          "message": "完全理解！很多企业在选择AI解决方案时都会有这样的考虑。让我帮您分析一下这两个方向：\n\n**Customer Service Chatbot优化**：\n- 🎯 ROI更直接：直接提升客服效率\n- 📊 数据需求：客服对话历史、FAQ数据\n- ⏱️ 见效时间：2-4周\n- 💡 建议：先从这个开始，因为数据更容易获得\n\n**Speech Recognition集成**：\n- 🚀 创新价值：提供语音客服能力\n- 📊 数据需求：语音通话录音+转录\n- ⏱️ 见效时间：4-8周\n- 💡 建议：可以作为第二阶段\n\n**我的推荐**：\n1. Phase 1: 先优化文本chatbot (1-2个月)\n2. Phase 2: 再集成语音功能 (2-3个月)\n\n这样既能快速看到效果，又能逐步构建完整的智能客服系统。您觉得这个roadmap怎么样？",
+          "intent": "consultative_guidance",
+          "emotion": "helpful",
+          "confidence": 0.92,
+          "language_mix": ["zh-CN", "en-US"],
+          "entities": [
+            {
+              "type": "solution_comparison",
+              "value": {
+                "chatbot": {"roi": "直接", "timeline": "2-4周", "priority": "高"},
+                "speech": {"value": "创新", "timeline": "4-8周", "priority": "中"}
+              },
+              "start": 0,
+              "end": -1
+            },
+            {
+              "type": "phased_approach",
+              "value": ["Phase 1: 文本chatbot", "Phase 2: 语音功能"],
+              "start": 0,
+              "end": -1
+            }
+          ],
+          "context": {
+            "conversation_stage": "strategic_consultation",
+            "approach": "uncertainty_resolution",
+            "recommendation_type": "phased_implementation"
+          }
+        }
+      ],
+      "expected_outcomes": {
+        "language_handling": "seamless_code_switching",
+        "uncertainty_management": "guided_clarification",
+        "strategic_value": "actionable_roadmap"
+      },
+      "test_assertions": [
+        {
+          "type": "mixed_language_processing",
+          "expected": "accurate_understanding",
+          "languages": ["zh-CN", "en-US"],
+          "technical_terms": "preserved"
+        },
+        {
+          "type": "uncertainty_handling",
+          "expected": "guided_decision_making",
+          "approach": "consultative"
+        },
+        {
+          "type": "strategic_thinking",
+          "expected": "phased_approach_recommendation",
+          "business_value": "demonstrated"
+        }
+      ]
+    }
+  ],
+  "evaluation_metrics": {
+    "intent_recognition": {
+      "accuracy_threshold": 0.85,
+      "confidence_threshold": 0.7,
+      "categories": [
+        "product_inquiry",
+        "technical_support", 
+        "complaint",
+        "business_inquiry",
+        "problem_report",
+        "feature_inquiry"
+      ]
+    },
+    "emotion_analysis": {
+      "accuracy_threshold": 0.8,
+      "intensity_accuracy": 0.75,
+      "emotions": [
+        "neutral",
+        "happy", 
+        "frustrated",
+        "angry",
+        "curious",
+        "professional",
+        "empathetic"
+      ]
+    },
+    "context_understanding": {
+      "context_preservation": 0.9,
+      "reference_resolution": 0.85,
+      "topic_consistency": 0.88
+    },
+    "response_quality": {
+      "relevance": 0.9,
+      "helpfulness": 0.85,
+      "completeness": 0.8,
+      "empathy": 0.75
+    }
+  },
+  "usage_instructions": {
+    "test_execution": "使用这些对话数据测试对话系统的理解和响应能力",
+    "evaluation": "根据expected_outcomes和test_assertions评估系统表现",
+    "iteration": "基于测试结果调整模型参数和训练数据",
+    "expansion": "可以基于这些模板生成更多测试用例"
+  }
+}
