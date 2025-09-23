@@ -6,7 +6,7 @@
 set -e
 
 # 配置
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REPORT_DIR="$PROJECT_ROOT/reports/quality/$(date +%Y-%m-%d)"
 LOG_FILE="$REPORT_DIR/quality_check.log"
 
