@@ -1,0 +1,16 @@
+# 模型缓存PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-cache-pvc
+  namespace: voicehelper
+  labels:
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: voicehelper-storage
+  resources:
+    requests:
+      storage: 50Gi

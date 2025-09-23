@@ -33,6 +33,7 @@ spec:
       containers:
       - name: gateway
         image: voicehelper/gateway:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
           name: http
@@ -58,8 +59,8 @@ spec:
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
-              name: jwt-secret
-              key: secret
+              name: voicehelper-secrets
+              key: JWT_SECRET
         - name: ADMIN_SECRET_KEY
           valueFrom:
             secretKeyRef:
@@ -67,69 +68,45 @@ spec:
               key: admin-secret
         # 数据库连接
         - name: POSTGRES_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: POSTGRES_HOST
+          value: "postgresql-service.voicehelper.svc.cluster.local"
         - name: POSTGRES_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: POSTGRES_PORT
+          value: "5432"
         - name: POSTGRES_DB
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: POSTGRES_DB
+          value: "voicehelper"
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
-              key: username
+              name: voicehelper-secrets
+              key: POSTGRES_USER
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: postgres-secret
-              key: password
+              name: voicehelper-secrets
+              key: POSTGRES_PASSWORD
         # Redis连接
         - name: REDIS_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: REDIS_HOST
+          value: "redis-service.voicehelper.svc.cluster.local"
         - name: REDIS_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: REDIS_PORT
+          value: "6379"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: redis-secret
-              key: password
+              name: voicehelper-secrets
+              key: REDIS_PASSWORD
         # 服务发现
         - name: ALGO_SERVICE_URL
           value: "http://algo-service.voicehelper.svc.cluster.local:8000"
         - name: VOICE_SERVICE_URL
           value: "http://voice-service.voicehelper.svc.cluster.local:8001"
         - name: BGE_SERVICE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: BGE_SERVICE_URL
+          value: "http://bge-service.voicehelper.svc.cluster.local:8080"
         - name: FAISS_SERVICE_URL
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: FAISS_SERVICE_URL
+          value: "http://faiss-service.voicehelper.svc.cluster.local:8081"
         # 监控配置
         - name: PROMETHEUS_ENABLED
           value: "true"
         - name: JAEGER_ENDPOINT
-          valueFrom:
-            configMapKeyRef:
-              name: voicehelper-config
-              key: JAEGER_ENDPOINT
+          value: "http://jaeger-collector.voicehelper-monitoring.svc.cluster.local:14268/api/traces"
         - name: OTEL_SERVICE_NAME
           value: "gateway"
         - name: OTEL_RESOURCE_ATTRIBUTES
@@ -190,8 +167,8 @@ spec:
       - name: config-dir
         configMap:
           name: gateway-config
-      nodeSelector:
-        kubernetes.io/arch: amd64
+      # nodeSelector:
+      #   kubernetes.io/arch: arm64
 ---
 # Gateway 服务
 apiVersion: v1

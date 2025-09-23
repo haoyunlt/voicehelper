@@ -73,6 +73,7 @@ spec:
       containers:
       - name: bge-service
         image: voicehelper/bge-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
           name: http
@@ -161,7 +162,7 @@ spec:
       - name: tmp-dir
         emptyDir: {}
       nodeSelector:
-        kubernetes.io/arch: amd64
+        kubernetes.io/arch: arm64
       tolerations:
       - key: "ai-workload"
         operator: "Equal"

@@ -53,6 +53,7 @@ spec:
       containers:
       - name: faiss-service
         image: voicehelper/faiss-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8081
           name: http
@@ -144,7 +145,7 @@ spec:
       - name: tmp-dir
         emptyDir: {}
       nodeSelector:
-        kubernetes.io/arch: amd64
+        kubernetes.io/arch: arm64
       tolerations:
       - key: "ai-workload"
         operator: "Equal"
@@ -232,6 +233,7 @@ spec:
       containers:
       - name: faiss-sync
         image: voicehelper/faiss-service:latest
+        imagePullPolicy: Never
         command:
         - /bin/bash
         - -c

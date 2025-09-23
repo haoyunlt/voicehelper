@@ -278,3 +278,32 @@ temp_*
 docs/SPRINT_COMPLETION_REPORT.md
 docs/RECOVERY_IMPLEMENTATION_REPORT.md
 docs/DOCKER_DEPLOYMENT_FIXES.md
+
+# ==================== 性能优化补充 ====================
+# 测试虚拟环境
+tools/testing/test_venv/**
+tools/testing/e2e/tests/venv/**
+
+# 大型测试文件
+tools/testing/performance/long_context_test.py
+tools/testing/FINAL_TEST_CONSOLIDATION_REPORT.md
+
+# 质量报告目录
+reports/**
+tools/reports/**
+
+# 更多Python缓存
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# 更多构建产物
+**/dist/**
+**/build/**
+**/out/**
+**/target/**
+
+# 大型配置和数据文件
+**/*.json.bak
+**/*.yaml.bak
+**/*.md.bak
