@@ -1,0 +1,240 @@
+# VoiceHelper Kubernetes ConfigMap 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: voicehelper-config
+  namespace: voicehelper
+data:
+  # 基础环境配置
+  ENV: "production"
+  NODE_ENV: "production"
+  
+  # 服务发现配置
+  POSTGRES_HOST: "postgres-service"
+  POSTGRES_PORT: "5432"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  NEO4J_URI: "bolt://neo4j-service:7687"
+  NATS_URL: "nats://nats-service:4222"
+  MILVUS_HOST: "milvus-service"
+  MILVUS_PORT: "19530"
+  
+  # 网关配置
+  GATEWAY_PORT: "8080"
+  GATEWAY_SERVICE_NAME: "voicehelper-gateway"
+  
+  # 算法服务配置
+  ALGO_PORT: "8000"
+  ALGO_SERVICE_NAME: "voicehelper-algo"
+  
+  # 语音服务配置
+  VOICE_PORT: "8001"
+  VOICE_SERVICE_NAME: "voicehelper-voice"
+  
+  # 前端配置
+  FRONTEND_PORT: "3000"
+  FRONTEND_SERVICE_NAME: "voicehelper-frontend"
+  NEXT_PUBLIC_API_URL: "http://gateway-service:8080"
+  NEXT_PUBLIC_WS_URL: "ws://gateway-service:8080"
+  NEXT_PUBLIC_VOICE_WS_URL: "ws://voice-service:8001"
+  
+  # 日志配置
+  LOG_LEVEL: "info"
+  
+  # 监控配置
+  PROMETHEUS_ENABLED: "true"
+  JAEGER_ENABLED: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dify-config
+  namespace: voicehelper-dify
+data:
+  # Dify 基础配置
+  MODE: "api"
+  LOG_LEVEL: "INFO"
+  INIT_PASSWORD: "password123"
+  
+  # Dify 服务URL配置
+  CONSOLE_WEB_URL: "http://dify-web-service:3000"
+  CONSOLE_API_URL: "http://dify-api-service:5001"
+  SERVICE_API_URL: "http://dify-api-service:5001"
+  APP_WEB_URL: "http://frontend-service:3000"
+  
+  # 数据库配置
+  DB_HOST: "dify-postgres-service"
+  DB_PORT: "5432"
+  DB_DATABASE: "dify"
+  DB_USERNAME: "dify"
+  
+  # Redis 配置
+  REDIS_HOST: "dify-redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_USE_SSL: "false"
+  
+  # 向量数据库配置
+  VECTOR_STORE: "weaviate"
+  WEAVIATE_ENDPOINT: "http://dify-weaviate-service:8080"
+  
+  # 存储配置
+  STORAGE_TYPE: "local"
+  STORAGE_LOCAL_PATH: "storage"
+  
+  # 代码执行配置
+  CODE_EXECUTION_ENDPOINT: "http://dify-sandbox-service:8194"
+  
+  # 安全配置
+  WEB_API_CORS_ALLOW_ORIGINS: "http://frontend-service:3000,http://dify-web-service:3000"
+  CONSOLE_CORS_ALLOW_ORIGINS: "http://dify-web-service:3000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: voicehelper
+data:
+  POSTGRES_DB: "voicehelper"
+  POSTGRES_USER: "voicehelper"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dify-postgres-config
+  namespace: voicehelper-dify
+data:
+  POSTGRES_DB: "dify"
+  POSTGRES_USER: "dify"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: voicehelper
+data:
+  redis.conf: |
+    # Redis 优化配置
+    maxmemory 1gb
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfsync everysec
+    tcp-keepalive 300
+    timeout 0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dify-redis-config
+  namespace: voicehelper-dify
+data:
+  redis.conf: |
+    # Dify Redis 配置
+    maxmemory 512mb
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfsync everysec
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: voicehelper
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+    
+    events {
+        worker_connections 1024;
+        use epoll;
+        multi_accept on;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+        
+        access_log /var/log/nginx/access.log main;
+        
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        
+        upstream frontend {
+            server frontend-service:3000;
+        }
+        
+        upstream gateway {
+            server gateway-service:8080;
+        }
+        
+        upstream dify-web {
+            server dify-web-service.voicehelper-dify.svc.cluster.local:3000;
+        }
+        
+        server {
+            listen 80;
+            server_name localhost;
+            
+            # VoiceHelper 前端
+            location / {
+                proxy_pass http://frontend;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            # VoiceHelper API
+            location /api/ {
+                proxy_pass http://gateway;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            # WebSocket 支持
+            location /ws/ {
+                proxy_pass http://gateway;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            # Dify 控制台
+            location /dify/ {
+                proxy_pass http://dify-web/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
+    }

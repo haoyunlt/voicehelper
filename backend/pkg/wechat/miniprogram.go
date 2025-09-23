@@ -71,18 +71,41 @@ func (c *MiniProgramClient) Code2Session(code string) (*SessionResponse, error) 
 
 	resp, err := c.client.Get(url)
 	if err != nil {
-		logrus.WithError(err).Error("微信Code2Session请求失败")
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"appid": c.config.AppID,
+			"code":  code[:8] + "...",
+		}).Error("微信Code2Session HTTP请求失败")
 		return nil, fmt.Errorf("微信API请求失败: %w", err)
 	}
 	defer resp.Body.Close()
 
+	// 检查HTTP状态码
+	if resp.StatusCode != http.StatusOK {
+		logrus.WithFields(logrus.Fields{
+			"status_code": resp.StatusCode,
+			"appid":       c.config.AppID,
+			"code":        code[:8] + "...",
+		}).Error("微信Code2Session HTTP状态码异常")
+		return nil, fmt.Errorf("微信API返回异常状态码: %d", resp.StatusCode)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+			"appid": c.config.AppID,
+		}).Error("读取微信API响应失败")
 		return nil, fmt.Errorf("读取响应失败: %w", err)
 	}
 
 	var sessionResp SessionResponse
 	if err := json.Unmarshal(body, &sessionResp); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":    err.Error(),
+			"appid":    c.config.AppID,
+			"response": string(body)[:200] + "...", // 只记录前200字符
+		}).Error("解析微信API响应失败")
 		return nil, fmt.Errorf("解析响应失败: %w", err)
 	}
 
@@ -108,22 +131,34 @@ func (c *MiniProgramClient) DecryptUserInfo(encryptedData, iv, sessionKey string
 	// Base64解码
 	cipherText, err := base64.StdEncoding.DecodeString(encryptedData)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("解码加密数据失败")
 		return nil, fmt.Errorf("解码加密数据失败: %w", err)
 	}
 
 	ivBytes, err := base64.StdEncoding.DecodeString(iv)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("解码IV失败")
 		return nil, fmt.Errorf("解码IV失败: %w", err)
 	}
 
 	sessionKeyBytes, err := base64.StdEncoding.DecodeString(sessionKey)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("解码SessionKey失败")
 		return nil, fmt.Errorf("解码SessionKey失败: %w", err)
 	}
 
 	// AES解密
 	block, err := aes.NewCipher(sessionKeyBytes)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("创建AES加密器失败")
 		return nil, fmt.Errorf("创建AES加密器失败: %w", err)
 	}
 
@@ -137,6 +172,10 @@ func (c *MiniProgramClient) DecryptUserInfo(encryptedData, iv, sessionKey string
 	// 解析用户信息
 	var userInfo UserInfo
 	if err := json.Unmarshal(plainText, &userInfo); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":     err.Error(),
+			"plaintext": string(plainText)[:100] + "...", // 只记录前100字符
+		}).Error("解析用户信息JSON失败")
 		return nil, fmt.Errorf("解析用户信息失败: %w", err)
 	}
 

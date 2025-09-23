@@ -98,6 +98,8 @@ VoiceHelper AI Docker Compose 部署工具
     core        - 仅启动核心服务 (数据库、网关、算法服务)
     monitoring  - 仅启动监控服务
     tools       - 仅启动开发工具
+    dify        - 启动Dify AI平台服务
+    dify-tools  - 启动Dify管理工具
 
 示例:
     # 启动开发环境
@@ -105,6 +107,9 @@ VoiceHelper AI Docker Compose 部署工具
 
     # 启动生产环境核心服务
     $0 -e prod -p core up
+
+    # 启动Dify AI平台
+    $0 -p dify up
 
     # 查看特定服务日志
     $0 -s gateway logs
@@ -191,11 +196,11 @@ validate_environment() {
     esac
 
     case $PROFILE in
-        all|core|monitoring|tools)
+        all|core|monitoring|tools|dify|dify-tools)
             ;;
         *)
             log_error "无效的配置: $PROFILE"
-            log_error "支持的配置: all, core, monitoring, tools"
+            log_error "支持的配置: all, core, monitoring, tools, dify, dify-tools"
             exit 1
             ;;
     esac
@@ -246,6 +251,13 @@ get_compose_files() {
             ;;
     esac
     
+    # 如果配置包含Dify，添加Dify compose文件
+    case $PROFILE in
+        dify|dify-tools|all)
+            files+=("-f" "docker-compose.dify.yml")
+            ;;
+    esac
+    
     echo "${files[@]}"
 }
 
@@ -269,6 +281,12 @@ get_profile_services() {
             ;;
         tools)
             echo "pgadmin redis-commander attu mailhog swagger-ui"
+            ;;
+        dify)
+            echo "dify-postgres dify-redis dify-weaviate dify-sandbox dify-api dify-worker dify-web dify-adapter"
+            ;;
+        dify-tools)
+            echo "dify-pgadmin dify-redis-commander"
             ;;
         all)
             echo ""  # 空字符串表示所有服务
@@ -576,7 +594,7 @@ cmd_check() {
     
     # 检查端口占用
     log_info "检查端口占用:"
-    local ports=(3000 8080 8000 8001 5001 5432 6379 19530)
+    local ports=(3000 8080 8000 8001 5001 5432 6379 19530 3001 5433 6380 8194 8200)
     local occupied_ports=()
     
     for port in "${ports[@]}"; do

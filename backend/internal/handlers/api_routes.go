@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ import (
 
 	"voicehelper/backend/common/logger"
 	"voicehelper/backend/internal/repository"
+	"voicehelper/backend/pkg/errors"
 	"voicehelper/backend/pkg/middleware"
 	"voicehelper/backend/pkg/wechat"
 )
@@ -29,6 +31,7 @@ type APIHandler struct {
 	conversationRepo repository.ConversationRepository
 	algoServiceURL   string
 	voiceHandler     *RealtimeVoiceHandler
+	db               *sql.DB
 }
 
 // NewAPIHandler 创建API处理器
@@ -39,6 +42,7 @@ func NewAPIHandler(
 	conversationRepo repository.ConversationRepository,
 	algoServiceURL string,
 	voiceHandler *RealtimeVoiceHandler,
+	db *sql.DB,
 ) *APIHandler {
 	return &APIHandler{
 		authMiddleware:   auth,
@@ -47,6 +51,7 @@ func NewAPIHandler(
 		conversationRepo: conversationRepo,
 		algoServiceURL:   algoServiceURL,
 		voiceHandler:     voiceHandler,
+		db:               db,
 	}
 }
 
@@ -167,11 +172,19 @@ func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logrus.WithError(err).Error("微信登录请求参数错误")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "请求参数错误",
-			"code":  "INVALID_PARAMS",
-		})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"path":       c.Request.URL.Path,
+		}).Error("微信登录请求参数绑定失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrInvalidParams,
+			"请求参数格式错误",
+			http.StatusBadRequest,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
@@ -183,11 +196,20 @@ func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 
 	sessionResp, err := wechatClient.Code2Session(req.Code)
 	if err != nil {
-		logrus.WithError(err).Error("微信Code2Session失败")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "微信登录失败",
-			"code":  "WECHAT_LOGIN_FAILED",
-		})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"code":       req.Code[:8] + "...", // 只记录前8位保护隐私
+			"tenant_id":  req.TenantID,
+		}).Error("微信Code2Session调用失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrWechatLoginFailed,
+			"微信授权验证失败",
+			http.StatusUnauthorized,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
@@ -196,7 +218,12 @@ func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 	if req.EncryptedData != "" && req.IV != "" {
 		userInfo, err = wechatClient.DecryptUserInfo(req.EncryptedData, req.IV, sessionResp.SessionKey)
 		if err != nil {
-			logrus.WithError(err).Error("解密用户信息失败")
+			logrus.WithFields(logrus.Fields{
+				"error":      err.Error(),
+				"request_id": c.GetString("request_id"),
+				"openid":     sessionResp.OpenID[:8] + "...",
+				"tenant_id":  req.TenantID,
+			}).Warn("解密用户信息失败，继续使用基础登录信息")
 			// 解密失败不影响登录，继续使用基础信息
 		}
 	}
@@ -204,11 +231,19 @@ func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 	// 3. 验证签名（如果提供了签名数据）
 	if req.Signature != "" && req.RawData != "" {
 		if !wechatClient.ValidateSignature(req.RawData, req.Signature, sessionResp.SessionKey) {
-			logrus.Error("用户信息签名验证失败")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "用户信息验证失败",
-				"code":  "SIGNATURE_INVALID",
-			})
+			logrus.WithFields(logrus.Fields{
+				"request_id": c.GetString("request_id"),
+				"openid":     sessionResp.OpenID[:8] + "...",
+				"tenant_id":  req.TenantID,
+				"signature":  req.Signature[:16] + "...", // 只记录前16位
+			}).Error("用户信息签名验证失败")
+
+			apiErr := errors.NewAPIError(
+				errors.ErrSignatureInvalid,
+				"用户信息签名验证失败",
+				http.StatusUnauthorized,
+			)
+			middleware.HandleAPIError(c, apiErr)
 			return
 		}
 	}
@@ -216,22 +251,41 @@ func (h *APIHandler) wechatMiniProgramLogin(c *gin.Context) {
 	// 4. 查询或创建用户
 	user, err := h.findOrCreateWechatUser(sessionResp, userInfo, req.TenantID)
 	if err != nil {
-		logrus.WithError(err).Error("创建微信用户失败")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "用户创建失败",
-			"code":  "USER_CREATE_FAILED",
-		})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"openid":     sessionResp.OpenID[:8] + "...",
+			"tenant_id":  req.TenantID,
+		}).Error("查询或创建微信用户失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrUserCreateFailed,
+			"用户信息处理失败",
+			http.StatusInternalServerError,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
 	// 5. 生成JWT token
 	token, err := h.generateJWTToken(user)
 	if err != nil {
-		logrus.WithError(err).Error("生成JWT token失败")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "令牌生成失败",
-			"code":  "TOKEN_GENERATE_FAILED",
-		})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"user_id":    user.ID,
+			"openid":     sessionResp.OpenID[:8] + "...",
+			"tenant_id":  req.TenantID,
+		}).Error("生成JWT token失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrTokenInvalid,
+			"令牌生成失败",
+			http.StatusInternalServerError,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
@@ -282,7 +336,19 @@ func (h *APIHandler) cancelChat(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"path":       c.Request.URL.Path,
+		}).Error("取消聊天请求参数绑定失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrInvalidParams,
+			"请求参数格式错误",
+			http.StatusBadRequest,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
@@ -290,7 +356,17 @@ func (h *APIHandler) cancelChat(c *gin.Context) {
 	tenantID := c.GetString("tenant_id")
 
 	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未认证"})
+		logrus.WithFields(logrus.Fields{
+			"request_id": c.GetString("request_id"),
+			"stream_id":  req.StreamID,
+		}).Error("取消聊天请求用户未认证")
+
+		apiErr := errors.NewAPIError(
+			errors.ErrUnauthorized,
+			"用户未认证",
+			http.StatusUnauthorized,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
@@ -303,12 +379,31 @@ func (h *APIHandler) cancelChat(c *gin.Context) {
 
 	success, err := h.callCancelChatService(c.Request.Context(), cancelReq)
 	if err != nil {
-		logger.Error("取消聊天失败", logger.Field{Key: "error", Value: err}, logger.Field{Key: "stream_id", Value: req.StreamID})
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "取消聊天失败"})
+		logrus.WithFields(logrus.Fields{
+			"error":      err.Error(),
+			"request_id": c.GetString("request_id"),
+			"stream_id":  req.StreamID,
+			"user_id":    userID,
+			"tenant_id":  tenantID,
+		}).Error("调用算法服务取消聊天失败")
+
+		apiErr := errors.NewAPIErrorWithCause(
+			errors.ErrChatCancelFailed,
+			"取消聊天服务调用失败",
+			http.StatusInternalServerError,
+			err,
+		)
+		middleware.HandleAPIError(c, apiErr)
 		return
 	}
 
 	if success {
+		logrus.WithFields(logrus.Fields{
+			"request_id": c.GetString("request_id"),
+			"stream_id":  req.StreamID,
+			"user_id":    userID,
+		}).Info("聊天会话取消成功")
+
 		c.JSON(http.StatusOK, gin.H{
 			"message":   "Chat cancelled successfully",
 			"stream_id": req.StreamID,
@@ -316,10 +411,18 @@ func (h *APIHandler) cancelChat(c *gin.Context) {
 			"timestamp": time.Now().Unix(),
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":     "Chat session not found or already completed",
-			"stream_id": req.StreamID,
-		})
+		logrus.WithFields(logrus.Fields{
+			"request_id": c.GetString("request_id"),
+			"stream_id":  req.StreamID,
+			"user_id":    userID,
+		}).Warn("聊天会话未找到或已完成")
+
+		apiErr := errors.NewAPIError(
+			errors.ErrChatSessionNotFound,
+			"聊天会话不存在或已完成",
+			http.StatusNotFound,
+		)
+		middleware.HandleAPIError(c, apiErr)
 	}
 }
 

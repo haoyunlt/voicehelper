@@ -1,0 +1,29 @@
+# VoiceHelper Kubernetes 命名空间配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper
+  labels:
+    name: voicehelper
+    app.kubernetes.io/name: voicehelper
+    app.kubernetes.io/version: "2.0"
+    app.kubernetes.io/managed-by: kubectl
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-dify
+  labels:
+    name: voicehelper-dify
+    app.kubernetes.io/name: dify
+    app.kubernetes.io/version: "0.6.16"
+    app.kubernetes.io/managed-by: kubectl
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voicehelper-monitoring
+  labels:
+    name: voicehelper-monitoring
+    app.kubernetes.io/name: monitoring
+    app.kubernetes.io/managed-by: kubectl

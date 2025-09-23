@@ -5,28 +5,29 @@ import (
 	"fmt"
 	"time"
 
+	"voicehelper/backend/pkg/wechat"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sirupsen/logrus"
-	"voicehelper/backend/pkg/wechat"
 )
 
 // WechatUser 微信用户模型
 type WechatUser struct {
-	ID         string    `json:"id" db:"id"`
-	OpenID     string    `json:"openid" db:"openid"`
-	UnionID    string    `json:"unionid" db:"unionid"`
-	Nickname   string    `json:"nickname" db:"nickname"`
-	Avatar     string    `json:"avatar" db:"avatar"`
-	Gender     int       `json:"gender" db:"gender"`
-	City       string    `json:"city" db:"city"`
-	Province   string    `json:"province" db:"province"`
-	Country    string    `json:"country" db:"country"`
-	Language   string    `json:"language" db:"language"`
-	TenantID   string    `json:"tenant_id" db:"tenant_id"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
-	LastLogin  time.Time `json:"last_login" db:"last_login"`
-	IsActive   bool      `json:"is_active" db:"is_active"`
+	ID        string    `json:"id" db:"id"`
+	OpenID    string    `json:"openid" db:"openid"`
+	UnionID   string    `json:"unionid" db:"unionid"`
+	Nickname  string    `json:"nickname" db:"nickname"`
+	Avatar    string    `json:"avatar" db:"avatar"`
+	Gender    int       `json:"gender" db:"gender"`
+	City      string    `json:"city" db:"city"`
+	Province  string    `json:"province" db:"province"`
+	Country   string    `json:"country" db:"country"`
+	Language  string    `json:"language" db:"language"`
+	TenantID  string    `json:"tenant_id" db:"tenant_id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	LastLogin time.Time `json:"last_login" db:"last_login"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
 }
 
 // JWTClaims JWT声明
@@ -42,6 +43,10 @@ func (h *APIHandler) findOrCreateWechatUser(sessionResp *wechat.SessionResponse,
 	// 首先尝试查找现有用户
 	user, err := h.findWechatUserByOpenID(sessionResp.OpenID)
 	if err != nil && err != sql.ErrNoRows {
+		logrus.WithFields(logrus.Fields{
+			"error":  err.Error(),
+			"openid": sessionResp.OpenID[:8] + "...",
+		}).Error("查询微信用户失败")
 		return nil, fmt.Errorf("查询用户失败: %w", err)
 	}
 
@@ -51,7 +56,7 @@ func (h *APIHandler) findOrCreateWechatUser(sessionResp *wechat.SessionResponse,
 		// 用户已存在，更新最后登录时间和用户信息
 		user.LastLogin = now
 		user.UpdatedAt = now
-		
+
 		// 如果有新的用户信息，更新用户资料
 		if userInfo != nil {
 			user.Nickname = userInfo.NickName
@@ -67,6 +72,11 @@ func (h *APIHandler) findOrCreateWechatUser(sessionResp *wechat.SessionResponse,
 		}
 
 		if err := h.updateWechatUser(user); err != nil {
+			logrus.WithFields(logrus.Fields{
+				"error":   err.Error(),
+				"user_id": user.ID,
+				"openid":  sessionResp.OpenID[:8] + "...",
+			}).Error("更新微信用户信息失败")
 			return nil, fmt.Errorf("更新用户失败: %w", err)
 		}
 
@@ -109,6 +119,12 @@ func (h *APIHandler) findOrCreateWechatUser(sessionResp *wechat.SessionResponse,
 	}
 
 	if err := h.createWechatUser(user); err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":    err.Error(),
+			"user_id":  user.ID,
+			"openid":   sessionResp.OpenID[:8] + "...",
+			"nickname": user.Nickname,
+		}).Error("创建微信用户失败")
 		return nil, fmt.Errorf("创建用户失败: %w", err)
 	}
 
@@ -138,6 +154,12 @@ func (h *APIHandler) findWechatUserByOpenID(openID string) (*WechatUser, error) 
 	)
 
 	if err != nil {
+		if err != sql.ErrNoRows {
+			logrus.WithFields(logrus.Fields{
+				"error":  err.Error(),
+				"openid": openID[:8] + "...",
+			}).Error("数据库查询微信用户失败")
+		}
 		return nil, err
 	}
 
@@ -161,6 +183,14 @@ func (h *APIHandler) createWechatUser(user *WechatUser) error {
 		user.TenantID, user.CreatedAt, user.UpdatedAt, user.LastLogin, user.IsActive,
 	)
 
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":   err.Error(),
+			"user_id": user.ID,
+			"openid":  user.OpenID[:8] + "...",
+		}).Error("数据库创建微信用户失败")
+	}
+
 	return err
 }
 
@@ -179,6 +209,14 @@ func (h *APIHandler) updateWechatUser(user *WechatUser) error {
 		user.City, user.Province, user.Country, user.Language,
 		user.UpdatedAt, user.LastLogin,
 	)
+
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":   err.Error(),
+			"user_id": user.ID,
+			"openid":  user.OpenID[:8] + "...",
+		}).Error("数据库更新微信用户失败")
+	}
 
 	return err
 }
@@ -199,15 +237,22 @@ func (h *APIHandler) generateJWTToken(user *WechatUser) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	
+
 	// 从环境变量获取JWT密钥
 	jwtSecret := h.authMiddleware.GetJWTSecret()
 	if jwtSecret == "" {
+		logrus.WithFields(logrus.Fields{
+			"user_id": user.ID,
+		}).Error("JWT密钥未配置")
 		return "", fmt.Errorf("JWT密钥未配置")
 	}
 
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error":   err.Error(),
+			"user_id": user.ID,
+		}).Error("JWT token签名失败")
 		return "", fmt.Errorf("签名token失败: %w", err)
 	}
 

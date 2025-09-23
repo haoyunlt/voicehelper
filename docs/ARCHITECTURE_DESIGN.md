@@ -41,12 +41,15 @@ VoiceHelper 是一个多模态 AI 助手平台，支持语音、文本、图像�
   - 监控埋点
 
 #### 2. AI 算法服务 (Python)
-- **职责**：LLM 调用、RAG 检索、推理编排
+- **职责**：LLM 调用、RAG 检索、推理编排、多模态处理
 - **端口**：8000 (FastAPI)
 - **核心模块**：
-  - `core/llm/`: 多模型适配 (OpenAI/Anthropic/国产)
-  - `core/rag/`: BGE + FAISS 向量检索
-  - `core/agents/`: 工作流编排
+  - `core/enhanced_model_router.py`: 增强模型路由器 (负载均衡/成本优化/故障转移)
+  - `core/reasoning_chain.py`: 推理链路可视化和缓存管理
+  - `core/voice_performance_optimizer.py`: 语音性能优化器
+  - `core/multimodal/`: 多模态处理 (文档/图像/视频解析)
+  - `core/bge_faiss_rag.py`: BGE + FAISS 向量检索
+  - `core/langgraph_agent.py`: Agent工作流编排
   - `reasoning/`: 逻辑/数学/因果推理
 
 #### 3. 语音服务 (Python)
@@ -65,18 +68,29 @@ VoiceHelper 是一个多模态 AI 助手平台，支持语音、文本、图像�
 
 ## 关键技术决策
 
-### 1. 多模型路由策略
+### 1. 增强模型路由策略
 ```python
-# 按成本/质量/延迟路由
-routing_config = {
-    "chat": {
-        "primary": "gpt-4o-mini",      # 性价比
-        "fallback": "claude-3-haiku",   # 备用
-        "premium": "gpt-4o"            # 高质量
+# 动态路由策略：成本优化/延迟优化/质量优化/负载均衡
+class RoutingStrategy(Enum):
+    COST_OPTIMIZED = "cost_optimized"
+    LATENCY_OPTIMIZED = "latency_optimized" 
+    QUALITY_OPTIMIZED = "quality_optimized"
+    BALANCED = "balanced"
+    LOAD_BALANCED = "load_balanced"
+
+# 模型配置与指标
+models = {
+    "gpt-4-turbo": {
+        "cost_per_1k_tokens": 0.03,
+        "latency_p95": 2000,
+        "quality_score": 0.95,
+        "capabilities": ["chat", "reasoning", "code_generation"]
     },
-    "reasoning": {
-        "primary": "claude-3.5-sonnet", # 推理能力
-        "fallback": "gpt-4o"
+    "claude-3-sonnet": {
+        "cost_per_1k_tokens": 0.015,
+        "latency_p95": 2500, 
+        "quality_score": 0.90,
+        "capabilities": ["chat", "reasoning"]
     }
 }
 ```
@@ -87,10 +101,36 @@ routing_config = {
 查询 → BGE嵌入 → 相似度检索 → 重排序 → 上下文注入
 ```
 
-### 3. 实时通信架构
-- **WebSocket**: 双向实时消息
+### 3. 推理链路可视化
+```python
+# 推理步骤追踪和缓存
+class ReasoningChain:
+    def __init__(self, conversation_id: str, user_query: str):
+        self.chain_id = str(uuid4())
+        self.steps = []  # 推理步骤列表
+        self.total_execution_time = 0.0
+        self.overall_confidence = 0.0
+    
+    def add_step(self, step_type: ReasoningStepType, title: str):
+        # 添加推理步骤，支持缓存和可视化
+        pass
+```
+
+### 4. 语音性能优化
+```python
+# 并发控制和缓存优化
+class VoicePerformanceOptimizer:
+    def __init__(self, max_concurrent_requests: int = 10):
+        self.asr_semaphore = asyncio.Semaphore(max_concurrent_requests // 2)
+        self.tts_semaphore = asyncio.Semaphore(max_concurrent_requests // 2)
+        self.asr_cache = {}  # 音频哈希缓存
+        self.tts_cache = {}  # 文本哈希缓存
+```
+
+### 5. 实时通信架构
+- **WebSocket**: 双向实时消息 + 语音流处理
 - **SSE**: 服务端推送 (LLM 流式输出)
-- **WebRTC**: P2P 语音通话
+- **WebRTC**: P2P 语音通话 + 增强音频处理
 
 ## 性能指标 (SLO)
 
@@ -171,5 +211,5 @@ alerts:
 
 ---
 
-*最后更新: 2025-09-22*
-*版本: v2.0*
+*最后更新: 2025-09-23*
+*版本: v2.1 - 增强模型路由、推理链路可视化、语音性能优化*
