@@ -1,0 +1,2071 @@
+Run started:2025-09-23 03:30:20.597541
+
+Test results:
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./app/main.py:24:25
+23	SERVICE_NAME = os.getenv("SERVICE_NAME", os.getenv("ALGO_SERVICE_NAME", "voicehelper-algo"))
+24	HOST = os.getenv("HOST", "0.0.0.0")
+25	PORT = int(os.getenv("PORT", os.getenv("ALGO_PORT", 8000)))
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: ./app/main.py:362:8
+361	            await websocket.close(code=1011, reason="Internal server error")
+362	        except:
+363	            pass
+364	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: ./app/v2_api.py:284:12
+283	                asr_adapter.stop()
+284	            except:
+285	                pass
+286	
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./app/v2_api.py:373:13
+372	        "v2_api:app",
+373	        host="0.0.0.0",
+374	        port=int(os.getenv("PORT", 8070)),
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: ./common/logger.py:114:8
+113	                return str(request.client.port)
+114	        except Exception:
+115	            pass
+116	        return ""
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/active_learning.py:298:19
+297	            import random
+298	            return random.sample(
+299	                self.learning_pool,
+300	                min(100, len(self.learning_pool))
+301	            )
+302	    
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/active_learning.py:320:46
+319	                import random
+320	                selected.append(remaining.pop(random.randint(0, len(remaining)-1)))
+321	            else:
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/active_learning.py:365:16
+364	            selected.extend(
+365	                random.sample(
+366	                    group_examples,
+367	                    min(samples_per_group, len(group_examples))
+368	                )
+369	            )
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:156:20
+155	        # 模拟资源监控
+156	        cpu_usage = random.uniform(0.2, 0.8)
+157	        memory_usage = random.uniform(0.3, 0.7)
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:157:23
+156	        cpu_usage = random.uniform(0.2, 0.8)
+157	        memory_usage = random.uniform(0.3, 0.7)
+158	        gpu_usage = random.uniform(0.1, 0.9)
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:158:20
+157	        memory_usage = random.uniform(0.3, 0.7)
+158	        gpu_usage = random.uniform(0.1, 0.9)
+159	        
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:169:25
+168	            gpu_usage=gpu_usage,
+169	            queue_length=random.randint(0, 50),
+170	            active_batches=random.randint(0, 10),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:170:27
+169	            queue_length=random.randint(0, 50),
+170	            active_batches=random.randint(0, 10),
+171	            average_processing_time=random.uniform(0.1, 2.0)
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:171:36
+170	            active_batches=random.randint(0, 10),
+171	            average_processing_time=random.uniform(0.1, 2.0)
+172	        )
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:560:42
+559	    request = ProcessRequest(
+560	        id=f"req_{int(time.time()*1000)}_{random.randint(1000, 9999)}",
+561	        type=request_type,
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:578:27
+577	        for i in range(50):
+578	            request_type = random.choice(list(RequestType))
+579	            priority = random.choice(list(RequestPriority))
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/adaptive_batch_scheduler.py:579:23
+578	            request_type = random.choice(list(RequestType))
+579	            priority = random.choice(list(RequestPriority))
+580	            
+
+--------------------------------------------------
+>> Issue: [B615:huggingface_unsafe_download] Unsafe Hugging Face Hub download without revision pinning in from_pretrained()
+   Severity: Medium   Confidence: High
+   CWE: CWE-494 (https://cwe.mitre.org/data/definitions/494.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b615_huggingface_unsafe_download.html
+   Location: ./core/advanced_rag.py:185:25
+184	    def __init__(self, model_name: str = "BAAI/bge-reranker-base"):
+185	        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+186	        self.model = AutoModel.from_pretrained(model_name)
+
+--------------------------------------------------
+>> Issue: [B615:huggingface_unsafe_download] Unsafe Hugging Face Hub download without revision pinning in from_pretrained()
+   Severity: Medium   Confidence: High
+   CWE: CWE-494 (https://cwe.mitre.org/data/definitions/494.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b615_huggingface_unsafe_download.html
+   Location: ./core/advanced_rag.py:186:21
+185	        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+186	        self.model = AutoModel.from_pretrained(model_name)
+187	        self.model.eval()
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: ./core/agent.py:160:16
+159	                    result["confidence"] = min(max(confidence, 0), 1)
+160	                except:
+161	                    pass
+162	            elif "证据支持" in line:
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/base/mixins.py:103:15
+102	        key_str = f"{args}_{sorted(kwargs.items())}"
+103	        return hashlib.md5(key_str.encode()).hexdigest()
+104	    
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/batch_processor.py:85:15
+84	        content = f"{request.content}:{request.model}:{sorted(request.parameters.items())}"
+85	        return hashlib.md5(content.encode()).hexdigest()
+86	    
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/cache_prewarming.py:308:33
+307	                # 基于需求执行，这里简化为随机执行
+308	                should_execute = random.random() < 0.1
+309	            
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./core/context_memory_system.py:20:0
+19	import sqlite3
+20	import pickle
+21	
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./core/context_memory_system.py:503:23
+502	            with open("memories.pkl", "rb") as f:
+503	                data = pickle.load(f)
+504	                self.memory_store = data.get("memory_store", {})
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/dynamic_batcher.py:259:12
+258	            self.consecutive_degradations == 0 and
+259	            random.random() < self.exploration_probability):
+260	            return True
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/dynamic_knowledge_system.py:411:15
+410	        normalized_name = name.lower().strip()
+411	        return hashlib.md5(normalized_name.encode()).hexdigest()[:16]
+412	    
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/embeddings.py:24:23
+23	            # 使用文本哈希作为种子，确保相同文本产生相同嵌入
+24	            seed = int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
+25	            random.seed(seed)
+
+--------------------------------------------------
+>> Issue: [B615:huggingface_unsafe_download] Unsafe Hugging Face Hub download without revision pinning in from_pretrained()
+   Severity: Medium   Confidence: High
+   CWE: CWE-494 (https://cwe.mitre.org/data/definitions/494.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b615_huggingface_unsafe_download.html
+   Location: ./core/emotion_recognition_system.py:175:24
+174	        # Wav2Vec2特征提取器
+175	        self.wav2vec2 = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base")
+176	        
+
+--------------------------------------------------
+>> Issue: [B614:pytorch_load] Use of unsafe PyTorch load
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b614_pytorch_load.html
+   Location: ./core/emotion_recognition_system.py:231:39
+230	        if model_path:
+231	            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+232	        self.model.to(self.device)
+
+--------------------------------------------------
+>> Issue: [B615:huggingface_unsafe_download] Unsafe Hugging Face Hub download without revision pinning in from_pretrained()
+   Severity: Medium   Confidence: High
+   CWE: CWE-494 (https://cwe.mitre.org/data/definitions/494.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b615_huggingface_unsafe_download.html
+   Location: ./core/emotion_recognition_system.py:236:25
+235	        # 初始化处理器
+236	        self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base")
+237	        self.feature_extractor = EmotionFeatureExtractor()
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'password'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: ./core/enhanced_security_auth.py:22:15
+21	    """认证方法"""
+22	    PASSWORD = "password"
+23	    TOTP = "totp"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'hardware_token'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: ./core/enhanced_security_auth.py:27:21
+26	    BIOMETRIC = "biometric"
+27	    HARDWARE_TOKEN = "hardware_token"
+28	    FIDO2 = "fido2"
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: ./core/enhanced_security_auth.py:100:23
+99	            if user_id not in self.user_credentials:
+100	                return AuthenticationResult(
+101	                    success=False,
+102	                    user_id=user_id,
+103	                    session_token="",
+104	                    security_level=SecurityLevel.BASIC,
+105	                    authentication_methods=[],
+106	                    expires_at=0.0,
+107	                    metadata={"error": "User not found"}
+108	                )
+109	            
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: ./core/enhanced_security_auth.py:136:23
+135	            else:
+136	                return AuthenticationResult(
+137	                    success=False,
+138	                    user_id=user_id,
+139	                    session_token="",
+140	                    security_level=SecurityLevel.BASIC,
+141	                    authentication_methods=successful_methods,
+142	                    expires_at=0.0,
+143	                    metadata={"error": "Insufficient authentication methods"}
+144	                )
+145	                
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: ./core/enhanced_security_auth.py:148:19
+147	            logger.error(f"Authentication error: {e}")
+148	            return AuthenticationResult(
+149	                success=False,
+150	                user_id=user_id,
+151	                session_token="",
+152	                security_level=SecurityLevel.BASIC,
+153	                authentication_methods=[],
+154	                expires_at=0.0,
+155	                metadata={"error": str(e)}
+156	            )
+157	    
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'test_secret'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: ./core/enhanced_security_auth.py:549:8
+548	        # 注册测试用户
+549	        enhanced_security_system.mfa_authenticator.register_user(
+550	            "test_user", "password123", 
+551	            totp_secret="test_secret",
+552	            biometric_data={"type": "fingerprint", "template": b"fake_template", "quality": 0.9}
+553	        )
+554	        
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/enhanced_voice_services.py:108:15
+107	        key_data = f"{text}:{provider}:{voice or 'default'}"
+108	        return hashlib.md5(key_data.encode()).hexdigest()
+109	    
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/error_handling_system.py:166:28
+165	            import random
+166	            delay *= (0.5 + random.random() * 0.5)
+167	        
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:280:17
+279	        # 简化的加权轮询实现
+280	        target = random.uniform(0, total_weight)
+281	        current_weight = 0
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/high_concurrency_system.py:304:25
+303	        # 简化的一致性哈希实现
+304	        hash_value = int(hashlib.md5(request_hash.encode()).hexdigest(), 16)
+305	        index = hash_value % len(instances)
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:319:17
+318	        
+319	        target = random.uniform(0, total_score)
+320	        current_score = 0
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:438:56
+437	        if request_id is None:
+438	            request_id = f"req_{int(time.time()*1000)}_{random.randint(1000, 9999)}"
+439	        
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:546:26
+545	        # 模拟请求处理
+546	        processing_time = random.uniform(0.01, 0.1)  # 10-100ms
+547	        
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:557:11
+556	        # 模拟偶发错误
+557	        if random.random() < 0.001:  # 0.1%的错误率
+558	            raise Exception("Simulated processing error")
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/high_concurrency_system.py:578:15
+577	        key_data = f"{data_str}:{user_id or 'anonymous'}"
+578	        return hashlib.md5(key_data.encode()).hexdigest()
+579	    
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:672:33
+671	            # 更新资源使用率（模拟）
+672	            instance.cpu_usage = random.uniform(0.1, 0.9)
+673	            instance.memory_usage = random.uniform(0.2, 0.8)
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:673:36
+672	            instance.cpu_usage = random.uniform(0.1, 0.9)
+673	            instance.memory_usage = random.uniform(0.2, 0.8)
+674	            instance.last_health_check = time.time()
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/high_concurrency_system.py:855:28
+854	                "user_id": f"user_{i % 100}",  # 100个不同用户
+855	                "priority": random.randint(1, 10)
+856	            })
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./core/ingest.py:4:0
+3	import json
+4	import pickle
+5	from datetime import datetime
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./core/ingest.py:43:40
+42	                with open(vector_file, 'rb') as f:
+43	                    self.vector_store = pickle.load(f)
+44	                print(f"Loaded {len(self.vector_store)} vectors from local storage")
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./core/ingest.py:48:43
+47	                with open(docs_file, 'rb') as f:
+48	                    self.documents_store = pickle.load(f)
+49	                print(f"Loaded {len(self.documents_store)} documents from local storage")
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/model_routing_system.py:476:12
+475	        
+476	        r = random.uniform(0, total_weight)
+477	        cumulative_weight = 0
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b113_request_without_timeout.html
+   Location: ./core/multi_model_service.py:247:23
+246	            
+247	            response = requests.post(
+248	                endpoint,
+249	                headers=headers,
+250	                json=payload,
+251	                timeout=kwargs.get("timeout", 30)
+252	            )
+253	            
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b113_request_without_timeout.html
+   Location: ./core/multi_model_service.py:317:23
+316	            
+317	            response = requests.post(
+318	                endpoint,
+319	                headers=headers,
+320	                json=payload,
+321	                stream=True,
+322	                timeout=kwargs.get("timeout", 30)
+323	            )
+324	            
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./core/production_emotion_model.py:19:0
+18	import uuid
+19	import pickle
+20	from pathlib import Path
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/production_emotion_model.py:381:20
+380	        """生成缓存键"""
+381	        text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+382	        audio_hash = hashlib.md5(audio_features.tobytes()).hexdigest()[:8]
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/production_emotion_model.py:382:21
+381	        text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+382	        audio_hash = hashlib.md5(audio_features.tobytes()).hexdigest()[:8]
+383	        lang_code = language.value if language else "unknown"
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./core/production_emotion_recognition.py:11:0
+10	import json
+11	import pickle
+12	from typing import Dict, List, Optional, Tuple, Any
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:82:32
+81	        return {
+82	            "layer1_weights": [[random.uniform(-0.5, 0.5) for _ in range(40)] for _ in range(128)],
+83	            "layer2_weights": [[random.uniform(-0.3, 0.3) for _ in range(128)] for _ in range(64)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:83:32
+82	            "layer1_weights": [[random.uniform(-0.5, 0.5) for _ in range(40)] for _ in range(128)],
+83	            "layer2_weights": [[random.uniform(-0.3, 0.3) for _ in range(128)] for _ in range(64)],
+84	            "output_weights": [[random.uniform(-0.2, 0.2) for _ in range(64)] for _ in range(len(self.emotion_classes))],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:84:32
+83	            "layer2_weights": [[random.uniform(-0.3, 0.3) for _ in range(128)] for _ in range(64)],
+84	            "output_weights": [[random.uniform(-0.2, 0.2) for _ in range(64)] for _ in range(len(self.emotion_classes))],
+85	            "bias": [random.uniform(-0.1, 0.1) for _ in range(len(self.emotion_classes))]
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:85:21
+84	            "output_weights": [[random.uniform(-0.2, 0.2) for _ in range(64)] for _ in range(len(self.emotion_classes))],
+85	            "bias": [random.uniform(-0.1, 0.1) for _ in range(len(self.emotion_classes))]
+86	        }
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:94:35
+93	        return {
+94	            "embedding_weights": [[random.uniform(-0.1, 0.1) for _ in range(256)] for _ in range(256)],
+95	            "lstm_weights": [[random.uniform(-0.2, 0.2) for _ in range(256)] for _ in range(128)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:95:30
+94	            "embedding_weights": [[random.uniform(-0.1, 0.1) for _ in range(256)] for _ in range(256)],
+95	            "lstm_weights": [[random.uniform(-0.2, 0.2) for _ in range(256)] for _ in range(128)],
+96	            "attention_weights": [[random.uniform(-0.15, 0.15) for _ in range(128)] for _ in range(64)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:96:35
+95	            "lstm_weights": [[random.uniform(-0.2, 0.2) for _ in range(256)] for _ in range(128)],
+96	            "attention_weights": [[random.uniform(-0.15, 0.15) for _ in range(128)] for _ in range(64)],
+97	            "output_weights": [[random.uniform(-0.1, 0.1) for _ in range(64)] for _ in range(len(self.emotion_classes))]
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/production_emotion_recognition.py:97:32
+96	            "attention_weights": [[random.uniform(-0.15, 0.15) for _ in range(128)] for _ in range(64)],
+97	            "output_weights": [[random.uniform(-0.1, 0.1) for _ in range(64)] for _ in range(len(self.emotion_classes))]
+98	        }
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:91:22
+90	        features = {
+91	            "energy": random.random(),
+92	            "zero_crossing_rate": random.random(),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:92:34
+91	            "energy": random.random(),
+92	            "zero_crossing_rate": random.random(),
+93	            "spectral_centroid": random.random() * 4000,
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:93:33
+92	            "zero_crossing_rate": random.random(),
+93	            "spectral_centroid": random.random() * 4000,
+94	            "spectral_rolloff": random.random() * 4000,
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:94:32
+93	            "spectral_centroid": random.random() * 4000,
+94	            "spectral_rolloff": random.random() * 4000,
+95	            "mfcc": [random.random() for _ in range(13)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:95:21
+94	            "spectral_rolloff": random.random() * 4000,
+95	            "mfcc": [random.random() for _ in range(13)],
+96	            "chroma": [random.random() for _ in range(12)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:96:23
+95	            "mfcc": [random.random() for _ in range(13)],
+96	            "chroma": [random.random() for _ in range(12)],
+97	            "mel_spectrogram": [random.random() for _ in range(128)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:97:32
+96	            "chroma": [random.random() for _ in range(12)],
+97	            "mel_spectrogram": [random.random() for _ in range(128)],
+98	            "pitch": random.random() * 500,
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:98:21
+97	            "mel_spectrogram": [random.random() for _ in range(128)],
+98	            "pitch": random.random() * 500,
+99	            "formants": [random.random() for _ in range(3)],
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:99:25
+98	            "pitch": random.random() * 500,
+99	            "formants": [random.random() for _ in range(3)],
+100	            "voice_activity": random.random() > 0.5
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:100:30
+99	            "formants": [random.random() for _ in range(3)],
+100	            "voice_activity": random.random() > 0.5
+101	        }
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:109:15
+108	        # 模拟语音活动检测
+109	        return random.random() > 0.3
+110	    
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:115:23
+114	        return {
+115	            "valence": random.random() * 2 - 1,  # -1 to 1
+116	            "arousal": random.random() * 2 - 1,   # -1 to 1
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:116:23
+115	            "valence": random.random() * 2 - 1,  # -1 to 1
+116	            "arousal": random.random() * 2 - 1,   # -1 to 1
+117	            "dominance": random.random() * 2 - 1, # -1 to 1
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:117:25
+116	            "arousal": random.random() * 2 - 1,   # -1 to 1
+117	            "dominance": random.random() * 2 - 1, # -1 to 1
+118	            "confidence": random.random()
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: ./core/realtime_interrupt_detection.py:118:26
+117	            "dominance": random.random() * 2 - 1, # -1 to 1
+118	            "confidence": random.random()
+119	        }
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/request_merger.py:54:15
+53	        content_str = f"{self.normalized_content}:{self.model}:{sorted(self.parameters.items())}"
+54	        return hashlib.md5(content_str.encode()).hexdigest()
+55	
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/request_merger_unified.py:54:28
+53	        content_str = f"{self.normalized_content}:{self.model}:{sorted(self.parameters.items())}"
+54	        self.content_hash = hashlib.md5(content_str.encode()).hexdigest()
+55	    
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: ./core/retrieve.py:3:0
+2	import asyncio
+3	import pickle
+4	import numpy as np
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./core/retrieve.py:34:40
+33	                with open(vector_file, 'rb') as f:
+34	                    self.vector_store = pickle.load(f)
+35	                print(f"Loaded {len(self.vector_store)} vectors from local storage")
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: ./core/retrieve.py:39:43
+38	                with open(docs_file, 'rb') as f:
+39	                    self.documents_store = pickle.load(f)
+40	                print(f"Loaded {len(self.documents_store)} documents from local storage")
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/semantic_cache.py:140:15
+139	        key_data = f"{normalized_content}:{model}:{param_signature}"
+140	        return hashlib.md5(key_data.encode()).hexdigest()
+141	    
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/unified_utils.py:182:28
+181	        content_str = f"{self.normalized_content}:{self.model}:{sorted(self.parameters.items())}"
+182	        self.content_hash = hashlib.md5(content_str.encode()).hexdigest()
+183	
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/unified_utils.py:491:15
+490	        key_data = f"{normalized_content}:{model}:{param_signature}"
+491	        return hashlib.md5(key_data.encode()).hexdigest()
+492	    
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./core/voice_synthesis_system.py:493:15
+492	        key_data = f"{request.text}_{request.voice_profile_id}_{request.emotion.value}_{request.emotion_intensity}_{request.speed}_{request.pitch}"
+493	        return hashlib.md5(key_data.encode()).hexdigest()
+494	    
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: ./core/websocket_voice.py:403:24
+402	                            await session.websocket.close()
+403	                        except:
+404	                            pass
+405	                        logger.info(f"清理过期WebSocket会话: {session_id}")
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: ./core/websocket_voice.py:429:82
+428	# WebSocket服务器启动函数
+429	async def start_websocket_server(voice_service: EnhancedVoiceService, host: str = "0.0.0.0", port: int = 8001):
+430	    """启动WebSocket语音服务器"""
+
+--------------------------------------------------
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b307-eval
+   Location: ./reasoning/logical_reasoning.py:192:19
+191	        try:
+192	            return eval(eval_formula)
+193	        except:
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: ./services/cache_service.py:254:15
+253	        key_data = f"{content}:{model}:{json.dumps(parameters, sort_keys=True)}"
+254	        return hashlib.md5(key_data.encode()).hexdigest()
+255	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:7:4
+6	    """Test basic Python functionality"""
+7	    assert 1 + 1 == 2
+8	    assert "hello" + " world" == "hello world"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:8:4
+7	    assert 1 + 1 == 2
+8	    assert "hello" + " world" == "hello world"
+9	    assert [1, 2, 3] == [1, 2, 3]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:9:4
+8	    assert "hello" + " world" == "hello world"
+9	    assert [1, 2, 3] == [1, 2, 3]
+10	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:14:4
+13	    data = {"key": "value", "number": 42}
+14	    assert data["key"] == "value"
+15	    assert data["number"] == 42
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:15:4
+14	    assert data["key"] == "value"
+15	    assert data["number"] == 42
+16	    assert len(data) == 2
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:16:4
+15	    assert data["number"] == 42
+16	    assert len(data) == 2
+17	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:21:4
+20	    items = [1, 2, 3, 4, 5]
+21	    assert len(items) == 5
+22	    assert items[0] == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:22:4
+21	    assert len(items) == 5
+22	    assert items[0] == 1
+23	    assert items[-1] == 5
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:23:4
+22	    assert items[0] == 1
+23	    assert items[-1] == 5
+24	    assert sum(items) == 15
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:24:4
+23	    assert items[-1] == 5
+24	    assert sum(items) == 15
+25	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:29:4
+28	    text = "Hello, World!"
+29	    assert text.lower() == "hello, world!"
+30	    assert text.upper() == "HELLO, WORLD!"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:30:4
+29	    assert text.lower() == "hello, world!"
+30	    assert text.upper() == "HELLO, WORLD!"
+31	    assert "World" in text
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:31:4
+30	    assert text.upper() == "HELLO, WORLD!"
+31	    assert "World" in text
+32	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:44:8
+43	        
+44	        assert config["max_iterations"] == 5
+45	        assert config["confidence_threshold"] == 0.8
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:45:8
+44	        assert config["max_iterations"] == 5
+45	        assert config["confidence_threshold"] == 0.8
+46	        assert len(config["reasoning_types"]) == 2
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:46:8
+45	        assert config["confidence_threshold"] == 0.8
+46	        assert len(config["reasoning_types"]) == 2
+47	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:63:8
+62	        
+63	        assert state["status"] == "processing"
+64	        assert state["current_iteration"] == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:64:8
+63	        assert state["status"] == "processing"
+64	        assert state["current_iteration"] == 1
+65	        assert len(state["reasoning_chain"]) == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:65:8
+64	        assert state["current_iteration"] == 1
+65	        assert len(state["reasoning_chain"]) == 1
+66	        assert state["confidence"] > 0.8
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:66:8
+65	        assert len(state["reasoning_chain"]) == 1
+66	        assert state["confidence"] > 0.8
+67	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:80:8
+79	        
+80	        assert entity["name"] == "Apple Inc."
+81	        assert entity["type"] == "ORGANIZATION"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:81:8
+80	        assert entity["name"] == "Apple Inc."
+81	        assert entity["type"] == "ORGANIZATION"
+82	        assert entity["confidence"] > 0.9
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:82:8
+81	        assert entity["type"] == "ORGANIZATION"
+82	        assert entity["confidence"] > 0.9
+83	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:94:8
+93	        
+94	        assert relationship["source"] == "Steve Jobs"
+95	        assert relationship["target"] == "Apple Inc."
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:95:8
+94	        assert relationship["source"] == "Steve Jobs"
+95	        assert relationship["target"] == "Apple Inc."
+96	        assert relationship["type"] == "FOUNDED"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:96:8
+95	        assert relationship["target"] == "Apple Inc."
+96	        assert relationship["type"] == "FOUNDED"
+97	        assert relationship["confidence"] == 0.9
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:97:8
+96	        assert relationship["type"] == "FOUNDED"
+97	        assert relationship["confidence"] == 0.9
+98	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:111:8
+110	        
+111	        assert result["score"] > 0.9
+112	        assert result["source"] == "vector_search"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:112:8
+111	        assert result["score"] > 0.9
+112	        assert result["source"] == "vector_search"
+113	        assert "doc_id" in result["metadata"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_basic.py:113:8
+112	        assert result["source"] == "vector_search"
+113	        assert "doc_id" in result["metadata"]
+114	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:84:8
+83	        )
+84	        assert embedder.model_name == "BAAI/bge-small-zh-v1.5"
+85	        assert embedder.device == "cpu"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:85:8
+84	        assert embedder.model_name == "BAAI/bge-small-zh-v1.5"
+85	        assert embedder.device == "cpu"
+86	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:97:8
+96	        
+97	        assert embeddings.shape[0] == 2
+98	        assert embeddings.shape[1] == embedder.dimension
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:98:8
+97	        assert embeddings.shape[0] == 2
+98	        assert embeddings.shape[1] == embedder.dimension
+99	        assert embeddings.dtype.name == 'float32'
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:99:8
+98	        assert embeddings.shape[1] == embedder.dimension
+99	        assert embeddings.dtype.name == 'float32'
+100	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:111:8
+110	        
+111	        assert embeddings.shape[0] == 2
+112	        assert embeddings.shape[1] == embedder.dimension
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:112:8
+111	        assert embeddings.shape[0] == 2
+112	        assert embeddings.shape[1] == embedder.dimension
+113	        assert embeddings.dtype.name == 'float32'
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:113:8
+112	        assert embeddings.shape[1] == embedder.dimension
+113	        assert embeddings.dtype.name == 'float32'
+114	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:125:8
+124	        
+125	        assert len(chunks) > 0
+126	        assert all("text" in chunk for chunk in chunks)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:126:8
+125	        assert len(chunks) > 0
+126	        assert all("text" in chunk for chunk in chunks)
+127	        assert all("chunk_id" in chunk for chunk in chunks)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:127:8
+126	        assert all("text" in chunk for chunk in chunks)
+127	        assert all("chunk_id" in chunk for chunk in chunks)
+128	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:135:8
+134	        
+135	        assert len(all_chunks) > len(sample_documents)  # 应该产生更多分块
+136	        assert all("text" in chunk for chunk in all_chunks)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:136:8
+135	        assert len(all_chunks) > len(sample_documents)  # 应该产生更多分块
+136	        assert all("text" in chunk for chunk in all_chunks)
+137	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:165:8
+164	        result = retriever.add_documents(chunks)
+165	        assert result["added"] > 0
+166	        assert result["total"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:166:8
+165	        assert result["added"] > 0
+166	        assert result["total"] > 0
+167	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:172:8
+171	        
+172	        assert len(results) > 0
+173	        assert all("score" in result for result in results)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:173:8
+172	        assert len(results) > 0
+173	        assert all("score" in result for result in results)
+174	        assert all("content" in result for result in results)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:174:8
+173	        assert all("score" in result for result in results)
+174	        assert all("content" in result for result in results)
+175	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:178:8
+177	        scores = [result["score"] for result in results]
+178	        assert scores == sorted(scores, reverse=True)
+179	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:196:8
+195	        
+196	        assert result["status"] == "success"
+197	        assert result["total_documents"] == len(sample_documents)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:197:8
+196	        assert result["status"] == "success"
+197	        assert result["total_documents"] == len(sample_documents)
+198	        assert result["chunks_created"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:198:8
+197	        assert result["total_documents"] == len(sample_documents)
+198	        assert result["chunks_created"] > 0
+199	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:210:8
+209	        
+210	        assert len(results) > 0
+211	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:218:8
+217	        
+218	        assert "total_vectors" in stats
+219	        assert stats["total_vectors"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:219:8
+218	        assert "total_vectors" in stats
+219	        assert stats["total_vectors"] > 0
+220	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:240:8
+239	        
+240	        assert stats["total_queries"] >= 1
+241	        assert stats["avg_latency_ms"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:241:8
+240	        assert stats["total_queries"] >= 1
+241	        assert stats["avg_latency_ms"] > 0
+242	        assert stats["avg_results_count"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:242:8
+241	        assert stats["avg_latency_ms"] > 0
+242	        assert stats["avg_results_count"] > 0
+243	    
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:260:8
+259	        
+260	        assert stats["latest_load_time_ms"] == 100.0
+261	        assert stats["vector_count"] == 100
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:261:8
+260	        assert stats["latest_load_time_ms"] == 100.0
+261	        assert stats["vector_count"] == 100
+262	        assert stats["dimension"] == 512
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:262:8
+261	        assert stats["vector_count"] == 100
+262	        assert stats["dimension"] == 512
+263	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:281:8
+280	        
+281	        assert build_result["status"] == "success"
+282	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:302:12
+301	            # 验证结果质量
+302	            assert len(results) > 0
+303	            assert all(result["score"] > 0 for result in results)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:303:12
+302	            assert len(results) > 0
+303	            assert all(result["score"] > 0 for result in results)
+304	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:309:8
+308	        
+309	        assert retrieval_stats["total_queries"] >= len(test_queries)
+310	        assert retrieval_stats["avg_latency_ms"] > 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:310:8
+309	        assert retrieval_stats["total_queries"] >= len(test_queries)
+310	        assert retrieval_stats["avg_latency_ms"] > 0
+311	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:318:8
+317	        
+318	        assert retriever_stats["total_vectors"] > 0
+319	        assert retriever_stats["index_type"] == temp_config.faiss.index_type
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_bge_faiss_integration.py:319:8
+318	        assert retriever_stats["total_vectors"] > 0
+319	        assert retriever_stats["index_type"] == temp_config.faiss.index_type
+320	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:92:8
+91	
+92	        assert len(entities) == 4
+93	        assert entities[0].name == "Apple Inc."
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:93:8
+92	        assert len(entities) == 4
+93	        assert entities[0].name == "Apple Inc."
+94	        assert entities[0].type == "ORGANIZATION"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:94:8
+93	        assert entities[0].name == "Apple Inc."
+94	        assert entities[0].type == "ORGANIZATION"
+95	        mock_llm_client.extract_entities.assert_called_once_with(text)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:120:8
+119	
+120	        assert len(relationships) == 1
+121	        assert relationships[0].source == "Steve Jobs"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:121:8
+120	        assert len(relationships) == 1
+121	        assert relationships[0].source == "Steve Jobs"
+122	        assert relationships[0].target == "Apple Inc."
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:122:8
+121	        assert relationships[0].source == "Steve Jobs"
+122	        assert relationships[0].target == "Apple Inc."
+123	        assert relationships[0].type == "FOUNDED"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:123:8
+122	        assert relationships[0].target == "Apple Inc."
+123	        assert relationships[0].type == "FOUNDED"
+124	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:150:8
+149	        # Verify graph database operations
+150	        assert mock_graph_db.add_node.call_count >= 2  # At least 2 entities
+151	        assert mock_graph_db.add_edge.call_count >= 1  # At least 1 relationship
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:151:8
+150	        assert mock_graph_db.add_node.call_count >= 2  # At least 2 entities
+151	        assert mock_graph_db.add_edge.call_count >= 1  # At least 1 relationship
+152	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:175:8
+174	
+175	        assert len(results) == 2
+176	        assert results[0]["score"] == 0.95
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:176:8
+175	        assert len(results) == 2
+176	        assert results[0]["score"] == 0.95
+177	        mock_vector_store.search.assert_called_once_with(query, top_k=5)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:202:8
+201	
+202	        assert len(results) == 2
+203	        assert "Apple Inc." in results[0]["path"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:203:8
+202	        assert len(results) == 2
+203	        assert "Apple Inc." in results[0]["path"]
+204	        mock_graph_db.find_paths.assert_called_once()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:228:8
+227	
+228	        assert len(communities) == 2
+229	        assert communities[0].id == "community_1"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:229:8
+228	        assert len(communities) == 2
+229	        assert communities[0].id == "community_1"
+230	        assert "Apple Inc." in communities[0].nodes
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:230:8
+229	        assert communities[0].id == "community_1"
+230	        assert "Apple Inc." in communities[0].nodes
+231	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:249:8
+248	
+249	        assert len(results) > 0
+250	        assert isinstance(results, list)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:250:8
+249	        assert len(results) > 0
+250	        assert isinstance(results, list)
+251	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:278:8
+277	
+278	        assert "Steve Jobs" in result
+279	        assert "iPhone" in result
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:279:8
+278	        assert "Steve Jobs" in result
+279	        assert "iPhone" in result
+280	        assert "Apple Inc." in result
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:280:8
+279	        assert "iPhone" in result
+280	        assert "Apple Inc." in result
+281	        mock_llm_client.generate_summary.assert_called_once()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:304:8
+303	
+304	        assert "Apple Inc." in summary
+305	        assert "Steve Jobs" in summary
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:305:8
+304	        assert "Apple Inc." in summary
+305	        assert "Steve Jobs" in summary
+306	        mock_llm_client.generate_summary.assert_called_once()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:335:8
+334	
+335	        assert len(results) == 3
+336	        assert any("iPhone" in str(result) for result in results)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:336:8
+335	        assert len(results) == 3
+336	        assert any("iPhone" in str(result) for result in results)
+337	        assert any("Pixar" in str(result) for result in results)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:337:8
+336	        assert any("iPhone" in str(result) for result in results)
+337	        assert any("Pixar" in str(result) for result in results)
+338	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:382:8
+381	
+382	        assert len(ranked_results) == 2
+383	        # Higher score should be ranked first
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:384:8
+383	        # Higher score should be ranked first
+384	        assert ranked_results[0]["score"] >= ranked_results[1]["score"]
+385	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:399:8
+398	        # Should have fewer entities after resolution
+399	        assert len(resolved_entities) <= len(entities)
+400	        
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:405:8
+404	        
+405	        assert len(org_names) <= 2  # Apple variations merged
+406	        assert len(person_names) <= 2  # Steve Jobs variations merged
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:406:8
+405	        assert len(org_names) <= 2  # Apple variations merged
+406	        assert len(person_names) <= 2  # Steve Jobs variations merged
+407	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:416:8
+415	        )
+416	        assert config.max_hops == 3
+417	        assert config.similarity_threshold == 0.8
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:417:8
+416	        assert config.max_hops == 3
+417	        assert config.similarity_threshold == 0.8
+418	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:453:8
+452	        # Should still return results (from graph fallback)
+453	        assert isinstance(results, list)
+454	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:468:8
+467	
+468	        assert len(results) == 3
+469	        # All should complete without exceptions
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:470:8
+469	        # All should complete without exceptions
+470	        assert all(not isinstance(r, Exception) for r in results)
+471	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b101_assert_used.html
+   Location: ./tests/test_graph_rag.py:486:12
+485	        for metric in expected_metrics:
+486	            assert metric in metrics or hasattr(graph_rag, f'_{metric}')
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 44961
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 168
+		Medium: 16
+		High: 16
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 2
+		Medium: 9
+		High: 189
+Files skipped (1):
+	./core/graph_rag.py (syntax error while parsing AST from file)

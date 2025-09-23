@@ -1,0 +1,3 @@
+./platforms/web/node_modules/@next/swc-darwin-arm64/next-swc.darwin-arm64.node
+./voice_venv/lib/python3.13/site-packages/cryptography/hazmat/bindings/_rust.abi3.so
+./voice_venv/lib/python3.13/site-packages/7ae574991b77ef47acad__mypyc.cpython-313-darwin.so

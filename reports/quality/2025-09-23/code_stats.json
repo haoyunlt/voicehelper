@@ -1,0 +1,213 @@
+{"header" : {
+  "cloc_url"           : "github.com/AlDanial/cloc",
+  "cloc_version"       : "2.06",
+  "elapsed_seconds"    : 25.1679670810699,
+  "n_files"            : 20656,
+  "n_lines"            : 4592455,
+  "files_per_second"   : 820.725803298447,
+  "lines_per_second"   : 182472.226906805},
+"Python" :{
+  "nFiles": 13662,
+  "blank": 649834,
+  "comment": 1077396,
+  "code": 2472547},
+"JSON" :{
+  "nFiles": 6063,
+  "blank": 14,
+  "comment": 0,
+  "code": 159363},
+"CSV" :{
+  "nFiles": 30,
+  "blank": 0,
+  "comment": 0,
+  "code": 36702},
+"TypeScript" :{
+  "nFiles": 86,
+  "blank": 3756,
+  "comment": 2289,
+  "code": 20319},
+"Markdown" :{
+  "nFiles": 71,
+  "blank": 4923,
+  "comment": 1,
+  "code": 17181},
+"Text" :{
+  "nFiles": 209,
+  "blank": 889,
+  "comment": 0,
+  "code": 16393},
+"Go" :{
+  "nFiles": 58,
+  "blank": 3092,
+  "comment": 1868,
+  "code": 15878},
+"C/C++ Header" :{
+  "nFiles": 81,
+  "blank": 2739,
+  "comment": 4344,
+  "code": 14712},
+"Cython" :{
+  "nFiles": 88,
+  "blank": 3532,
+  "comment": 1707,
+  "code": 13924},
+"HTML" :{
+  "nFiles": 14,
+  "blank": 2328,
+  "comment": 0,
+  "code": 13624},
+"JavaScript" :{
+  "nFiles": 68,
+  "blank": 1989,
+  "comment": 1030,
+  "code": 10861},
+"C" :{
+  "nFiles": 27,
+  "blank": 1208,
+  "comment": 1073,
+  "code": 9050},
+"YAML" :{
+  "nFiles": 18,
+  "blank": 437,
+  "comment": 360,
+  "code": 4300},
+"Bourne Shell" :{
+  "nFiles": 15,
+  "blank": 683,
+  "comment": 467,
+  "code": 3116},
+"C++" :{
+  "nFiles": 16,
+  "blank": 594,
+  "comment": 1162,
+  "code": 2930},
+"SQL" :{
+  "nFiles": 6,
+  "blank": 67,
+  "comment": 87,
+  "code": 1685},
+"Kotlin" :{
+  "nFiles": 3,
+  "blank": 216,
+  "comment": 88,
+  "code": 1673},
+"Swift" :{
+  "nFiles": 3,
+  "blank": 210,
+  "comment": 88,
+  "code": 1224},
+"Fortran 90" :{
+  "nFiles": 61,
+  "blank": 132,
+  "comment": 97,
+  "code": 1007},
+"XML" :{
+  "nFiles": 2,
+  "blank": 186,
+  "comment": 1,
+  "code": 910},
+"SCSS" :{
+  "nFiles": 1,
+  "blank": 113,
+  "comment": 35,
+  "code": 676},
+"TOML" :{
+  "nFiles": 1,
+  "blank": 41,
+  "comment": 123,
+  "code": 654},
+"CSS" :{
+  "nFiles": 5,
+  "blank": 233,
+  "comment": 16,
+  "code": 446},
+"WXSS" :{
+  "nFiles": 1,
+  "blank": 76,
+  "comment": 10,
+  "code": 427},
+"Fortran 77" :{
+  "nFiles": 25,
+  "blank": 29,
+  "comment": 55,
+  "code": 401},
+"reStructuredText" :{
+  "nFiles": 7,
+  "blank": 156,
+  "comment": 135,
+  "code": 340},
+"XSLT" :{
+  "nFiles": 4,
+  "blank": 47,
+  "comment": 54,
+  "code": 308},
+"WXML" :{
+  "nFiles": 1,
+  "blank": 14,
+  "comment": 19,
+  "code": 150},
+"Fish Shell" :{
+  "nFiles": 3,
+  "blank": 39,
+  "comment": 43,
+  "code": 131},
+"Dockerfile" :{
+  "nFiles": 8,
+  "blank": 84,
+  "comment": 83,
+  "code": 130},
+"Meson" :{
+  "nFiles": 3,
+  "blank": 24,
+  "comment": 9,
+  "code": 122},
+"Assembly" :{
+  "nFiles": 2,
+  "blank": 30,
+  "comment": 14,
+  "code": 120},
+"make" :{
+  "nFiles": 1,
+  "blank": 22,
+  "comment": 17,
+  "code": 118},
+"INI" :{
+  "nFiles": 4,
+  "blank": 18,
+  "comment": 0,
+  "code": 110},
+"PowerShell" :{
+  "nFiles": 1,
+  "blank": 50,
+  "comment": 90,
+  "code": 108},
+"Jinja Template" :{
+  "nFiles": 2,
+  "blank": 20,
+  "comment": 0,
+  "code": 81},
+"XSD" :{
+  "nFiles": 1,
+  "blank": 0,
+  "comment": 3,
+  "code": 47},
+"C Shell" :{
+  "nFiles": 3,
+  "blank": 29,
+  "comment": 17,
+  "code": 45},
+"Fortran 95" :{
+  "nFiles": 1,
+  "blank": 0,
+  "comment": 1,
+  "code": 4},
+"DOS Batch" :{
+  "nFiles": 1,
+  "blank": 0,
+  "comment": 0,
+  "code": 2},
+"SUM": {
+  "blank": 677854,
+  "comment": 1092782,
+  "code": 2821819,
+  "nFiles": 20656} }

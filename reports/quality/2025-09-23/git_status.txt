@@ -1,0 +1,75 @@
+ M .cursorignore
+ M .gitignore
+ D Makefile.optimized
+ M algo/Dockerfile
+ D algo/Dockerfile.voice.dev
+ D algo/examples/batch_scheduler_example.py
+ M backend/Dockerfile
+ M backend/cmd/gateway/main.go
+ D backend/cmd/simple/main.go
+ M backend/common/logger/logger.go
+ M backend/go.mod
+ M backend/go.sum
+ D backend/internal/handler/auth.go
+ D backend/internal/handler/chat.go
+ D backend/internal/handler/dataset.go
+ D backend/internal/handler/handler.go
+ D backend/internal/handler/ingest.go
+ D backend/internal/handler/integration.go
+ D backend/internal/handler/security_admin.go
+ D backend/internal/handler/voice.go
+ M backend/internal/handlers/api_routes.go
+ M backend/internal/handlers/base.go
+ D backend/internal/handlers/chat_sse.go
+ M backend/internal/handlers/v2_chat.go
+ M backend/internal/handlers/v2_routes.go
+ M backend/internal/handlers/v2_voice.go
+ M backend/internal/handlers/voice_ws.go
+ M backend/internal/handlers/webrtc_signaling.go
+ M backend/internal/middleware/zero_trust.go
+ M backend/internal/repository/apikey_repository.go
+ M backend/internal/service/service.go
+ D backend/internal/ssews/base.go
+ D backend/internal/ssews/event_bus.go
+ D backend/internal/ssews/sse.go
+ D backend/internal/ssews/stream.go
+ D backend/internal/ssews/ws.go
+ M backend/pkg/middleware/common.go
+ M backend/pkg/middleware/request_id.go
+ M backend/pkg/middleware/voice_metrics.go
+ D backend/server
+ D backend/simple-server
+ M common/logger/logger.go
+ D deploy-helper.sh
+ D deploy.sh
+ M docker-compose.local.yml
+ D docker-compose.optimized.yml
+ D docs/api/openapi.yaml
+ D docs/api/openapi_v3.yaml
+ M platforms/web/Dockerfile.simple
+ M platforms/web/next.config.js
+ M platforms/web/src/api/base.ts
+ M platforms/web/src/api/chat.ts
+ M platforms/web/tsconfig.json
+ D tools/deployment/Makefile.local
+ M tools/deployment/config/prometheus.yml
+ D tools/deployment/deploy/config/prometheus.yml
+ D tools/deployment/docker-compose.local.yml
+ D tools/deployment/k8s/voicehelper-deployment.yaml
+ M tools/scripts/daily_quality_check.sh
+ M tools/scripts/simple_validation.py
+?? algo/Dockerfile.full
+?? algo/requirements-full.txt
+?? algo/start.sh
+?? backend/internal/handlers/api_helpers.go
+?? backend/pkg/metrics/
+?? backend/pkg/middleware/metrics.go
+?? docs/DOCKER_DEPLOYMENT_FIXES.md
+?? docs/ITERATION_PLAN_2025_LATEST.md
+?? docs/RECOVERY_IMPLEMENTATION_REPORT.md
+?? docs/SPRINT_COMPLETION_REPORT.md
+?? platforms/admin/Dockerfile.simple
+?? platforms/admin/requirements-simple.txt
+?? platforms/web/src/types/
+?? reports/
+?? tools/reports/

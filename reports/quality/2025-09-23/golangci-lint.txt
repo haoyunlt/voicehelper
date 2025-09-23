@@ -1,0 +1,6 @@
+pkg/utils/error_handler.go:1: : # voicehelper/backend/pkg/utils
+pkg/utils/error_handler.go:59:30: context.Canceled undefined (type string has no field or method Canceled)
+pkg/utils/error_handler.go:62:30: context.DeadlineExceeded undefined (type string has no field or method DeadlineExceeded) (typecheck)
+package utils
+1 issues:
+* typecheck: 1

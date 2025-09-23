@@ -1,0 +1,22 @@
+=== README文件检查 ===
+./testing/test_venv/lib/python3.13/site-packages/flask/sansio/README.md
+./testing/test_venv/lib/python3.13/site-packages/zmq/backend/cffi/README.md
+./testing/e2e/node_modules/@types/node/README.md
+./testing/e2e/node_modules/@playwright/test/README.md
+./testing/e2e/node_modules/playwright-core/README.md
+./testing/e2e/node_modules/typescript/README.md
+./testing/e2e/node_modules/undici-types/README.md
+./testing/e2e/node_modules/playwright/README.md
+./testing/e2e/README.md
+
+=== API文档检查 ===
+
+=== 配置文件检查 ===
+./testing/test_venv/lib/python3.13/site-packages/selenium/webdriver/firefox/webdriver_prefs.json
+./testing/test_venv/lib/python3.13/site-packages/setuptools/config/setuptools.schema.json
+./testing/test_venv/lib/python3.13/site-packages/setuptools/config/distutils.schema.json
+./deployment/config/logging.yml
+./deployment/config/grafana/dashboards/system-overview.json
+./deployment/config/grafana/dashboards/business-metrics.json
+./deployment/config/prometheus/rules/alerts.yml
+./deployment/config/prometheus.yml

@@ -1,0 +1,74 @@
+
+
+[33m[1m+===========================================================================================================================================================================================+[0m
+
+
+[31m[1mDEPRECATED: [0m[33m[1mthis command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.[0m
+
+
+[32mWe highly encourage switching to the new [0m[32m[1m`scan`[0m[32m command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.[0m
+
+
+[33m[1m+===========================================================================================================================================================================================+[0m
+
+
+/Users/lintao/important/ai-customer/voicehelper/voice_venv/lib/python3.13/site-packages/safety/safety.py:1857: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
++==============================================================================+
+
+                               /$$$$$$            /$$
+                              /$$__  $$          | $$
+           /$$$$$$$  /$$$$$$ | $$  \__//$$$$$$  /$$$$$$   /$$   /$$
+          /$$_____/ |____  $$| $$$$   /$$__  $$|_  $$_/  | $$  | $$
+         |  $$$$$$   /$$$$$$$| $$_/  | $$$$$$$$  | $$    | $$  | $$
+          \____  $$ /$$__  $$| $$    | $$_____/  | $$ /$$| $$  | $$
+          /$$$$$$$/|  $$$$$$$| $$    |  $$$$$$$  |  $$$$/|  $$$$$$$
+         |_______/  \_______/|__/     \_______/   \___/   \____  $$
+                                                          /$$  | $$
+                                                         |  $$$$$$/
+  by safetycli.com                                        \______/
+
++==============================================================================+
+
+ [1mREPORT[0m 
+
+  Safety [1mv3.6.1[0m is scanning for [1mVulnerabilities[0m[1m...[0m
+[1m  Scanning dependencies[0m in your [1menvironment:[0m
+
+  -> /usr/local/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3
+  .13/lib/python3.13
+  -> /Users/lintao/important/ai-
+  customer/voicehelper/voice_venv/lib/python3.13/site-packages
+  -> /Users/lintao/important/ai-
+  customer/voicehelper/voice_venv/lib/python3.13/site-
+  packages/setuptools/_vendor
+  -> /usr/local/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3
+  .13/lib/python3.13/lib-dynload
+  -> /Users/lintao/important/ai-customer/voicehelper/voice_venv/bin
+  -> /usr/local/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3
+  .13/lib/python313.zip
+
+  Using [1mopen-source vulnerability database[0m
+[1m  Found and scanned 133 packages[0m
+  Timestamp [1m2025-09-23 11:30:28[0m
+[1m  0[0m[1m vulnerabilities reported[0m
+[1m  0[0m[1m vulnerabilities ignored[0m
++==============================================================================+
+
+ [32m[1mNo known security vulnerabilities reported.[0m 
+
++==============================================================================+[0m
+
+
+[33m[1m+===========================================================================================================================================================================================+[0m
+
+
+[31m[1mDEPRECATED: [0m[33m[1mthis command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.[0m
+
+
+[32mWe highly encourage switching to the new [0m[32m[1m`scan`[0m[32m command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.[0m
+
+
+[33m[1m+===========================================================================================================================================================================================+[0m
+
+

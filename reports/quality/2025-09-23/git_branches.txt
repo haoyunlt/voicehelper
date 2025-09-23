@@ -1,0 +1,7 @@
+  main
+  v1
+* v2
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+  remotes/origin/v1
+  remotes/origin/v2

@@ -1,0 +1,22 @@
+# voicehelper/backend/pkg/integration
+vet: pkg/integration/service_connector.go:389:2: declared and not used: service
+# voicehelper/backend/internal/auth
+vet: internal/auth/sso_providers.go:369:25: undefined: samlsp.DefaultSessionCookieStore
+# voicehelper/backend/pkg/common
+vet: pkg/common/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+# voicehelper/backend/internal/contracts
+vet: internal/contracts/validation.go:144:24: v.getMessage undefined (type string has no field or method getMessage)
+# voicehelper/backend/pkg/utils
+vet: pkg/utils/error_handler.go:59:30: context.Canceled undefined (type string has no field or method Canceled)
+# voicehelper/backend/internal/handlers
+internal/handlers/api_routes.go:348:16: undefined: strconv
+internal/handlers/api_routes.go:349:17: undefined: strconv
+internal/handlers/api_routes.go:352:10: undefined: repository
+internal/handlers/api_routes.go:360:33: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:362:3: undefined: logger
+internal/handlers/api_routes.go:396:11: undefined: repository
+internal/handlers/api_routes.go:405:14: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:406:3: undefined: logger
+internal/handlers/api_routes.go:411:2: undefined: logger
+internal/handlers/api_routes.go:429:17: h.conversationRepo undefined (type *APIHandler has no field or method conversationRepo)
+internal/handlers/api_routes.go:429:17: too many errors
